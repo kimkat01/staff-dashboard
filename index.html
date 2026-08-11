@@ -3452,12 +3452,36 @@ function goStub(title,icon,tint){
   show("stub");
 }
 
-/* 外部リンク先URL（決まり次第ここに入れるだけ） */
-const LINKS={
-  shift:"",   // シフト管理（空なら内蔵シフト画面を開く）
-  uq:"https://hojyokinsenyo-cell.github.io/uqcheck/staff_standalone.html",  // 有給チェッカー（職員用・GAS接続済み）
-  bot:"https://kimkat01.github.io/dome-chat/?en=yashio_akanemachi",         // ドメボット（?en=園キー。デモ用に1園を指定。本番は園ごとに差し替え）
+/* 外部リンク先の土台 */
+const UQ_BASE="https://hojyokinsenyo-cell.github.io/uqcheck/staff_standalone.html"; // ?garden=園名 を付ける
+const DOME_BASE="https://kimkat01.github.io/dome-chat/";                            // ?en=園キー を付ける
+
+/* 園名 → ドメボットの園キー（en）。園を増やしたらここに足す */
+const DOME_KEY={
+  "しおどめ保育園八潮茜町":"yashio_akanemachi",
+  "認定こども園しおどめの森":"shiodome_no_mori",
+  "しおどめ保育園江戸川中央":"edogawa_chuo",
+  "しおどめ保育園三郷中央":"misato_chuo",
+  "しおどめ保育園春日部":"kasukabe",
+  "しおどめ保育園つくば":"tsukuba",
+  "守谷しおどめ保育園":"moriya_shiodome",
+  "八潮しおどめ保育園":"yashio_shiodome",
+  "しおどめなかよし保育園":"shiodome_nakayoshi",
 };
+/* デモ園がUQ/ドメボットに未登録のときに使う代表値（動作確認用） */
+const DEMO_UQ_GARDEN="しおどめ保育園稲城";   // UQchecker職員マスタに登録済みの園名
+const DEMO_DOME_KEY="yashio_akanemachi";      // ドメボットの代表園キー（稲城のキーは未確認）
+
+function gardenName(){return (DATA.facility||"").replace(/（(デモ|サンプル)）/,"").trim();}
+function uqUrl(){
+  var g=DATA.uqGarden||DEMO_UQ_GARDEN;         // 本番は園データのuqGardenを使用
+  return UQ_BASE+"?garden="+encodeURIComponent(g);
+}
+function domeUrl(){
+  var key=DATA.domeKey||DOME_KEY[gardenName()]||DEMO_DOME_KEY;
+  return DOME_BASE+"?en="+encodeURIComponent(key);
+}
+const LINKS={ shift:"" };  // シフト管理（空なら内蔵シフト画面を開く）
 function goLink(url,title,icon,tint){
   if(url){window.open(url,'_blank','noopener');return;}
   document.getElementById('brandtxt').textContent=title;
@@ -3471,11 +3495,11 @@ function goLink(url,title,icon,tint){
 /* HOME */
 const MENU=[
  {t:"シフト管理",d:"今週のシフトと園の予定",ic:"shift",tint:"i-mid",go:()=>{if(LINKS.shift){window.open(LINKS.shift,'_blank','noopener');}else{goShift();}},flag:"NEW"},
- {t:"有給チェッカー",d:"有給の残り日数をチェック",ic:"uq",tint:"i-early",go:()=>goLink(LINKS.uq,"有給チェッカー","uq","i-early")},
+ {t:"有給チェッカー",d:"有給の残り日数をチェック",ic:"uq",tint:"i-early",go:()=>goLink(uqUrl(),"有給チェッカー","uq","i-early")},
  {t:"お知らせ",d:"本部・園からのお知らせ",ic:"news",tint:"i-late",go:()=>goStub("お知らせ","news","i-late")},
  {t:"カレンダー",d:"行事・園の予定",ic:"cal",tint:"i-brand",go:()=>goStub("カレンダー","cal","i-brand")},
  {t:"規約・マニュアル",d:"就業規則・各種マニュアル",ic:"doc",tint:"i-slate",go:()=>goStub("規約・マニュアル","doc","i-slate")},
- {t:"ドメボット",d:"チャットで質問・相談",ic:"bot",tint:"i-rose",go:()=>goLink(LINKS.bot,"ドメボット","bot","i-rose")},
+ {t:"ドメボット",d:"チャットで質問・相談",ic:"bot",tint:"i-rose",go:()=>goLink(domeUrl(),"ドメボット","bot","i-rose")},
  {t:"コーポレートブック",d:"会社案内・理念ブック",ic:"book",tint:"i-gold",go:()=>goStub("コーポレートブック","book","i-gold")},
 ];
 function renderHome(){
