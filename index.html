@@ -11,6 +11,7 @@
 :root{
   --ink:#2b2a28; --ink-soft:#6f6a62; --line:#e7e2d9; --paper:#f4f1ec; --card:#ffffff;
   --brand:#1f7a6b; --brand-soft:#e2f0ec;
+  --brand-blue:#4169e2; --brand-blue-d:#3355c6;
   --early:#e0863a; --early-bg:#fbe9d2; --early-ink:#8f5311;
   --mid:#2e9384;   --mid-bg:#d9efe9;   --mid-ink:#1b5c53;
   --late:#6a73c2;  --late-bg:#e3e4f6;  --late-ink:#3c4590;
@@ -27,26 +28,28 @@ body{font-family:"Hiragino Kaku Gothic ProN","Hiragino Sans","Yu Gothic",YuGothi
 .round{font-family:"M PLUS Rounded 1c",sans-serif;}
 .wrap{max-width:440px;margin:0 auto;min-height:100vh;background:var(--paper);padding:0 0 40px;position:relative;}
 
-header{position:sticky;top:0;z-index:20;background:rgba(244,241,236,.86);
-  backdrop-filter:saturate(150%) blur(10px);border-bottom:1px solid var(--line);padding:12px 16px 10px;}
-.brandrow{display:flex;align-items:center;gap:9px;}
-.backbtn{border:0;background:transparent;font-size:20px;color:var(--ink);cursor:pointer;
-  width:30px;height:30px;margin:-4px 0 -4px -6px;border-radius:9px;display:none;}
-.backbtn.on{display:grid;place-items:center}
-.mark{width:26px;height:26px;border-radius:9px;background:var(--brand);flex:0 0 auto;
-  display:grid;place-items:center;color:#fff;font-weight:800;font-size:15px;}
-.brandtxt{font-size:12px;color:var(--ink-soft);letter-spacing:.02em;}
-.brandtxt b{display:block;color:var(--ink);font-size:14px;font-weight:700;}
-.htitle{font-size:14px;font-weight:800;}
-.whochip{margin-top:10px;width:100%;display:flex;align-items:center;gap:10px;background:var(--card);
-  border:1px solid var(--line);border-radius:14px;padding:9px 12px;box-shadow:var(--shadow);cursor:pointer;text-align:left;}
-.whochip .av{width:34px;height:34px;border-radius:11px;background:var(--brand-soft);color:var(--brand);
-  display:grid;place-items:center;font-weight:800;font-size:15px;flex:0 0 auto;}
-.whochip .who{flex:1;min-width:0}
-.whochip .who .p{font-size:11px;color:var(--ink-soft);}
-.whochip .who .n{font-size:15px;font-weight:700;}
-.whochip .chev{color:var(--ink-soft);font-size:12px;}
-.switch{font-size:11px;color:var(--brand);font-weight:700;text-align:right}
+header.topbar{position:sticky;top:0;z-index:20;background:var(--brand-blue);color:#fff;
+  display:flex;align-items:center;gap:10px;
+  padding:calc(env(safe-area-inset-top,0px) + 15px) 16px 15px;}
+.tb-back{border:0;background:transparent;color:#fff;font-size:26px;line-height:1;cursor:pointer;
+  width:30px;height:30px;margin:-6px 2px -6px -6px;border-radius:9px;display:none;flex:0 0 auto;}
+.tb-back.on{display:grid;place-items:center}
+.tb-title{flex:1;min-width:0;font-size:19px;font-weight:800;color:#fff;letter-spacing:.01em;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.tb-logout{flex:0 0 auto;border:1.5px solid rgba(255,255,255,.75);background:transparent;color:#fff;
+  font-size:12.5px;font-weight:800;padding:6px 14px;border-radius:999px;cursor:pointer;font-family:inherit;
+  white-space:nowrap;}
+.tb-logout:active{background:rgba(255,255,255,.16)}
+
+.userbar{display:flex;align-items:center;gap:12px;width:100%;
+  background:var(--card);border:0;border-bottom:1px solid var(--line);
+  padding:13px 16px;cursor:pointer;text-align:left;box-shadow:0 2px 8px rgba(40,34,20,.04);}
+.userbar .ub-av{width:44px;height:44px;border-radius:50%;background:var(--brand-blue);color:#fff;
+  display:grid;place-items:center;font-weight:800;font-size:18px;flex:0 0 auto;}
+.userbar .ub-who{flex:1;min-width:0}
+.userbar .ub-n{font-size:17px;font-weight:800;line-height:1.2;}
+.userbar .ub-p{font-size:11.5px;color:var(--ink-soft);margin-top:3px;font-variant-numeric:tabular-nums;}
+.userbar .ub-chev{color:var(--off-ink);font-size:15px;flex:0 0 auto;}
 
 main{padding:16px}
 
@@ -178,18 +181,16 @@ tbody tr.me .namecol{color:var(--brand)}
 </head>
 <body>
 <div class="wrap">
-  <header>
-    <div class="brandrow">
-      <button class="backbtn round" id="backbtn" onclick="goHome()" aria-label="ホームに戻る">‹</button>
-      <div class="mark round">し</div>
-      <div class="brandtxt" id="brandtxt">しおどめグループ<b class="round">職員ダッシュボード</b></div>
-    </div>
-    <button class="whochip" id="whochip" aria-label="ログイン中の職員を切り替える">
-      <div class="av round" id="avatar">—</div>
-      <div class="who"><div class="p" id="who-p">— 保育園</div><div class="n" id="who-n">名前を選択</div></div>
-      <div><div class="switch">切替</div><div class="chev" style="text-align:right">▾</div></div>
-    </button>
+  <header class="topbar">
+    <button class="tb-back round" id="backbtn" onclick="goHome()" aria-label="ホームに戻る">‹</button>
+    <div class="tb-title" id="brandtxt">職員ダッシュボード</div>
+    <button class="tb-logout" id="logoutbtn" onclick="openSheet()">ログアウト</button>
   </header>
+  <button class="userbar" id="userbar" aria-label="ログイン中の職員を切り替える">
+    <div class="ub-av round" id="avatar">—</div>
+    <div class="ub-who"><div class="ub-n" id="who-n">名前を選択</div><div class="ub-p" id="who-p"></div></div>
+    <div class="ub-chev">›</div>
+  </button>
 
   <main>
     <section id="screen-home"></section>
@@ -3417,7 +3418,7 @@ const IC={
 document.getElementById('sheet-fac').textContent=DATA.facility.replace("（サンプル）","");
 const openSheet=()=>{sheetbg.classList.add('on');sheet.classList.add('on');};
 const closeSheet=()=>{sheetbg.classList.remove('on');sheet.classList.remove('on');};
-document.getElementById('whochip').onclick=openSheet;
+document.getElementById('userbar').onclick=openSheet;
 function buildNamelist(){
   const w=document.getElementById('namelist');w.innerHTML="";
   staff.forEach((s,i)=>{const b=document.createElement('button');if(i===current)b.className="sel";
@@ -3427,7 +3428,8 @@ function buildNamelist(){
 }
 function renderWho(){const s=staff[current];
   document.getElementById('avatar').textContent=s?initials(s.name):"—";
-  document.getElementById('who-p').textContent=DATA.facility.replace("（サンプル）","");
+  var sub = s ? ((s.role||"正職員")+"／採用 "+(s.hired||"2021/04/01")) : "";
+  document.getElementById('who-p').textContent=sub;
   document.getElementById('who-n').textContent=s?s.name:"名前を選択";}
 
 /* router */
@@ -3437,14 +3439,12 @@ function show(name){
   document.getElementById('screen-shift').hidden=name!=="shift";
   document.getElementById('screen-stub').hidden=name!=="stub";
   document.getElementById('backbtn').classList.toggle('on',name!=="home");
-  const bt=document.getElementById('brandtxt');
-  document.getElementById('whochip').style.display = name==="home"?"":"flex";
   window.scrollTo({top:0});
 }
-function goHome(){document.getElementById('brandtxt').innerHTML='しおどめグループ<b class="round">職員ダッシュボード</b>';show("home");}
-function goShift(){document.getElementById('brandtxt').innerHTML='<span class="htitle round">シフト</span>';renderShift();show("shift");}
+function goHome(){document.getElementById('brandtxt').textContent='職員ダッシュボード';show("home");}
+function goShift(){document.getElementById('brandtxt').textContent='シフト';renderShift();show("shift");}
 function goStub(title,icon,tint){
-  document.getElementById('brandtxt').innerHTML=`<span class="htitle round">${title}</span>`;
+  document.getElementById('brandtxt').textContent=title;
   document.getElementById('screen-stub').innerHTML=
     `<div class="stub"><div class="ic ${tint}">${IC[icon]}</div><h2 class="round">${title}</h2>
      <p>この画面は準備中です。<br>本番ではここに「${title}」の中身が入ります。<br>ログインは共通なので、開くだけで使えます。</p>
@@ -3452,14 +3452,30 @@ function goStub(title,icon,tint){
   show("stub");
 }
 
+/* 外部リンク先URL（決まり次第ここに入れるだけ） */
+const LINKS={
+  shift:"",   // シフト管理（空なら内蔵シフト画面を開く）
+  uq:"https://hojyokinsenyo-cell.github.io/uqcheck/staff_standalone.html",  // 有給チェッカー（職員用・GAS接続済み）
+  bot:"https://kimkat01.github.io/dome-chat/?en=yashio_akanemachi",         // ドメボット（?en=園キー。デモ用に1園を指定。本番は園ごとに差し替え）
+};
+function goLink(url,title,icon,tint){
+  if(url){window.open(url,'_blank','noopener');return;}
+  document.getElementById('brandtxt').textContent=title;
+  document.getElementById('screen-stub').innerHTML=
+    '<div class="stub"><div class="ic '+tint+'">'+IC[icon]+'</div><h2 class="round">'+title+'</h2>'+
+    '<p>リンク先URLが未設定です。<br>URLを入れると、ここから直接ひらきます。</p>'+
+    '<button class="back" onclick="goHome()">ホームに戻る</button></div>';
+  show("stub");
+}
+
 /* HOME */
 const MENU=[
- {t:"シフト",d:"今週のシフトと園の予定",ic:"shift",tint:"i-mid",go:()=>goShift(),flag:"NEW"},
- {t:"有給チェッカー",d:"有給の残り日数をチェック",ic:"uq",tint:"i-early",go:()=>goStub("有給チェッカー","uq","i-early")},
+ {t:"シフト管理",d:"今週のシフトと園の予定",ic:"shift",tint:"i-mid",go:()=>{if(LINKS.shift){window.open(LINKS.shift,'_blank','noopener');}else{goShift();}},flag:"NEW"},
+ {t:"有給チェッカー",d:"有給の残り日数をチェック",ic:"uq",tint:"i-early",go:()=>goLink(LINKS.uq,"有給チェッカー","uq","i-early")},
  {t:"お知らせ",d:"本部・園からのお知らせ",ic:"news",tint:"i-late",go:()=>goStub("お知らせ","news","i-late")},
  {t:"カレンダー",d:"行事・園の予定",ic:"cal",tint:"i-brand",go:()=>goStub("カレンダー","cal","i-brand")},
  {t:"規約・マニュアル",d:"就業規則・各種マニュアル",ic:"doc",tint:"i-slate",go:()=>goStub("規約・マニュアル","doc","i-slate")},
- {t:"ドメボット",d:"チャットで質問・相談",ic:"bot",tint:"i-rose",go:()=>goStub("ドメボット","bot","i-rose")},
+ {t:"ドメボット",d:"チャットで質問・相談",ic:"bot",tint:"i-rose",go:()=>goLink(LINKS.bot,"ドメボット","bot","i-rose")},
  {t:"コーポレートブック",d:"会社案内・理念ブック",ic:"book",tint:"i-gold",go:()=>goStub("コーポレートブック","book","i-gold")},
 ];
 function renderHome(){
@@ -3482,18 +3498,9 @@ function renderHome(){
   }).join("");
 
   document.getElementById('screen-home').innerHTML=`
-   <div class="greet"><div class="hi round">こんにちは、${first}さん</div>
-     <div class="sub">${DATA.facility.replace("（サンプル）","")} ・ ${evd.md?evd.md.replace('/','月')+'日（'+evd.dow+'）':''}</div></div>
-   <div class="todaycard" onclick="goShift()">
-     <div class="tc-l"><div class="tc-k">きょうのあなた</div>
-       <div class="tc-v round">${val}${tm}</div>${ev}</div>
-     <span class="tag" style="background:var(${c.bg});color:var(${c.ink})">${c.label}</span>
-     <span class="go">›</span></div>
-   <div class="sec-label">メニュー</div>
+   <div class="sec-label" style="margin-top:6px">メニュー</div>
    <div class="grid">${tiles}</div>
-   <div class="soon"><div class="k">第2弾（アップデートで追加予定）</div>
-     <div class="v">目安箱・リファラル採用。まず有給チェッカーとシフトで入口に慣れてから、少しあとに追加します。</div></div>
-   <p class="foot"><b>これは試作です。</b>ログイン（園→名前）は共通で、6メニュー＋シフトすべてに有効。1つの入口・1回のログインで全部ひらきます。</p>`;
+   <p class="foot"><b>これは試作です。</b>ログイン（園→名前）は共通で、全メニューに有効。1つの入口・1回のログインで全部ひらきます。</p>`;
 }
 
 /* SHIFT screen (personal + facility) */
