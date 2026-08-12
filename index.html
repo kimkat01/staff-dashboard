@@ -158,6 +158,14 @@ tbody tr.me .namecol{color:var(--brand)}
 .stub .back{margin-top:18px;border:0;background:var(--brand);color:#fff;font-weight:800;font-size:14px;
   padding:11px 20px;border-radius:12px;cursor:pointer;font-family:inherit}
 
+/* ---------- shift login screen ---------- */
+.login{padding:6px 2px 24px;}
+.login-card{background:var(--card);border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow);
+  padding:18px 10px 10px;max-width:440px;margin:8px auto;}
+.login-fac{font-size:14px;font-weight:800;color:var(--brand-blue);margin:0 10px;}
+.login-card h2{margin:2px 10px 2px;font-size:22px;font-weight:800;}
+.login-hint{margin:0 10px 12px;font-size:12.5px;color:var(--ink-soft);}
+
 /* ---------- login sheet ---------- */
 .sheet-bg{position:fixed;inset:0;background:rgba(30,26,20,.38);z-index:40;display:none;}
 .sheet-bg.on{display:block}
@@ -177,6 +185,38 @@ tbody tr.me .namecol{color:var(--brand)}
 .namelist .av{width:30px;height:30px;border-radius:9px;background:#e7e2d9;color:var(--ink-soft);display:grid;place-items:center;font-weight:800;font-size:13px;flex:0 0 auto}
 .namelist button.sel .av{background:var(--brand);color:#fff}
 @media (prefers-reduced-motion:reduce){.sheet{transition:none}.tile{transition:none}}
+/* ===== 目安箱（型B・内蔵） ===== */
+#screen-omeyasu .owrap{max-width:440px;margin:0 auto;padding:16px;}
+#screen-omeyasu .ocard{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:14px;box-shadow:var(--shadow);}
+#screen-omeyasu .osafe{border:1px solid #cfe8d8;background:#f2fbf6;}
+#screen-omeyasu .osafe .olead{font-size:15px;font-weight:800;color:#1e824c;margin-bottom:6px;}
+#screen-omeyasu .osafe .obody{font-size:13px;line-height:1.8;color:var(--ink);}
+#screen-omeyasu .osafe .obody b{color:#1e824c;}
+#screen-omeyasu .oinfo{border:1px solid #dfe6f5;background:#f4f7ff;}
+#screen-omeyasu .oinfo .oilead{font-size:14px;font-weight:800;color:var(--brand-blue);margin-bottom:6px;}
+#screen-omeyasu .oinfo .oibody{font-size:13px;line-height:1.8;color:var(--ink);}
+#screen-omeyasu .oinfo .oibody b{color:var(--brand-blue);}
+#screen-omeyasu .otabs{display:flex;gap:8px;margin-bottom:14px;}
+#screen-omeyasu .otabs button{flex:1;padding:12px;border:1px solid var(--line);background:#fff;color:var(--ink-soft);border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;}
+#screen-omeyasu .otabs button.on{background:var(--brand-blue);color:#fff;border-color:var(--brand-blue);}
+#screen-omeyasu label{display:block;font-size:13px;font-weight:700;margin:0 0 6px;}
+#screen-omeyasu select,#screen-omeyasu textarea,#screen-omeyasu input[type=text]{width:100%;padding:12px;border:1px solid var(--line);border-radius:10px;font-size:15px;font-family:inherit;background:#fff;color:var(--ink);}
+#screen-omeyasu textarea{min-height:140px;resize:vertical;line-height:1.6;}
+#screen-omeyasu .ofield{margin-bottom:14px;}
+#screen-omeyasu .obtn{width:100%;padding:14px;border:none;border-radius:12px;background:var(--brand-blue);color:#fff;font-size:16px;font-weight:800;cursor:pointer;font-family:inherit;}
+#screen-omeyasu .obtn:active{background:var(--brand-blue-d);}
+#screen-omeyasu .obtn[disabled]{opacity:.5;}
+#screen-omeyasu .omsg{font-size:13px;margin-top:10px;min-height:18px;}
+#screen-omeyasu .omsg.err{color:#c0392b;}
+#screen-omeyasu .omsg.ok{color:#1e824c;}
+#screen-omeyasu .ohidden{display:none;}
+#screen-omeyasu .ocode-box{text-align:center;padding:18px;}
+#screen-omeyasu .ocode{font-size:26px;font-weight:800;letter-spacing:2px;color:var(--brand-blue);margin:8px 0;}
+#screen-omeyasu .ocode-note{font-size:13px;color:var(--ink-soft);line-height:1.7;}
+#screen-omeyasu .ocopy{margin-top:10px;padding:10px 16px;border:1px solid var(--brand-blue);background:#fff;color:var(--brand-blue);border-radius:10px;font-weight:800;cursor:pointer;font-family:inherit;}
+#screen-omeyasu .oresult{border-left:4px solid var(--brand-blue);padding:10px 14px;background:#f5f8ff;border-radius:8px;margin-top:12px;}
+#screen-omeyasu .oresult .orow{font-size:14px;margin:4px 0;}
+#screen-omeyasu .oresult .orow b{display:inline-block;min-width:70px;color:var(--ink-soft);font-weight:700;}
 </style>
 </head>
 <body>
@@ -184,28 +224,86 @@ tbody tr.me .namecol{color:var(--brand)}
   <header class="topbar">
     <button class="tb-back round" id="backbtn" onclick="goHome()" aria-label="ホームに戻る">‹</button>
     <div class="tb-title" id="brandtxt">職員ダッシュボード</div>
-    <button class="tb-logout" id="logoutbtn" onclick="openSheet()">ログアウト</button>
+    <button class="tb-logout" id="logoutbtn" onclick="logout()">ログアウト</button>
   </header>
-  <button class="userbar" id="userbar" aria-label="ログイン中の職員を切り替える">
-    <div class="ub-av round" id="avatar">—</div>
-    <div class="ub-who"><div class="ub-n" id="who-n">名前を選択</div><div class="ub-p" id="who-p"></div></div>
-    <div class="ub-chev">›</div>
-  </button>
-
   <main>
     <section id="screen-home"></section>
+    <section id="screen-shiftlogin" hidden></section>
     <section id="screen-shift" hidden></section>
     <section id="screen-stub" hidden></section>
+    <section id="screen-omeyasu" hidden>
+      <div class="owrap">
+        <div class="ocard osafe">
+          <div class="olead">🔒 匿名で投稿できます</div>
+          <div class="obody">
+            お名前は表示されません。<b>園長にも同僚にも、誰が書いたかは分かりません。</b><br>
+            投稿内容が人事評価や処遇に使われることもありません。<br>
+            気づいたこと・困っていること・提案など、どうか安心してそのままお書きください。<b>小さなことでも大歓迎です。</b>
+          </div>
+        </div>
+        <div class="ocard oinfo">
+          <div class="oilead">💬 返信の受け取り方</div>
+          <div class="oibody">
+            送信すると、あなた専用の<b>「追跡コード」</b>（例：MB-3F9K2A）が発行されます。<br>
+            お名前の代わりに、このコードが<b>あなたと本部をつなぐ番号</b>です。本部からの返信は、下の「返信を確認する」からこのコードで読めます。<br>
+            <b>控えていないと返信を確認できません。</b>送信後に必ずメモかコピーをしてください。
+          </div>
+        </div>
+        <div class="otabs">
+          <button id="omTabPost" class="on" onclick="omeyasuMode('post')">投稿する</button>
+          <button id="omTabCheck" onclick="omeyasuMode('check')">返信を確認する</button>
+        </div>
+        <div id="omPanePost">
+          <div class="ocard" id="omFormCard">
+            <div class="ofield">
+              <label for="omCat">カテゴリ</label>
+              <select id="omCat">
+                <option>職場環境</option><option>人間関係</option><option>業務・シフト</option>
+                <option>設備・備品</option><option>保育内容</option><option>ハラスメント</option><option>その他</option>
+              </select>
+            </div>
+            <div class="ofield">
+              <label for="omBody">内容（自由記入）</label>
+              <textarea id="omBody" placeholder="気づいたこと・困っていること・提案などをご記入ください。"></textarea>
+            </div>
+            <button class="obtn" id="omSendBtn" onclick="omeyasuSubmit()">送信する</button>
+            <div class="omsg" id="omPostMsg"></div>
+          </div>
+          <div class="ocard ocode-box ohidden" id="omDoneCard">
+            <div style="font-weight:800">投稿を受け付けました</div>
+            <div class="ocode-note" style="margin-top:6px">これがあなた専用の<b>追跡コード</b>です</div>
+            <div class="ocode" id="omCodeText">MB-XXXXXX</div>
+            <div class="ocode-note">
+              名前の代わりに、このコードで<b>あなたと本部がやり取り</b>します。<br>
+              本部からの返信は「返信を確認する」から<b>このコードで確認</b>できます。<br>
+              <b>控えていないと返信を読めなくなります。</b>必ずメモかコピーをしてください。
+            </div>
+            <button class="ocopy" onclick="omeyasuCopy()">コードをコピー</button>
+            <div class="omsg ok" id="omCopyMsg"></div>
+          </div>
+        </div>
+        <div id="omPaneCheck" class="ohidden">
+          <div class="ocard">
+            <div class="ocode-note" style="margin-bottom:12px">
+              投稿したときに発行された<b>追跡コード</b>（例：MB-3F9K2A）を入力すると、本部からの返信を確認できます。<br>
+              コードを控えていない場合は、この画面からは確認できません。恐れ入りますが、もう一度投稿してください。
+            </div>
+            <div class="ofield">
+              <label for="omCodeIn">追跡コードを入力</label>
+              <input type="text" id="omCodeIn" placeholder="例：MB-3F9K2A" autocapitalize="characters">
+            </div>
+            <button class="obtn" id="omCheckBtn" onclick="omeyasuCheck()">確認する</button>
+            <div class="omsg" id="omCheckMsg"></div>
+            <div class="oresult ohidden" id="omResultBox">
+              <div class="orow"><b>状態</b><span id="omRStatus"></span></div>
+              <div class="orow"><b>カテゴリ</b><span id="omRCat"></span></div>
+              <div class="orow"><b>本部返信</b><span id="omRReply"></span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
   </main>
-</div>
-
-<div class="sheet-bg" id="sheetbg" onclick="closeSheet()"></div>
-<div class="sheet" id="sheet">
-  <div class="grab"></div>
-  <div class="stepnote">園を選ぶ → 自分の名前を選ぶ</div>
-  <h3 id="sheet-fac">しおどめ保育園</h3>
-  <p class="hint">自分の名前をえらぶと、ダッシュボードが開きます。本番では最初の1回だけ。次回から端末が記憶します。</p>
-  <div class="namelist" id="namelist"></div>
 </div>
 
 <script>
@@ -3388,7 +3486,7 @@ const DATA = {
  ]
 };
 const staff = DATA.staff, dates = DATA.dates, today = DATA.today;
-let current = 0, curScreen="home", showAllPeriod=false, shiftTab="me";
+let current = null, curScreen="home", showAllPeriod=false, shiftTab="me";
 
 const CAT = {
  "早番":{cls:"cell-early",bg:"--early-bg",ink:"--early-ink",label:"早番"},
@@ -3412,37 +3510,45 @@ const IC={
  doc:'<svg viewBox="0 0 24 24"><path d="M6 3h8l4 4v14a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z"/><path d="M13 3v5h5M8 13h8M8 17h6"/></svg>',
  bot:'<svg viewBox="0 0 24 24"><rect x="4" y="8" width="16" height="11" rx="3"/><path d="M12 8V4M8 13h.01M16 13h.01M9 19l-2 2M15 19l2 2"/></svg>',
  book:'<svg viewBox="0 0 24 24"><path d="M4 5a2 2 0 0 1 2-2h12v16H6a2 2 0 0 0-2 2z"/><path d="M6 3v16"/></svg>',
+ box:'<svg viewBox="0 0 24 24"><path d="M4 13l2-8h12l2 8"/><path d="M4 13h5l1 2h4l1-2h5v6a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1z"/></svg>',
 };
 
-/* login sheet */
-document.getElementById('sheet-fac').textContent=DATA.facility.replace("（サンプル）","");
-const openSheet=()=>{sheetbg.classList.add('on');sheet.classList.add('on');};
-const closeSheet=()=>{sheetbg.classList.remove('on');sheet.classList.remove('on');};
-document.getElementById('userbar').onclick=openSheet;
-function buildNamelist(){
-  const w=document.getElementById('namelist');w.innerHTML="";
-  staff.forEach((s,i)=>{const b=document.createElement('button');if(i===current)b.className="sel";
-    b.innerHTML=`<span class="av round">${initials(s.name)}</span><span>${s.name}</span>`;
-    b.onclick=()=>{current=i;renderWho();buildNamelist();renderHome();renderShift();closeSheet();window.scrollTo({top:0,behavior:'smooth'});};
-    w.appendChild(b);});
+/* シフト管理ログイン（園→名前） */
+function goShiftLogin(){
+  document.getElementById('brandtxt').textContent='シフト管理';
+  renderShiftLogin();
+  show('shiftlogin');
 }
-function renderWho(){const s=staff[current];
-  document.getElementById('avatar').textContent=s?initials(s.name):"—";
-  var sub = s ? ((s.role||"正職員")+"／採用 "+(s.hired||"2021/04/01")) : "";
-  document.getElementById('who-p').textContent=sub;
-  document.getElementById('who-n').textContent=s?s.name:"名前を選択";}
+function renderShiftLogin(){
+  var fac=DATA.facility.replace(/（(デモ|サンプル)）/,'');
+  var names=staff.map(function(s,i){
+    return '<button onclick="pickShift('+i+')"><span class="av round">'+initials(s.name)+'</span><span>'+s.name+'</span></button>';
+  }).join('');
+  document.getElementById('screen-shiftlogin').innerHTML=
+    '<div class="login"><div class="login-card">'+
+      '<div class="login-fac">'+fac+'</div>'+
+      '<h2 class="round">シフト管理</h2>'+
+      '<p class="login-hint">自分の名前を選ぶと、あなたのシフトが開きます。</p>'+
+      '<div class="namelist">'+names+'</div>'+
+    '</div></div>';
+}
+function pickShift(i){current=i;goShift();}
+function logout(){current=null;goHome();}
 
 /* router */
 function show(name){
   curScreen=name;
   document.getElementById('screen-home').hidden=name!=="home";
+  document.getElementById('screen-shiftlogin').hidden=name!=="shiftlogin";
   document.getElementById('screen-shift').hidden=name!=="shift";
   document.getElementById('screen-stub').hidden=name!=="stub";
+  document.getElementById('screen-omeyasu').hidden=name!=="omeyasu";
   document.getElementById('backbtn').classList.toggle('on',name!=="home");
+  document.getElementById('logoutbtn').style.display=(name==="shift")?"":"none";
   window.scrollTo({top:0});
 }
 function goHome(){document.getElementById('brandtxt').textContent='職員ダッシュボード';show("home");}
-function goShift(){document.getElementById('brandtxt').textContent='シフト';renderShift();show("shift");}
+function goShift(){document.getElementById('brandtxt').textContent='シフト管理';renderShift();show("shift");}
 function goStub(title,icon,tint){
   document.getElementById('brandtxt').textContent=title;
   document.getElementById('screen-stub').innerHTML=
@@ -3492,28 +3598,92 @@ function goLink(url,title,icon,tint){
   show("stub");
 }
 
+/* ===== 目安箱（型B・内蔵） ===== */
+/* (1) GASウェブアプリの /exec URL を入れる */
+var OM_GAS_URL="";
+var omLastCode="";
+
+/* (2) 身元フック：ログイン中の園・氏名を返す。ここでしか名前を扱わず、URLには一切出さない */
+function getOmeyasuIdentity(){
+  var g=(typeof gardenName==='function')?gardenName():((typeof DATA!=='undefined'&&DATA.facility)||"");
+  var n=(current!=null && staff[current])?staff[current].name:"";
+  return {garden:g,name:n};
+}
+
+function goOmeyasu(){
+  document.getElementById('brandtxt').textContent='目安箱';
+  document.getElementById('omFormCard').className='ocard';
+  document.getElementById('omDoneCard').className='ocard ocode-box ohidden';
+  var pm=document.getElementById('omPostMsg');pm.textContent='';pm.className='omsg';
+  document.getElementById('omBody').value='';
+  omeyasuMode('post');
+  show('omeyasu');
+}
+function omeyasuMode(mode){
+  var post=(mode==='post');
+  document.getElementById('omTabPost').className=post?'on':'';
+  document.getElementById('omTabCheck').className=post?'':'on';
+  document.getElementById('omPanePost').className=post?'':'ohidden';
+  document.getElementById('omPaneCheck').className=post?'ohidden':'';
+}
+function omeyasuSubmit(){
+  var body=document.getElementById('omBody').value.trim();
+  var msg=document.getElementById('omPostMsg');msg.className='omsg';
+  if(!OM_GAS_URL){msg.className='omsg err';msg.textContent='送信先(OM_GAS_URL)が未設定です。';return;}
+  if(!body){msg.className='omsg err';msg.textContent='内容を入力してください。';return;}
+  var id=getOmeyasuIdentity();
+  var btn=document.getElementById('omSendBtn');btn.disabled=true;msg.textContent='送信中…';
+  var payload={category:document.getElementById('omCat').value,body:body,garden:id.garden||'',name:id.name||''};
+  fetch(OM_GAS_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(payload)})
+    .then(function(r){return r.json();})
+    .then(function(res){
+      btn.disabled=false;
+      if(res&&res.ok){
+        omLastCode=res.code;
+        document.getElementById('omCodeText').textContent=res.code;
+        document.getElementById('omFormCard').className='ocard ohidden';
+        document.getElementById('omDoneCard').className='ocard ocode-box';
+      }else{msg.className='omsg err';msg.textContent='送信に失敗しました。時間をおいて再度お試しください。';}
+    })
+    .catch(function(){btn.disabled=false;msg.className='omsg err';msg.textContent='通信エラーが発生しました。';});
+}
+function omeyasuCopy(){
+  var cm=document.getElementById('omCopyMsg');
+  if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(omLastCode).then(function(){cm.textContent='コピーしました。';});}
+  else{cm.textContent=omLastCode;}
+}
+function omeyasuCheck(){
+  var code=document.getElementById('omCodeIn').value.trim();
+  var msg=document.getElementById('omCheckMsg');var box=document.getElementById('omResultBox');
+  msg.className='omsg';box.className='oresult ohidden';
+  if(!OM_GAS_URL){msg.className='omsg err';msg.textContent='送信先(OM_GAS_URL)が未設定です。';return;}
+  if(!code){msg.className='omsg err';msg.textContent='コードを入力してください。';return;}
+  var btn=document.getElementById('omCheckBtn');btn.disabled=true;msg.textContent='確認中…';
+  var url=OM_GAS_URL+'?code='+encodeURIComponent(code)+'&t='+Date.now();
+  fetch(url).then(function(r){return r.json();}).then(function(res){
+    btn.disabled=false;
+    if(res&&res.ok){msg.textContent='';
+      document.getElementById('omRStatus').textContent=res.status||'未対応';
+      document.getElementById('omRCat').textContent=res.category||'—';
+      document.getElementById('omRReply').textContent=res.reply?res.reply:'（まだ返信はありません）';
+      box.className='oresult';
+    }else if(res&&res.error==='not_found'){msg.className='omsg err';msg.textContent='このコードの投稿が見つかりませんでした。';}
+    else{msg.className='omsg err';msg.textContent='確認に失敗しました。';}
+  }).catch(function(){btn.disabled=false;msg.className='omsg err';msg.textContent='通信エラーが発生しました。';});
+}
+
 /* HOME */
 const MENU=[
- {t:"シフト管理",d:"今週のシフトと園の予定",ic:"shift",tint:"i-mid",go:()=>{if(LINKS.shift){window.open(LINKS.shift,'_blank','noopener');}else{goShift();}},flag:"NEW"},
+ {t:"シフト管理",d:"今週のシフトと園の予定",ic:"shift",tint:"i-mid",go:()=>{if(LINKS.shift){window.open(LINKS.shift,'_blank','noopener');}else{goShiftLogin();}},flag:"NEW"},
  {t:"有給チェッカー",d:"有給の残り日数をチェック",ic:"uq",tint:"i-early",go:()=>goLink(uqUrl(),"有給チェッカー","uq","i-early")},
  {t:"お知らせ",d:"本部・園からのお知らせ",ic:"news",tint:"i-late",go:()=>goStub("お知らせ","news","i-late")},
  {t:"カレンダー",d:"行事・園の予定",ic:"cal",tint:"i-brand",go:()=>goStub("カレンダー","cal","i-brand")},
  {t:"規約・マニュアル",d:"就業規則・各種マニュアル",ic:"doc",tint:"i-slate",go:()=>goStub("規約・マニュアル","doc","i-slate")},
  {t:"ドメボット",d:"チャットで質問・相談",ic:"bot",tint:"i-rose",go:()=>goLink(domeUrl(),"ドメボット","bot","i-rose")},
+ {t:"目安箱",d:"匿名で本部に届ける",ic:"box",tint:"i-mid",go:()=>goOmeyasu(),flag:"NEW"},
  {t:"コーポレートブック",d:"会社案内・理念ブック",ic:"book",tint:"i-gold",go:()=>goStub("コーポレートブック","book","i-gold")},
 ];
 function renderHome(){
-  const s=staff[current];
-  const map={};s.shifts.forEach(x=>map[x.iso]=x);
-  const evd=dates.find(d=>d.iso===today)||{};
-  const t=map[today],cat=t?stateCat(t):"公休",c=CAT[cat];
-  const working=t&&(t.state==="work"||t.state==="training");
-  let val,tm="";
-  if(working){val=t.code;tm=t.time?`<span class="tm">${t.time}</span>`:"";}
-  else if(t&&t.state==="leave")val="有休";else val="お休み";
-  const ev=evd.event?`<div class="ev">📌 きょうの園の予定 ・ ${evd.event}</div>`:"";
-  const first=(s.name||"").split(" ")[0];
-
   const tiles=MENU.map(function(m,i){
      var flag=m.flag?'<span class="flag">'+m.flag+'</span>':'';
      return '<button class="tile" onclick="MENU['+i+'].go()">'+flag+
@@ -3604,7 +3774,7 @@ function allHTML(){
 }
 
 /* boot */
-renderWho();buildNamelist();renderHome();goHome();
+renderHome();goHome();
 </script>
 </body>
 </html>
