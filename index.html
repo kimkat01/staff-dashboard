@@ -227,7 +227,7 @@ tbody tr.me .namecol{color:var(--brand)}
 #screen-referral .rident{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:13px;color:var(--ink-soft);background:#f6f8ff;border:1px solid #dfe6f5;border-radius:10px;padding:10px 12px;margin-bottom:14px;}
 #screen-referral .rident b{color:var(--ink);}
 #screen-referral label{display:block;font-size:13px;font-weight:700;margin:0 0 6px;}
-#screen-referral input[type=text],#screen-referral textarea{width:100%;padding:12px;border:1px solid var(--line);border-radius:10px;font-size:15px;font-family:inherit;background:#fff;color:var(--ink);}
+#screen-referral input[type=text],#screen-referral textarea,#screen-referral select{width:100%;padding:12px;border:1px solid var(--line);border-radius:10px;font-size:15px;font-family:inherit;background:#fff;color:var(--ink);}
 #screen-referral textarea{min-height:80px;resize:vertical;line-height:1.6;}
 #screen-referral .rfield{margin-bottom:14px;}
 #screen-referral .rreq{color:#c0392b;font-size:12px;font-weight:700;margin-left:4px;}
@@ -327,8 +327,10 @@ tbody tr.me .namecol{color:var(--brand)}
         <div class="rcard rintro">
           <div class="rlead">🤝 職員紹介制度について</div>
           <div class="rbody" id="rfIntroBody">
-            【ここに制度の案内（謝礼・条件など）が入ります】<br>
-            ※この文面は後ほど差し込みます。一緒に働きたい方がいたら、下のフォームからご紹介ください。
+            一緒に働きたい方（ご友人・元同僚・ご家族など）がいたら、ぜひご紹介ください。<br>
+            ご紹介いただいた方が入職し、一定期間ご勤務された場合、ご紹介くださった職員へ<b>謝礼（○○）</b>をお渡しします。<br>
+            <b>ご紹介の流れ：</b>下のフォームで送信 → 担当より候補者の方へご連絡 → 面談・見学 → 入職。<br>
+            ※連絡先は選考のご連絡にのみ使用します。<b>必ずご本人の同意を得たうえで</b>ご記入ください。
           </div>
         </div>
 
@@ -349,6 +351,20 @@ tbody tr.me .namecol{color:var(--brand)}
           <div class="rfield">
             <label for="rfContact">ご紹介する方の連絡先（電話またはメール）<span class="rreq">必須</span></label>
             <input type="text" id="rfContact" placeholder="例：090-1234-5678／taro@example.com">
+          </div>
+          <div class="rfield">
+            <label for="rfJob">職種<span class="rreq">必須</span></label>
+            <select id="rfJob">
+              <option value="">選択してください</option>
+              <option>保育士</option><option>栄養士</option><option>調理師</option><option>保育補助</option>
+            </select>
+          </div>
+          <div class="rfield">
+            <label for="rfEmp">雇用形態<span class="rreq">必須</span></label>
+            <select id="rfEmp">
+              <option value="">選択してください</option>
+              <option>正規職員</option><option>パート</option>
+            </select>
           </div>
           <div class="rfield">
             <label for="rfRelation">あなたとの間柄</label>
@@ -3761,6 +3777,8 @@ function goReferral(){
   document.getElementById('rfName').value=id.name||'';
   document.getElementById('rfCandName').value='';
   document.getElementById('rfContact').value='';
+  document.getElementById('rfJob').value='';
+  document.getElementById('rfEmp').value='';
   document.getElementById('rfRelation').value='';
   document.getElementById('rfWhen').value='';
   document.getElementById('rfGarden').value='';
@@ -3775,15 +3793,19 @@ function referralSubmit(){
   var name=document.getElementById('rfName').value.trim();
   var cand=document.getElementById('rfCandName').value.trim();
   var contact=document.getElementById('rfContact').value.trim();
+  var job=document.getElementById('rfJob').value;
+  var emp=document.getElementById('rfEmp').value;
   var consent=document.getElementById('rfConsent').checked;
   var m=document.getElementById('rfMsg');m.className='rmsg';
   if(!name){m.className='rmsg err';m.textContent='あなたのお名前を入力してください。';return;}
   if(!cand){m.className='rmsg err';m.textContent='ご紹介する方のお名前を入力してください。';return;}
   if(!contact){m.className='rmsg err';m.textContent='ご紹介する方の連絡先を入力してください。';return;}
+  if(!job){m.className='rmsg err';m.textContent='職種を選択してください。';return;}
+  if(!emp){m.className='rmsg err';m.textContent='雇用形態を選択してください。';return;}
   if(!consent){m.className='rmsg err';m.textContent='ご本人の同意についてのチェックを入れてください。';return;}
   if(!RF_SUBMIT_URL){m.className='rmsg ok';m.textContent='入力内容はOKです。現在このフォームは受付準備中です（送信先の設定待ち）。設定後に送信できるようになります。';return;}
   var id=getOmeyasuIdentity();
-  var payload={referrerName:name,referrerGarden:id.garden||'',candidateName:cand,candidateContact:contact,relation:document.getElementById('rfRelation').value.trim(),availableFrom:document.getElementById('rfWhen').value.trim(),preferredGarden:document.getElementById('rfGarden').value.trim(),note:document.getElementById('rfNote').value.trim(),consent:true};
+  var payload={referrerName:name,referrerGarden:id.garden||'',candidateName:cand,candidateContact:contact,jobType:job,employmentType:emp,relation:document.getElementById('rfRelation').value.trim(),availableFrom:document.getElementById('rfWhen').value.trim(),preferredGarden:document.getElementById('rfGarden').value.trim(),note:document.getElementById('rfNote').value.trim(),consent:true};
   var btn=document.getElementById('rfSendBtn');btn.disabled=true;m.textContent='送信中…';
   fetch(RF_SUBMIT_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(payload)})
     .then(function(r){return r.json();})
