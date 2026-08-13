@@ -1,0 +1,3780 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>職員ダッシュボード｜しおどめグループ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@500;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#2b2a28; --ink-soft:#6f6a62; --line:#e7e2d9; --paper:#f4f1ec; --card:#ffffff;
+  --brand:#1f7a6b; --brand-soft:#e2f0ec;
+  --brand-blue:#4169e2; --brand-blue-d:#3355c6;
+  --early:#e0863a; --early-bg:#fbe9d2; --early-ink:#8f5311;
+  --mid:#2e9384;   --mid-bg:#d9efe9;   --mid-ink:#1b5c53;
+  --late:#6a73c2;  --late-bg:#e3e4f6;  --late-ink:#3c4590;
+  --train:#7c8698; --train-bg:#e7e9ed; --train-ink:#4b5462;
+  --leave:#d1738c; --leave-bg:#f7e0e7; --leave-ink:#95394f;
+  --off:#b8b0a3;   --off-bg:#efece5;   --off-ink:#8c8477;
+  --gold:#c69a3e;  --gold-bg:#f4ead0;  --gold-ink:#856019;
+  --shadow:0 1px 2px rgba(40,34,20,.05),0 6px 20px rgba(40,34,20,.06);
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{font-family:"Hiragino Kaku Gothic ProN","Hiragino Sans","Yu Gothic",YuGothic,"Noto Sans JP",sans-serif;
+  color:var(--ink);background:var(--paper);-webkit-font-smoothing:antialiased;line-height:1.55;}
+.round{font-family:"M PLUS Rounded 1c",sans-serif;}
+.wrap{max-width:440px;margin:0 auto;min-height:100vh;background:var(--paper);padding:0 0 40px;position:relative;}
+
+header.topbar{position:sticky;top:0;z-index:20;background:#2A8CF4;color:#fff;
+  display:flex;align-items:center;gap:10px;
+  padding:calc(env(safe-area-inset-top,0px) + 15px) 16px 15px;}
+.tb-back{border:0;background:transparent;color:#fff;font-size:26px;line-height:1;cursor:pointer;
+  width:30px;height:30px;margin:-6px 2px -6px -6px;border-radius:9px;display:none;flex:0 0 auto;}
+.tb-back.on{display:grid;place-items:center}
+.tb-title{flex:1;min-width:0;font-size:19px;font-weight:800;color:#fff;letter-spacing:.01em;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.tb-logout{flex:0 0 auto;border:1.5px solid rgba(255,255,255,.75);background:transparent;color:#fff;
+  font-size:12.5px;font-weight:800;padding:6px 14px;border-radius:999px;cursor:pointer;font-family:inherit;
+  white-space:nowrap;}
+.tb-logout:active{background:rgba(255,255,255,.16)}
+
+.userbar{display:flex;align-items:center;gap:12px;width:100%;
+  background:var(--card);border:0;border-bottom:1px solid var(--line);
+  padding:13px 16px;cursor:pointer;text-align:left;box-shadow:0 2px 8px rgba(40,34,20,.04);}
+.userbar .ub-av{width:44px;height:44px;border-radius:50%;background:var(--brand-blue);color:#fff;
+  display:grid;place-items:center;font-weight:800;font-size:18px;flex:0 0 auto;}
+.userbar .ub-who{flex:1;min-width:0}
+.userbar .ub-n{font-size:17px;font-weight:800;line-height:1.2;}
+.userbar .ub-p{font-size:11.5px;color:var(--ink-soft);margin-top:3px;font-variant-numeric:tabular-nums;}
+.userbar .ub-chev{color:var(--off-ink);font-size:15px;flex:0 0 auto;}
+
+main{padding:16px}
+
+/* ---------- HOME ---------- */
+.greet{margin:2px 2px 2px;}
+.greet .hi{font-size:22px;font-weight:800;letter-spacing:.01em;}
+.greet .sub{font-size:12.5px;color:var(--ink-soft);margin-top:1px;}
+.todaycard{margin-top:12px;background:var(--card);border:1px solid var(--line);border-radius:16px;
+  padding:12px 14px;box-shadow:var(--shadow);display:flex;align-items:center;gap:12px;cursor:pointer;}
+.todaycard .tc-l{flex:1;min-width:0}
+.todaycard .tc-k{font-size:11px;color:var(--ink-soft);font-weight:700}
+.todaycard .tc-v{font-size:16px;font-weight:800;margin-top:1px}
+.todaycard .tc-v .tm{font-size:12.5px;color:var(--ink-soft);font-weight:700;margin-left:6px;font-variant-numeric:tabular-nums}
+.todaycard .tag{font-size:11px;font-weight:800;padding:4px 9px;border-radius:999px;white-space:nowrap}
+.todaycard .go{color:var(--ink-soft);font-size:13px}
+.todaycard .ev{font-size:11px;color:#155e51;font-weight:700;margin-top:3px}
+
+.sec-label{font-size:11.5px;font-weight:800;color:var(--ink-soft);letter-spacing:.06em;margin:22px 2px 11px;}
+.grid{display:flex;flex-wrap:wrap;gap:11px;}
+.tile{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:14px 13px 13px;
+  box-shadow:var(--shadow);cursor:pointer;text-align:left;display:flex;flex-direction:column;gap:9px;
+  border:0;font-family:inherit;min-height:118px;transition:transform .12s ease;position:relative;
+  width:calc(50% - 6px);}
+.tile:active{transform:scale(.975)}
+.tile .ic{width:42px;height:42px;border-radius:13px;display:grid;place-items:center;}
+.tile .ic svg{width:22px;height:22px;stroke-width:2;fill:none;stroke:currentColor;
+  stroke-linecap:round;stroke-linejoin:round;}
+.tile .tt{font-size:15px;font-weight:800;line-height:1.25;}
+.tile .ds{font-size:11.5px;color:var(--ink-soft);line-height:1.4;margin-top:-3px;}
+.tile .flag{position:absolute;top:11px;right:11px;font-size:9.5px;font-weight:800;color:var(--brand);
+  background:var(--brand-soft);padding:3px 7px;border-radius:999px;}
+.i-mid{background:var(--mid-bg);color:var(--mid)} .i-early{background:var(--early-bg);color:var(--early)}
+.i-late{background:var(--late-bg);color:var(--late)} .i-brand{background:var(--brand-soft);color:var(--brand)}
+.i-slate{background:var(--train-bg);color:var(--train)} .i-rose{background:var(--leave-bg);color:var(--leave)}
+.i-gold{background:var(--gold-bg);color:var(--gold)}
+
+.soon{margin-top:20px;background:transparent;border:1px dashed var(--line);border-radius:16px;padding:13px 14px;}
+.soon .k{font-size:11px;font-weight:800;color:var(--brand);}
+.soon .v{font-size:12px;color:var(--ink-soft);margin-top:3px;line-height:1.5}
+
+.foot{margin:22px 4px 0;font-size:11px;color:var(--off-ink);line-height:1.7;}
+.foot b{color:var(--ink-soft)}
+
+/* ---------- SHIFT (from prototype) ---------- */
+.seg{display:flex;gap:4px;margin:0 0 4px;background:#eae6de;border-radius:13px;padding:4px;}
+.seg button{flex:1;border:0;background:transparent;padding:9px 0;border-radius:10px;font-size:13.5px;
+  font-weight:700;color:var(--ink-soft);cursor:pointer;font-family:inherit;}
+.seg button.on{background:var(--card);color:var(--ink);box-shadow:var(--shadow);}
+.sh-label{font-size:11.5px;font-weight:800;color:var(--ink-soft);letter-spacing:.06em;margin:22px 2px 9px;}
+.today2{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:16px 16px 14px;box-shadow:var(--shadow);margin-top:14px;}
+.today2 .eyebrow{display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;}
+.today2 .date{font-size:13px;color:var(--ink-soft);font-weight:700;}
+.today2 .dot{font-size:11px;font-weight:800;padding:3px 9px;border-radius:999px;}
+.today2 .headline{font-size:27px;font-weight:800;margin:2px 0;}
+.today2 .time{font-size:15px;color:var(--ink-soft);font-weight:700;font-variant-numeric:tabular-nums;}
+.today2 .ev{margin-top:10px;font-size:12.5px;background:var(--brand-soft);color:#155e51;border-radius:10px;padding:7px 10px;font-weight:700;}
+.track{margin-top:14px}
+.track .scale{display:flex;justify-content:space-between;font-size:10px;color:var(--off-ink);margin-bottom:4px;font-variant-numeric:tabular-nums;}
+.track .rail{position:relative;height:10px;border-radius:999px;background:linear-gradient(90deg,#fbe9d2,#d9efe9 46%,#e3e4f6);}
+.track .span{position:absolute;top:0;height:10px;border-radius:999px;opacity:.95;}
+.track .cap{font-size:10.5px;color:var(--off-ink);margin-top:5px;text-align:center;}
+.week{display:flex;flex-direction:column;gap:7px;}
+.day{display:flex;align-items:center;gap:12px;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:10px 13px;box-shadow:var(--shadow);}
+.day.now{border-color:var(--brand);box-shadow:0 0 0 2px var(--brand-soft),var(--shadow);}
+.day.out{opacity:.5;background:transparent;box-shadow:none;border-style:dashed;}
+.day .dcol{width:44px;flex:0 0 auto;text-align:center;}
+.day .dcol .d{font-size:18px;font-weight:800;line-height:1.1;}
+.day .dcol .w{font-size:10.5px;color:var(--ink-soft);font-weight:700;}
+.day .dcol .w.sat{color:#3d7fb0}.day .dcol .w.sun{color:#c46}
+.badge{flex:1;min-width:0;display:flex;align-items:center;gap:8px;}
+.pill{font-size:12.5px;font-weight:800;padding:5px 10px;border-radius:9px;white-space:nowrap;}
+.badge .tm{font-size:12px;color:var(--ink-soft);font-weight:700;font-variant-numeric:tabular-nums;}
+.ev2{font-size:10px;color:var(--brand);font-weight:700;margin-top:2px;}
+.mutedrow{font-size:12px;color:var(--off-ink);font-weight:700}
+.more{width:100%;margin-top:12px;border:1px dashed var(--line);background:transparent;border-radius:13px;padding:11px;font-size:13px;font-weight:700;color:var(--ink-soft);cursor:pointer;font-family:inherit;}
+.legend{display:flex;flex-wrap:wrap;gap:6px 12px;margin:2px 2px 12px;}
+.legend span{display:inline-flex;align-items:center;gap:5px;font-size:11px;color:var(--ink-soft);font-weight:700;}
+.legend i{width:11px;height:11px;border-radius:4px;display:inline-block;}
+.gridwrap{border:1px solid var(--line);border-radius:16px;overflow:hidden;background:var(--card);box-shadow:var(--shadow);}
+.gridscroll{overflow-x:auto;-webkit-overflow-scrolling:touch;}
+table.sg{border-collapse:separate;border-spacing:0;font-size:11px;}
+table.sg th,table.sg td{padding:0;}
+table.sg thead th{position:sticky;top:0;background:#f6f3ee;z-index:2;height:34px;min-width:34px;border-bottom:1px solid var(--line);font-weight:800;color:var(--ink-soft);font-variant-numeric:tabular-nums;}
+table.sg thead th .wk{display:block;font-size:9px;font-weight:700;color:var(--off-ink)}
+table.sg thead th.sun,table.sg tbody td.sun{background:#fbf3f3}
+table.sg thead th.now,table.sg tbody td.now{background:var(--brand-soft) !important;}
+table.sg thead th.now{color:var(--brand)}
+.namecol{position:sticky;left:0;z-index:3;background:var(--card);border-right:1px solid var(--line);text-align:left;padding:0 10px !important;min-width:78px;max-width:78px;font-weight:700;font-size:11.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+thead .namecol{z-index:4;background:#f6f3ee;}
+tbody tr{height:32px}
+tbody td{text-align:center;border-bottom:1px solid #f1ede6;border-right:1px solid #f5f1ea;}
+tbody td .c{display:block;height:100%;line-height:32px;font-weight:800;font-size:10px;}
+.cell-early{background:var(--early-bg);color:var(--early-ink)}.cell-mid{background:var(--mid-bg);color:var(--mid-ink)}
+.cell-late{background:var(--late-bg);color:var(--late-ink)}.cell-train{background:var(--train-bg);color:var(--train-ink)}
+.cell-leave{background:var(--leave-bg);color:var(--leave-ink)}.cell-off{color:var(--off);font-weight:700}
+tbody tr.me td{outline:2px solid var(--brand);outline-offset:-2px}
+tbody tr.me .namecol{color:var(--brand)}
+
+/* ---------- STUB ---------- */
+.stub{background:var(--card);border:1px solid var(--line);border-radius:20px;box-shadow:var(--shadow);
+  padding:30px 22px;text-align:center;margin-top:14px;}
+.stub .ic{width:56px;height:56px;border-radius:17px;display:grid;place-items:center;margin:0 auto 14px;}
+.stub .ic svg{width:28px;height:28px;stroke-width:2;fill:none;stroke:currentColor;stroke-linecap:round;stroke-linejoin:round;}
+.stub h2{font-size:19px;font-weight:800;margin:0 0 6px}
+.stub p{font-size:13px;color:var(--ink-soft);margin:0;line-height:1.6}
+.stub .back{margin-top:18px;border:0;background:var(--brand);color:#fff;font-weight:800;font-size:14px;
+  padding:11px 20px;border-radius:12px;cursor:pointer;font-family:inherit}
+
+/* ---------- shift login screen ---------- */
+.login{padding:6px 2px 24px;}
+.login-card{background:var(--card);border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow);
+  padding:18px 10px 10px;max-width:440px;margin:8px auto;}
+.login-fac{font-size:14px;font-weight:800;color:var(--brand-blue);margin:0 10px;}
+.login-card h2{margin:2px 10px 2px;font-size:22px;font-weight:800;}
+.login-hint{margin:0 10px 12px;font-size:12.5px;color:var(--ink-soft);}
+
+/* ---------- login sheet ---------- */
+.sheet-bg{position:fixed;inset:0;background:rgba(30,26,20,.38);z-index:40;display:none;}
+.sheet-bg.on{display:block}
+.sheet{position:fixed;left:0;right:0;bottom:0;z-index:50;max-width:440px;margin:0 auto;background:var(--paper);
+  border-radius:22px 22px 0 0;padding:8px 0 24px;transform:translateY(100%);
+  transition:transform .26s cubic-bezier(.2,.8,.2,1);max-height:80vh;display:flex;flex-direction:column;}
+.sheet.on{transform:translateY(0)}
+.grab{width:38px;height:4px;border-radius:999px;background:#d8d2c7;margin:8px auto 6px;}
+.stepnote{margin:0 20px 8px;font-size:11px;color:var(--brand);font-weight:800}
+.sheet h3{margin:4px 20px 2px;font-size:16px;font-weight:800;}
+.sheet .hint{margin:0 20px 10px;font-size:12px;color:var(--ink-soft);}
+.namelist{overflow-y:auto;padding:0 12px}
+.namelist button{width:100%;text-align:left;border:0;background:transparent;border-radius:12px;padding:12px;
+  font-size:15px;font-weight:700;color:var(--ink);cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:11px;}
+.namelist button:hover{background:#eae6de}
+.namelist button.sel{background:var(--brand-soft);color:#155e51}
+.namelist .av{width:30px;height:30px;border-radius:9px;background:#e7e2d9;color:var(--ink-soft);display:grid;place-items:center;font-weight:800;font-size:13px;flex:0 0 auto}
+.namelist button.sel .av{background:var(--brand);color:#fff}
+@media (prefers-reduced-motion:reduce){.sheet{transition:none}.tile{transition:none}}
+/* ===== 目安箱（型B・内蔵） ===== */
+#screen-omeyasu .owrap{max-width:440px;margin:0 auto;padding:16px;}
+#screen-omeyasu .ocard{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:14px;box-shadow:var(--shadow);}
+#screen-omeyasu .osafe{border:1px solid #cfe8d8;background:#f2fbf6;}
+#screen-omeyasu .osafe .olead{font-size:15px;font-weight:800;color:#1e824c;margin-bottom:6px;}
+#screen-omeyasu .osafe .obody{font-size:13px;line-height:1.8;color:var(--ink);}
+#screen-omeyasu .osafe .obody b{color:#1e824c;}
+#screen-omeyasu .oinfo{border:1px solid #dfe6f5;background:#f4f7ff;}
+#screen-omeyasu .oinfo .oilead{font-size:14px;font-weight:800;color:var(--brand-blue);margin-bottom:6px;}
+#screen-omeyasu .oinfo .oibody{font-size:13px;line-height:1.8;color:var(--ink);}
+#screen-omeyasu .oinfo .oibody b{color:var(--brand-blue);}
+#screen-omeyasu .otabs{display:flex;gap:8px;margin-bottom:14px;}
+#screen-omeyasu .otabs button{flex:1;padding:12px;border:1px solid var(--line);background:#fff;color:var(--ink-soft);border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;}
+#screen-omeyasu .otabs button.on{background:var(--brand-blue);color:#fff;border-color:var(--brand-blue);}
+#screen-omeyasu label{display:block;font-size:13px;font-weight:700;margin:0 0 6px;}
+#screen-omeyasu select,#screen-omeyasu textarea,#screen-omeyasu input[type=text]{width:100%;padding:12px;border:1px solid var(--line);border-radius:10px;font-size:15px;font-family:inherit;background:#fff;color:var(--ink);}
+#screen-omeyasu textarea{min-height:140px;resize:vertical;line-height:1.6;}
+#screen-omeyasu .ofield{margin-bottom:14px;}
+#screen-omeyasu .obtn{width:100%;padding:14px;border:none;border-radius:12px;background:var(--brand-blue);color:#fff;font-size:16px;font-weight:800;cursor:pointer;font-family:inherit;}
+#screen-omeyasu .obtn:active{background:var(--brand-blue-d);}
+#screen-omeyasu .obtn[disabled]{opacity:.5;}
+#screen-omeyasu .omsg{font-size:13px;margin-top:10px;min-height:18px;}
+#screen-omeyasu .omsg.err{color:#c0392b;}
+#screen-omeyasu .omsg.ok{color:#1e824c;}
+#screen-omeyasu .ohidden{display:none;}
+#screen-omeyasu .ocode-box{text-align:center;padding:18px;}
+#screen-omeyasu .ocode{font-size:26px;font-weight:800;letter-spacing:2px;color:var(--brand-blue);margin:8px 0;}
+#screen-omeyasu .ocode-note{font-size:13px;color:var(--ink-soft);line-height:1.7;}
+#screen-omeyasu .ocopy{margin-top:10px;padding:10px 16px;border:1px solid var(--brand-blue);background:#fff;color:var(--brand-blue);border-radius:10px;font-weight:800;cursor:pointer;font-family:inherit;}
+#screen-omeyasu .oresult{border-left:4px solid var(--brand-blue);padding:10px 14px;background:#f5f8ff;border-radius:8px;margin-top:12px;}
+#screen-omeyasu .oresult .orow{font-size:14px;margin:4px 0;}
+#screen-omeyasu .oresult .orow b{display:inline-block;min-width:70px;color:var(--ink-soft);font-weight:700;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="topbar">
+    <button class="tb-back round" id="backbtn" onclick="goHome()" aria-label="ホームに戻る">‹</button>
+    <div class="tb-title" id="brandtxt">職員ダッシュボード</div>
+    <button class="tb-logout" id="logoutbtn" onclick="logout()">ログアウト</button>
+  </header>
+  <main>
+    <section id="screen-home"></section>
+    <section id="screen-shiftlogin" hidden></section>
+    <section id="screen-shift" hidden></section>
+    <section id="screen-stub" hidden></section>
+    <section id="screen-omeyasu" hidden>
+      <div class="owrap">
+        <div class="ocard osafe">
+          <div class="olead">🔒 匿名で投稿できます</div>
+          <div class="obody">
+            お名前は表示されません。<b>園長にも同僚にも、誰が書いたかは分かりません。</b><br>
+            投稿内容が人事評価や処遇に使われることもありません。<br>
+            気づいたこと・困っていること・提案など、どうか安心してそのままお書きください。<b>小さなことでも大歓迎です。</b>
+          </div>
+        </div>
+        <div class="ocard oinfo">
+          <div class="oilead">💬 返信の受け取り方</div>
+          <div class="oibody">
+            送信すると、あなた専用の<b>「シークレットコード」</b>（例：MB-3F9K2A）が発行されます。<br>
+            お名前の代わりに、このコードが<b>あなたと本部をつなぐ番号</b>です。本部からの返信は、下の「返信を確認する」からこのコードで読めます。<br>
+            <b>控えていないと返信を確認できません。</b>送信後に必ずメモかコピーをしてください。
+          </div>
+        </div>
+        <div class="otabs">
+          <button id="omTabPost" class="on" onclick="omeyasuMode('post')">投稿する</button>
+          <button id="omTabCheck" onclick="omeyasuMode('check')">返信を確認する</button>
+        </div>
+        <div id="omPanePost">
+          <div class="ocard" id="omFormCard">
+            <div class="ofield">
+              <label for="omCat">カテゴリ</label>
+              <select id="omCat">
+                <option>職場環境</option><option>人間関係</option><option>業務・シフト</option>
+                <option>設備・備品</option><option>保育内容</option><option>ハラスメント</option><option>その他</option>
+              </select>
+            </div>
+            <div class="ofield">
+              <label for="omBody">内容（自由記入）</label>
+              <textarea id="omBody" placeholder="気づいたこと・困っていること・提案などをご記入ください。"></textarea>
+            </div>
+            <button class="obtn" id="omSendBtn" onclick="omeyasuSubmit()">送信する</button>
+            <div class="omsg" id="omPostMsg"></div>
+          </div>
+          <div class="ocard ocode-box ohidden" id="omDoneCard">
+            <div style="font-weight:800">投稿を受け付けました</div>
+            <div class="ocode-note" style="margin-top:6px">これがあなた専用の<b>シークレットコード</b>です</div>
+            <div class="ocode" id="omCodeText">MB-XXXXXX</div>
+            <div class="ocode-note">
+              名前の代わりに、このコードで<b>あなたと本部がやり取り</b>します。<br>
+              本部からの返信は「返信を確認する」から<b>このコードで確認</b>できます。<br>
+              <b>控えていないと返信を読めなくなります。</b>必ずメモかコピーをしてください。
+            </div>
+            <button class="ocopy" onclick="omeyasuCopy()">コードをコピー</button>
+            <div class="omsg ok" id="omCopyMsg"></div>
+          </div>
+        </div>
+        <div id="omPaneCheck" class="ohidden">
+          <div class="ocard">
+            <div class="ocode-note" style="margin-bottom:12px">
+              投稿したときに発行された<b>シークレットコード</b>（例：MB-3F9K2A）を入力すると、本部からの返信を確認できます。<br>
+              コードを控えていない場合は、この画面からは確認できません。恐れ入りますが、もう一度投稿してください。
+            </div>
+            <div class="ofield">
+              <label for="omCodeIn">シークレットコードを入力</label>
+              <input type="text" id="omCodeIn" placeholder="例：MB-3F9K2A" autocapitalize="characters">
+            </div>
+            <button class="obtn" id="omCheckBtn" onclick="omeyasuCheck()">確認する</button>
+            <div class="omsg" id="omCheckMsg"></div>
+            <div class="oresult ohidden" id="omResultBox">
+              <div class="orow"><b>状態</b><span id="omRStatus"></span></div>
+              <div class="orow"><b>カテゴリ</b><span id="omRCat"></span></div>
+              <div class="orow"><b>本部返信</b><span id="omRReply"></span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<script>
+const DATA = {
+ "facility": "しおどめ保育園（デモ）",
+ "period": {
+  "label": "2026年07月度",
+  "start": "7/16",
+  "end": "8/15"
+ },
+ "today": "2026-08-11",
+ "dates": [
+  {
+   "col": 2,
+   "d": 16,
+   "month": 7,
+   "md": "7/16",
+   "dow": "木",
+   "iso": "2026-07-16",
+   "event": ""
+  },
+  {
+   "col": 3,
+   "d": 17,
+   "month": 7,
+   "md": "7/17",
+   "dow": "金",
+   "iso": "2026-07-17",
+   "event": "食育「バナナ🍌」"
+  },
+  {
+   "col": 4,
+   "d": 18,
+   "month": 7,
+   "md": "7/18",
+   "dow": "土",
+   "iso": "2026-07-18",
+   "event": ""
+  },
+  {
+   "col": 5,
+   "d": 19,
+   "month": 7,
+   "md": "7/19",
+   "dow": "日",
+   "iso": "2026-07-19",
+   "event": "休園"
+  },
+  {
+   "col": 6,
+   "d": 20,
+   "month": 7,
+   "md": "7/20",
+   "dow": "月",
+   "iso": "2026-07-20",
+   "event": "休園"
+  },
+  {
+   "col": 7,
+   "d": 21,
+   "month": 7,
+   "md": "7/21",
+   "dow": "火",
+   "iso": "2026-07-21",
+   "event": ""
+  },
+  {
+   "col": 8,
+   "d": 22,
+   "month": 7,
+   "md": "7/22",
+   "dow": "水",
+   "iso": "2026-07-22",
+   "event": ""
+  },
+  {
+   "col": 9,
+   "d": 23,
+   "month": 7,
+   "md": "7/23",
+   "dow": "木",
+   "iso": "2026-07-23",
+   "event": ""
+  },
+  {
+   "col": 10,
+   "d": 24,
+   "month": 7,
+   "md": "7/24",
+   "dow": "金",
+   "iso": "2026-07-24",
+   "event": "夏祭り👘"
+  },
+  {
+   "col": 11,
+   "d": 25,
+   "month": 7,
+   "md": "7/25",
+   "dow": "土",
+   "iso": "2026-07-25",
+   "event": ""
+  },
+  {
+   "col": 12,
+   "d": 26,
+   "month": 7,
+   "md": "7/26",
+   "dow": "日",
+   "iso": "2026-07-26",
+   "event": "休園"
+  },
+  {
+   "col": 13,
+   "d": 27,
+   "month": 7,
+   "md": "7/27",
+   "dow": "月",
+   "iso": "2026-07-27",
+   "event": ""
+  },
+  {
+   "col": 14,
+   "d": 28,
+   "month": 7,
+   "md": "7/28",
+   "dow": "火",
+   "iso": "2026-07-28",
+   "event": ""
+  },
+  {
+   "col": 15,
+   "d": 29,
+   "month": 7,
+   "md": "7/29",
+   "dow": "水",
+   "iso": "2026-07-29",
+   "event": ""
+  },
+  {
+   "col": 16,
+   "d": 30,
+   "month": 7,
+   "md": "7/30",
+   "dow": "木",
+   "iso": "2026-07-30",
+   "event": "ぴよぴよ教室🐣"
+  },
+  {
+   "col": 17,
+   "d": 31,
+   "month": 7,
+   "md": "7/31",
+   "dow": "金",
+   "iso": "2026-07-31",
+   "event": "7月お誕生日会🎂"
+  },
+  {
+   "col": 18,
+   "d": 1,
+   "month": 8,
+   "md": "8/1",
+   "dow": "土",
+   "iso": "2026-08-01",
+   "event": ""
+  },
+  {
+   "col": 19,
+   "d": 2,
+   "month": 8,
+   "md": "8/2",
+   "dow": "日",
+   "iso": "2026-08-02",
+   "event": "休園"
+  },
+  {
+   "col": 20,
+   "d": 3,
+   "month": 8,
+   "md": "8/3",
+   "dow": "月",
+   "iso": "2026-08-03",
+   "event": ""
+  },
+  {
+   "col": 21,
+   "d": 4,
+   "month": 8,
+   "md": "8/4",
+   "dow": "火",
+   "iso": "2026-08-04",
+   "event": "避難訓練⛑"
+  },
+  {
+   "col": 22,
+   "d": 5,
+   "month": 8,
+   "md": "8/5",
+   "dow": "水",
+   "iso": "2026-08-05",
+   "event": "写真展示スタート／発達相談日"
+  },
+  {
+   "col": 23,
+   "d": 6,
+   "month": 8,
+   "md": "8/6",
+   "dow": "木",
+   "iso": "2026-08-06",
+   "event": ""
+  },
+  {
+   "col": 24,
+   "d": 7,
+   "month": 8,
+   "md": "8/7",
+   "dow": "金",
+   "iso": "2026-08-07",
+   "event": ""
+  },
+  {
+   "col": 25,
+   "d": 8,
+   "month": 8,
+   "md": "8/8",
+   "dow": "土",
+   "iso": "2026-08-08",
+   "event": ""
+  },
+  {
+   "col": 26,
+   "d": 9,
+   "month": 8,
+   "md": "8/9",
+   "dow": "日",
+   "iso": "2026-08-09",
+   "event": "休園"
+  },
+  {
+   "col": 27,
+   "d": 10,
+   "month": 8,
+   "md": "8/10",
+   "dow": "月",
+   "iso": "2026-08-10",
+   "event": "協力日"
+  },
+  {
+   "col": 28,
+   "d": 11,
+   "month": 8,
+   "md": "8/11",
+   "dow": "火",
+   "iso": "2026-08-11",
+   "event": "休園"
+  },
+  {
+   "col": 29,
+   "d": 12,
+   "month": 8,
+   "md": "8/12",
+   "dow": "水",
+   "iso": "2026-08-12",
+   "event": "協力日"
+  },
+  {
+   "col": 30,
+   "d": 13,
+   "month": 8,
+   "md": "8/13",
+   "dow": "木",
+   "iso": "2026-08-13",
+   "event": "協力日"
+  },
+  {
+   "col": 31,
+   "d": 14,
+   "month": 8,
+   "md": "8/14",
+   "dow": "金",
+   "iso": "2026-08-14",
+   "event": "協力日"
+  },
+  {
+   "col": 32,
+   "d": 15,
+   "month": 8,
+   "md": "8/15",
+   "dow": "土",
+   "iso": "2026-08-15",
+   "event": ""
+  }
+ ],
+ "staff": [
+  {
+   "name": "佐藤 花子",
+   "shifts": [
+    {
+     "iso": "2026-07-16",
+     "state": "work",
+     "cat": "早番",
+     "code": "早番C",
+     "time": "7:30-16:30"
+    },
+    {
+     "iso": "2026-07-17",
+     "state": "work",
+     "cat": "早番",
+     "code": "早番C",
+     "time": "7:30-16:30"
+    },
+    {
+     "iso": "2026-07-18",
+     "state": "off",
+     "cat": "公休",
+     "code": "",
+     "time": ""
+    },
+    {
+     "iso": "2026-07-19",
+     "state": "off",
+     "cat": "公休",
+     "code": "",
+     "time": ""
+    },
+    {
+     "iso": "2026-07-20",
+     "state": "off",
+     "cat": "公休",
+     "code": "",
+     "time": ""
+    },
+    {
+     "iso": "2026-07-21",
+     "state": "work",
+     "cat": "早番",
+     "code": "早番C",
+     "time": "7:30-16:30"
+    },
+    {
+     "iso": "2026-07-22",
+     "state": "leave",
+     "cat": "有給",
+     "code": "有休",
+     "time": ""
+    },
+    {
+     "iso": "2026-07-23",
+     "state": "work",
+     "cat": "早番",
+     "code": "早番C",
+     "time": "7:30-16:30"
+    },
+    {
+     "iso": "2026-07-24",
+     "state": "work",
+     "cat": "中番",
+     "code": "日勤９",
+     "time": "9:00-18:00"
+    },
+    {
+     "iso": "2026-07-25",
+     "state": "off",
+     "cat": "公休",
+     "code": "",
+     "time": ""
+    },
+    {
+     "iso": "2026-07-26",
+     "state": "off",
+     "cat": "公休",
+     "code": "",
+     "time": ""
+    },
+    {
+     "iso": "2026-07-27",
+     "state": "work",
+     "cat": "早番",
+     "code": "早番C",
+     "time": "7:30-16:30"
+    },
+    {
+     "iso": "2026-07-28",
+     "state": "work",
+     "cat": "中番",
+     "code": "日勤９",
+     "time": "9:00-18:00"
+    },
+    {
+     "iso": "2026-07-29",
+     "state": "work",
+     "cat": "遅番",
+     "code": "遅番B",
+     "time": "9:45-18:45"
+    },
+    {
+     "iso": "2026-07-30",
+     "state": "work",
+     "cat": "早番",
+     "code": "早番C",
+     "time": "7:30-16:30"
+    },
+    {
+     "iso": "2026-07-31",
+     "state": "work",
+     "cat": "早番",
+     "code": "早番C",
+     "time": "7:30-16:30"
+    },
+    {
+     "iso": "2026-08-01",
+     "state": "off",
+     "cat": "公休",
+     "code": "",
+     "time": ""
+    },
+    {
+     "iso": "2026-08-02",
+     "state": "off",
+     "cat": "公休",
+     "code": "",
+     "time": ""
+    },
+    {
+     "iso": "2026-08-03",
+     "state": "work",
+     "cat": "早番",
+     "code": "早番C",
+     "time": "7:30-16:30"
+    },
+    {
+     "iso": "2026-08-04",
+     "state": "work",
+     "cat": "早番",
+     "code": "早番C",
+     "time": "7:30-16:30"
+    },
+    {
+     "iso": "2026-08-05",
+     "state": "work",
+     "cat": "早番",
+     "code": "早番C",
+     "time": "7:30-16:30"
+    },
+    {
+     "iso": "2026-08-06",
+     "state": "work",
+     "cat": "中番",
+     "code": "土振",
+     "time": "8:00-17:00"
+    },
+    {
+     "iso": "2026-08-07",
+     "state": "work",
+     "cat": "中番",
+     "code": "日勤９",
+     "time": "9:00-18:00"
+    },
+    {
+     "iso": "2026-08-08",
+     "state": "work",
+     "cat": "早番",
+     "code": "土曜番",
+     "time": "8:00-17:00"
+    },
+    {
+     "iso": "2026-08-09",
+     "state": "off",
+     "cat": "公休",
+     "code": "",
+     "time": ""
+    },
+    {
+     "iso": "2026-08-10",
+     "state": "work",
+     "cat": "中番",
+     "code": "土振",
+     "time": "8:00-17:00"
+    },
+    {
+     "iso": "2026-08-11",
+     "state": "off",
+     "cat": "公休",
+     "code": "",
+     "time": ""
+    },
+    {
+     "iso": "2026-08-12",
+     "state": "work",
+     "cat": "中番",
+     "code": "８H",
+     "time": "8:30-16:30"
+    },
+    {
+     "iso": "2026-08-13",
+     "state": "leave",
+     "cat": "有給",
+     "code": "有休",
+     "time": ""
+    },
+    {
+     "iso": "2026-08-14",
+     "state": "leave",
+     "cat": "有給",
+     "code": "有休",
+     "time": ""
+    },
+    {
+     "iso": "2026-08-15",
+     "state": "work",
+     "cat": "早番",
+     "code": "土曜番",
+     "time": "8:00-17:00"
+    }
+   ]
+  },
+  {
+   "name": "鈴木 美咲",
+   "shifts": [
+    {
+     "iso": "2026-07-16",
+     "state": "work",
+     "cat": "中番",
+     "code": "土振",
+     "time": "8:00-17:00"
+    },
+    {
+     "iso": "2026-07-17",
+     "state": "work",
+     "cat": "遅番",
+     "code": "遅番B",
+     "time": "9:45-18:45"
+    },
+    {
+     "iso": "2026-07-18",
+     "state": "work",
+     "cat": "早番",
+     "code": "土曜番",
+     "time": "8:00-17:00"
+    },
+    {
+     "iso": "2026-07-19",
+     "state": "off",
+     "cat": "公休",
+     "code": "",
+     "time": ""
+    },
+    {
+     "iso": "2026-07-20",
+     "state": "off",
+     "cat": "公休",
+     "code": "",
+     "time": ""
+    },
+    {
+     "iso": "2026-07-21",
+     "state": "work",
+     "cat": "遅番",
+     "code": "遅番B",
+     "time": "9:45-18:45"
+    },
+    {
+     "iso": "2026-07-22",
+     "state": "work",
+     "cat": "遅番",
+     "code": "遅番B",
+     "time": "9:45-18:45"
+    },
+    {
+     "iso": "2026-07-23",
+     "state": "work",
+     "cat": "中番",
+     "code": "日勤９",
+     "time": "9:00-18:00"
+    },
+    {
+     "iso": "2026-07-24",
+     "state": "work",
+     "cat": "中番",
+     "code": "日勤B",
+     "time": "8:30-17:30"
+    },
+    {
+     "iso": "2026-07-25",
+     "state": "off",
+     "cat": "公休",
+     "code": "",
+     "time": ""
+    },
+    {
+     "iso": "2026-07-26",
+     "state": "off",
+     "cat": "公休",
+     "code": "",
+     "time": ""
+    },
+    {
+     "iso": "2026-07-27",
+     "state": "work",
+     "cat": "遅番",
+     "code": "遅番B",
+     "time": "9:45-18:45"
+    },
+    {
+     "iso": "2026-07-28",
+     "state": "leave",
+     "cat": "有給",
+     "code": "有休",
+     "time": ""
+    },
+    {
+     "iso": "2026-07-29",
+     "state": "work",
+     "cat": "中番",
+     "code": "日勤９",
+     "time": "9:00-18:00"
+    },
+    {
+     "iso": "2026-07-30",
+     "state": "work",
+     "cat": "遅番",
+     "code": "遅番B",
+     "time": "9:45-18:45"
+    },
+    {
+     "iso": "2026-07-31",
+     "state": "work",
+     "cat": "遅番",
+     "code": "遅番B",
+     "time": "9:45-18:45"
+    },
+    {
+     "iso": "2026-08-01",
+     "state": "off",
+     "cat": "公休",
+     "code": "",
+     "time": ""
+    },
+    {
+     "iso": "2026-08-02",
+     "state": "off",
+     "cat": "公休",
+     "code": "",
+     "time": ""
+    },
+    {
+     "iso": "2026-08-03",
+     "state": "work",
+     "cat": "中番",
+     "code": "日勤９",
+     "time": "9:00-18:00"
+    },
+    {
+     "iso": "2026-08-04",
+     "state": "work",
+     "cat": "遅番",
+     "code": "遅番B",
+     "time": "9:45-18:45"
+    },
+    {
+     "iso": "2026-08-05",
+     "state": "work",
+     "cat": "遅番",
+     "code": "遅番B",
+     "time": "9:45-18:45"
+    },
+    {
+     "iso": "2026-08-06",
+     "state": "work",
+     "cat": "遅番",
+     "code": "遅番B",
+     "time": "9:45-18:45"
+    },
+    {
+     "iso": "2026-08-07",
+     "state": "work",
+     "cat": "遅番",
+     "code": "遅番B",
+     "time": "9:45-18:45"
+    },
+    {
+     "iso": "2026-08-08",
+     "state": "work",
+     "cat": "早番",
+     "code": "土曜番",
+     "time": "8:00-17:00"
+    },
+    {
+     "iso": "2026-08-09",
+     "state": "off",
+     "cat": "公休",
+     "code": "",
+     "time": ""
+    },
+    {
+     "iso": "2026-08-10",
+     "state": "work",
+     "cat": "中番",
+     "code": "８H",
+     "time": "8:30-16:30"
+    },
+    {
+     "iso": "2026-08-11",
+     "state": "off",
+     "cat": "公休",
+     "code": "",
+     "time": ""
+    },
+    {
+     "iso": "2026-08-12",
+     "state": "work",
+     "cat": "中番",
+     "code": "８H",
+     "time": "8:30-16:30"
+    },
+    {
+     "iso": "2026-08-13",
+     "state": "work",
+     "cat": "中番",
+     "code": "土振",
+     "time": "8:00-17:00"
+    },
+    {
+     "iso": "2026-08-14",
+     "state": "work",
+     "cat": "中番",
+     "code": "８H",
+     "time": "8:30-16:30"
+    },
+    {
+     "iso": "2026-08-15",
+     "state": "off",
+     "cat": "公休",
+     "code": "",
+     "time": ""
+    }
+   ]
+  },
+  {
+   "name": "高橋 由紀",
+   "shifts": [
+    {
+     "iso": "2026-07-16",
+     "state": "work",
+     "cat": "遅番",
+     "code": "遅番B",
+     "time": "9:45-18:45"
+    },
+    {
+     "iso": "2026-07-17",
+     "state": "work",
+     "cat": "中番",
+     "code": "日勤９",
+     "time": "9:00-18:00"
+    },
+    {
+     "iso": "2026-07-18",
+     "state": "off",
+     "cat": "公休",
+     "code": "",
+     "time": ""
+    },
+    {
+     "iso": "2026-07-19",
+     "state": "off",
+     "cat": "公休",
+     "code": "",
+     "time": ""
+    },
+    {
+     "iso": "2026-07-20",
+     "state": "off",
+     "cat": "公休",
+     "code": "",
+     "time": ""
+    },
+    {
+     "iso": "2026-07-21",
+     "state": "work",
+     "cat": "中番",
+     "code": "土振",
+     "time": "8:00-17:00"
+    },
+    {
+     "iso": "2026-07-22",
+     "state": "work",
+     "cat": "遅番",
+     "code": "遅番B",
+     "time": "9:45-18:45"
+    },
+    {
+     "iso": "2026-07-23",
+     "state": "work",
+     "cat": "中番",
+     "code": "日勤B",
+     "time": "8:30-17:30"
+    },
+    {
+     "iso": "2026-07-24",
+     "state": "work",
+     "cat": "中番",
+     "code": "日勤９",
+     "time": "9:00-18:00"
+    },
+    {
+     "iso": "2026-07-25",
+     "state": "work",
+     "cat": "早番",
+     "code": "土曜番",
+     "time": "8:00-17:00"
+    },
+    {
+     "iso": "2026-07-26",
+     "state": "off",
+     "cat": "公休",
+     "code": "",
+     "time": ""
+    },
+    {
+     "iso": "2026-07-27",
+     "state": "work",
+     "cat": "遅番",
+     "code": "遅番B",
+     "time": "9:45-18:45"
+    },
+    {
+     "iso": "2026-07-28",
+     "state": "work",
+     "cat": "遅番",
+     "code": "遅番B",
+     "time": "9:45-18:45"
+    },
+    {
+     "iso": "2026-07-29",
+     "state": "work",
+     "cat": "早番",
+     "code": "早番C",
+     "time": "7:30-16:30"
+    },
+    {
+     "iso": "2026-07-30",
+     "state": "work",
+     "cat": "遅番",
+     "code": "遅番B",
+     "time": "9:45-18:45"
+    },
+    {
+     "iso": "2026-07-31",
+     "state": "work",
+     "cat": "中番",
+     "code": "日勤９",
+     "time": "9:00-18:00"
+    },
+    {
+     "iso": "2026-08-01",
+     "state": "work",
+     "cat": "早番",
+     "code": "土曜番",
+     "time": "8:00-17:00"
+    },
+    {
+     "iso": "2026-08-02",
+     "state": "off",
+     "cat": "公休",
+     "code": "",
+     "time": ""
+    },
+    {
+     "iso": "2026-08-03",
+     "state": "work",
+     "cat": "遅番",
+     "code": "遅番B",
+     "time": "9:45-18:45"
+    },
+    {
+     "iso": "2026-08-04",
+     "state": "work",
+     "cat": "中番",
+     "code": "日勤９",
+     "time": "9:00-18:00"
+    },
+    {
+     "iso": "2026-08-05",
+     "state": "work",
+     "cat": "中番",
+     "code": "土振",
+     "time": "8:00-17:00"
+    },
+    {
+     "iso": "2026-08-06",
+     "state": "work",
+     "cat": "遅番",
+     "code": "遅番B",
+     "time": "9:45-18:45"
+    },
+    {
+     "iso": "2026-08-07",
+     "state": "work",
+     "cat": "遅番",
+     "code": "遅番B",
+     "time": "9:45-18:45"
+    },
+    {
+     "iso": "2026-08-08",
+     "state": "off",
+     "cat": "公休",
+     "code": "",
+     "time": ""
+    },
+    {
+     "iso": "2026-08-09",
+     "state": "off",
+     "cat": "公休",
+     "code": "",
+     "time": ""
+    },
+    {
+     "iso": "2026-08-10",
+     "state": "leave",
+     "cat": "有給",
+     "code": "夏休",
+     "time": ""
+    },
+    {
+     "iso": "2026-08-11",
+     "state": "off",
+     "cat": "公休",
+     "code": "",
+     "time": ""
+    },
+    {
+     "iso": "2026-08-12",
+     "state": "leave",
+     "cat": "有給",
+     "code": "夏休",
+     "time": ""
+    },
+    {
+     "iso": "2026-08-13",
+     "state": "leave",
+     "cat": "有給",
+     "code": "夏休",
+     "time": ""
+    },
+    {
+     "iso": "2026-08-14",
+     "state": "leave",
+     "cat": "有給",
+     "code": "夏休",
+     "time": ""
+    },
+    {
+     "iso": "2026-08-15",
+     "state": "off",
+     "cat": "公休",
+     "code": "",
+     "time": ""
+    }
+   ]
+  },
+  {
+   "name": "田中 彩香",
+   "shifts": [
+    {
+     "iso": "2026-07-16",
+     "state": "work",
+     "cat": "遅番",
+     "code": "遅番B",
+     "time": "9:45-18:45"
+    },
+    {
+     "iso": "2026-07-17",
+     "state": "work",
+     "cat": "遅番",
+     "code": "遅番B",
+     "time": "9:45-18:45"
+    },
+    {
+     "iso": "2026-07-18",
+     "state": "work",
+     "cat": "早番",
+     "code": "土曜番",
+     "time": "8:00-17:00"
+    },
+    {
+     "iso": "2026-07-19",
+     "state": "off",
+     "cat": "公休",
+     "code": "",
+     "time": ""
+    },
+    {
+     "iso": "2026-07-20",
+     "state": "off",
+     "cat": "公休",
+     "code": "",
+     "time": ""
+    },
+    {
+     "iso": "2026-07-21",
+     "state": "work",
+     "cat": "遅番",
+     "code": "遅番B",
+     "time": "9:45-18:45"
+    },
+    {
+     "iso": "2026-07-22",
+     "state": "work",
+     "cat": "中番",
+     "code": "日勤９",
+     "time": "9:00-18:00"
+    },
+    {
+     "iso": "2026-07-23",
+     "state": "work",
+     "cat": "遅番",
+     "code": "遅番B",
+     "time": "9:45-18:45"
+    },
+    {
+     "iso": "2026-07-24",
+     "state": "work",
+     "cat": "中番",
+     "code": "日勤B",
+     "time": "8:30-17:30"
+    },
+    {
+     "iso": "2026-07-25",
+     "state": "off",
+     "cat": "公休",
+     "code": "",
+     "time": ""
+    },
+    {
+     "iso": "2026-07-26",
+     "state": "off",
+     "cat": "公休",
+     "code": "",
+     "time": ""
+    },
+    {
+     "iso": "2026-07-27",
+     "state": "work",
+     "cat": "中番",
+     "code": "日勤９",
+     "time": "9:00-18:00"
+    },
+    {
+     "iso": "2026-07-28",
+     "state": "work",
+     "cat": "遅番",
+     "code": "遅番B",
+     "time": "9:45-18:45"
+    },
+    {
+     "iso": "2026-07-29",
+     "state": "work",
+     "cat": "中番",
+     "code": "土振",
+     "time": "8:00-17:00"
+    },
+    {
+     "iso": "2026-07-30",
+     "state": "work",
+     "cat": "中番",
+     "code": "土振",
+     "time": "8:00-17:00"
+    },
+    {
+     "iso": "2026-07-31",
+     "state": "work",
+     "cat": "遅番",
+     "code": "遅番B",
+     "time": "9:45-18:45"
+    },
+    {
+     "iso": "2026-08-01",
+     "state": "work",
+     "cat": "早番",
+     "code": "土曜番",
+     "time": "8:00-17:00"
+    },
+    {
+     "iso": "2026-08-02",
+     "state": "off",
+     "cat": "公休",
+     "code": "",
+     "time": ""
+    },
+    {
+     "iso": "2026-08-03",
+     "state": "work",
+     "cat": "中番",
+     "code": "土振",
+     "time": "8:00-17:00"
+    },
+    {
+     "iso": "2026-08-04",
+     "state": "leave",
+     "cat": "有給",
+     "code": "有休",
+     "time": ""
+    },
+    {
+     "iso": "2026-08-05",
+     "state": "work",
+     "cat": "遅番",
+     "code": "遅番B",
+     "time": "9:45-18:45"
+    },
+    {
+     "iso": "2026-08-06",
+     "state": "work",
+     "cat": "中番",
+     "code": "日勤９",
+     "time": "9:00-18:00"
+    },
+    {
+     "iso": "2026-08-07",
+     "state": "work",
+     "cat": "早番",
+     "code": "早番C",
+     "time": "7:30-16:30"
+    },
+    {
+     "iso": "2026-08-08",
+     "state": "off",
+     "cat": "公休",
+     "code": "",
+     "time": ""
+    },
+    {
+     "iso": "2026-08-09",
+     "state": "off",
+     "cat": "公休",
+     "code": "",
+     "time": ""
+    },
+    {
+     "iso": "2026-08-10",
+     "state": "work",
+     "cat": "中番",
+     "code": "８H",
+     "time": "8:30-16:30"
+    },
+    {
+     "iso": "2026-08-11",
+     "state": "off",
+     "cat": "公休",
+     "code": "",
+     "time": ""
+    },
+    {
+     "iso": "2026-08-12",
+     "state": "leave",
+     "cat": "有給",
+     "code": "有休",
+     "time": ""
+    },
+    {
+     "iso": "2026-08-13",
+     "state": "work",
+     "cat": "中番",
+     "code": "８H",
+     "time": "8:30-16:30"
+    },
+    {
+     "iso": "2026-08-14",
+     "state": "work",
+     "cat": "中番",
+     "code": "８H",
+     "time": "8:30-16:30"
+    },
+    {
+     "iso": "2026-08-15",
+     "state": "off",
+     "cat": "公休",
+     "code": "",
+     "time": ""
+    }
+   ]
+  },
+  {
+   "name": "渡辺 麻衣",
+   "shifts": [
+    {
+     "iso": "2026-07-16",
+     "state": "work",
+     "cat": "中番",
+     "code": "日勤９",
+     "time": "9:00-18:00"
+    },
+    {
+     "iso": "2026-07-17",
+     "state": "leave",
+     "cat": "有給",
+     "code": "有休",
+     "time": ""
+    },
+    {
+     "iso": "2026-07-18",
+     "state": "off",
+     "cat": "公休",
+     "code": "",
+     "time": ""
+    },
+    {
+     "iso": "2026-07-19",
+     "state": "off",
+     "cat": "公休",
+     "code": "",
+     "time": ""
+    },
+    {
+     "iso": "2026-07-20",
+     "state": "off",
+     "cat": "公休",
+     "code": "",
+     "time": ""
+    },
+    {
+     "iso": "2026-07-21",
+     "state": "work",
+     "cat": "中番",
+     "code": "日勤９",
+     "time": "9:00-18:00"
+    },
+    {
+     "iso": "2026-07-22",
+     "state": "work",
+     "cat": "早番",
+     "code": "早番C",
+     "time": "7:30-16:30"
+    },
+    {
+     "iso": "2026-07-23",
+     "state": "work",
+     "cat": "遅番",
+     "code": "遅番B",
+     "time": "9:45-18:45"
+    },
+    {
+     "iso": "2026-07-24",
+     "state": "work",
+     "cat": "中番",
+     "code": "日勤B",
+     "time": "8:30-17:30"
+    },
+    {
+     "iso": "2026-07-25",
+     "state": "work",
+     "cat": "早番",
+     "code": "土曜番",
+     "time": "8:00-17:00"
+    },
+    {
+     "iso": "2026-07-26",
+     "state": "off",
+     "cat": "公休",
+     "code": "",
+     "time": ""
+    },
+    {
+     "iso": "2026-07-27",
+     "state": "work",
+     "cat": "中番",
+     "code": "土振",
+     "time": "8:00-17:00"
+    },
+    {
+     "iso": "2026-07-28",
+     "state": "work",
+     "cat": "早番",
+     "code": "早番C",
+     "time": "7:30-16:30"
+    },
+    {
+     "iso": "2026-07-29",
+     "state": "work",
+     "cat": "遅番",
+     "code": "遅番B",
+     "time": "9:45-18:45"
+    },
+    {
+     "iso": "2026-07-30",
+     "state": "work",
+     "cat": "中番",
+     "code": "日勤９",
+     "time": "9:00-18:00"
+    },
+    {
+     "iso": "2026-07-31",
+     "state": "work",
+     "cat": "中番",
+     "code": "日勤B",
+     "time": "8:30-17:30"
+    },
+    {
+     "iso": "2026-08-01",
+     "state": "off",
+     "cat": "公休",
+     "code": "",
+     "time": ""
+    },
+    {
+     "iso": "2026-08-02",
+     "state": "off",
+     "cat": "公休",
+     "code": "",
+     "time": ""
+    },
+    {
+     "iso": "2026-08-03",
+     "state": "work",
+     "cat": "遅番",
+     "code": "遅番B",
+     "time": "9:45-18:45"
+    },
+    {
+     "iso": "2026-08-04",
+     "state": "work",
+     "cat": "遅番",
+     "code": "遅番B",
+     "time": "9:45-18:45"
+    },
+    {
+     "iso": "2026-08-05",
+     "state": "work",
+     "cat": "中番",
+     "code": "日勤９",
+     "time": "9:00-18:00"
+    },
+    {
+     "iso": "2026-08-06",
+     "state": "work",
+     "cat": "早番",
+     "code": "早番C",
+     "time": "7:30-16:30"
+    },
+    {
+     "iso": "2026-08-07",
+     "state": "leave",
+     "cat": "有給",
+     "code": "有休",
+     "time": ""
+    },
+    {
+     "iso": "2026-08-08",
+     "state": "off",
+     "cat": "公休",
+     "code": "",
+     "time": ""
+    },
+    {
+     "iso": "2026-08-09",
+     "state": "off",
+     "cat": "公休",
+     "code": "",
+     "time": ""
+    },
+    {
+     "iso": "2026-08-10",
+     "state": "leave",
+     "cat": "有給",
+     "code": "有休",
+     "time": ""
+    },
+    {
+     "iso": "2026-08-11",
+     "state": "off",
+     "cat": "公休",
+     "code": "",
+     "time": ""
+    },
+    {
+     "iso": "2026-08-12",
+     "state": "work",
+     "cat": "中番",
+     "code": "土振",
+     "time": "8:00-17:00"
+    },
+    {
+     "iso": "2026-08-13",
+     "state": "work",
+     "cat": "中番",
+     "code": "８H",
+     "time": "8:30-16:30"
+    },
+    {
+     "iso": "2026-08-14",
+     "state": "leave",
+     "cat": "有給",
+     "code": "有休",
+     "time": ""
+    },
+    {
+     "iso": "2026-08-15",
+     "state": "work",
+     "cat": "早番",
+     "code": "土曜番",
+     "time": "8:00-17:00"
+    }
+   ]
+  },
+  {
+   "name": "伊藤 奈々",
+   "shifts": [
+    {
+     "iso": "2026-07-16",
+     "state": "work",
+     "cat": "中番",
+     "code": "日勤A",
+     "time": "8:00-17:00"
+    },
+    {
+     "iso": "2026-07-17",
+     "state": "work",
+     "cat": "中番",
+     "code": "日勤A",
+     "time": "8:00-17:00"
+    },
+    {
+     "iso": "2026-07-18",
+     "state": "off",
+     "cat": "公休",
+     "code": "",
+     "time": ""
+    },
+    {
+     "iso": "2026-07-19",
+     "state": "off",
+     "cat": "公休",
+     "code": "",
+     "time": ""
+    },
+    {
+     "iso": "2026-07-20",
+     "state": "off",
+     "cat": "公休",
+     "code": "",
+     "time": ""
+    },
+    {
+     "iso": "2026-07-21",
+     "state": "leave",
+     "cat": "有給",
+     "code": "有休",
+     "time": ""
+    },
+    {
+     "iso": "2026-07-22",
+     "state": "work",
+     "cat": "中番",
+     "code": "日勤A",
+     "time": "8:00-17:00"
+    },
+    {
+     "iso": "2026-07-23",
+     "state": "work",
+     "cat": "中番",
+     "code": "日勤A",
+     "time": "8:00-17:00"
+    },
+    {
+     "iso": "2026-07-24",
+     "state": "work",
+     "cat": "中番",
+     "code": "日勤A",
+     "time": "8:00-17:00"
+    },
+    {
+     "iso": "2026-07-25",
+     "state": "off",
+     "cat": "公休",
+     "code": "",
+     "time": ""
+    },
+    {
+     "iso": "2026-07-26",
+     "state": "off",
+     "cat": "公休",
+     "code": "",
+     "time": ""
+    },
+    {
+     "iso": "2026-07-27",
+     "state": "work",
+     "cat": "中番",
+     "code": "日勤A",
+     "time": "8:00-17:00"
+    },
+    {
+     "iso": "2026-07-28",
+     "state": "work",
+     "cat": "中番",
+     "code": "日勤A",
+     "time": "8:00-17:00"
+    },
+    {
+     "iso": "2026-07-29",
+     "state": "work",
+     "cat": "中番",
+     "code": "日勤A",
+     "time": "8:00-17:00"
+    },
+    {
+     "iso": "2026-07-30",
+     "state": "work",
+     "cat": "中番",
+     "code": "日勤A",
+     "time": "8:00-17:00"
+    },
+    {
+     "iso": "2026-07-31",
+     "state": "work",
+     "cat": "中番",
+     "code": "日勤A",
+     "time": "8:00-17:00"
+    },
+    {
+     "iso": "2026-08-01",
+     "state": "off",
+     "cat": "公休",
+     "code": "",
+     "time": ""
+    },
+    {
+     "iso": "2026-08-02",
+     "state": "off",
+     "cat": "公休",
+     "code": "",
+     "time": ""
+    },
+    {
+     "iso": "2026-08-03",
+     "state": "work",
+     "cat": "中番",
+     "code": "日勤A",
+     "time": "8:00-17:00"
+    },
+    {
+     "iso": "2026-08-04",
+     "state": "work",
+     "cat": "中番",
+     "code": "日勤A",
+     "time": "8:00-17:00"
+    },
+    {
+     "iso": "2026-08-05",
+     "state": "work",
+     "cat": "中番",
+     "code": "日勤A",
+     "time": "8:00-17:00"
+    },
+    {
+     "iso": "2026-08-06",
+     "state": "work",
+     "cat": "中番",
+     "code": "日勤A",
+     "time": "8:00-17:00"
+    },
+    {
+     "iso": "2026-08-07",
+     "state": "work",
+     "cat": "中番",
+     "code": "日勤A",
+     "time": "8:00-17:00"
+    },
+    {
+     "iso": "2026-08-08",
+     "state": "off",
+     "cat": "公休",
+     "code": "",
+     "time": ""
+    },
+    {
+     "iso": "2026-08-09",
+     "state": "off",
+     "cat": "公休",
+     "code": "",
+     "time": ""
+    },
+    {
+     "iso": "2026-08-10",
+     "state": "leave",
+     "cat": "有給",
+     "code": "夏休",
+     "time": ""
+    },
+    {
+     "iso": "2026-08-11",
+     "state": "off",
+     "cat": "公休",
+     "code": "",
+     "time": ""
+    },
+    {
+     "iso": "2026-08-12",
+     "state": "leave",
+     "cat": "有給",
+     "code": "夏休",
+     "time": ""
+    },
+    {
+     "iso": "2026-08-13",
+     "state": "leave",
+     "cat": "有給",
+     "code": "夏休",
+     "time": ""
+    },
+    {
+     "iso": "2026-08-14",
+     "state": "leave",
+     "cat": "有給",
+     "code": "夏休",
+     "time": ""
+    },
+    {
+     "iso": "2026-08-15",
+     "state": "off",
+     "cat": "公休",
+     "code": "",
+     "time": ""
+    }
+   ]
+  },
+  {
+   "name": "山本 千夏",
+   "shifts": [
+    {
+     "iso": "2026-07-16",
+     "state": "work",
+     "cat": "中番",
+     "code": "８H",
+     "time": "8:30-16:30"
+    },
+    {
+     "iso": "2026-07-17",
+     "state": "off",
+     "cat": "公休",
+     "code": "",
+     "time": ""
+    },
+    {
+     "iso": "2026-07-18",
+     "state": "off",
+     "cat": "公休",
+     "code": "",
+     "time": ""
+    },
+    {
+     "iso": "2026-07-19",
+     "state": "off",
+     "cat": "公休",
+     "code": "",
+     "time": ""
+    },
+    {
+     "iso": "2026-07-20",
+     "state": "off",
+     "cat": "公休",
+     "code": "",
+     "time": ""
+    },
+    {
+     "iso": "2026-07-21",
+     "state": "off",
+     "cat": "公休",
+     "code": "",
+     "time": ""
+    },
+    {
+     "iso": "2026-07-22",
+     "state": "off",
+     "cat": "公休",
+     "code": "",
+     "time": ""
+    },
+    {
+     "iso": "2026-07-23",
+     "state": "off",
+     "cat": "公休",
+     "code": "",
+     "time": ""
+    },
+    {
+     "iso": "2026-07-24",
+     "state": "off",
+     "cat": "公休",
+     "code": "",
+     "time": ""
+    },
+    {
+     "iso": "2026-07-25",
+     "state": "off",
+     "cat": "公休",
+     "code": "",
+     "time": ""
+    },
+    {
+     "iso": "2026-07-26",
+     "state": "off",
+     "cat": "公休",
+     "code": "",
+     "time": ""
+    },
+    {
+     "iso": "2026-07-27",
+     "state": "off",
+     "cat": "公休",
+     "code": "",
+     "time": ""
+    },
+    {
+     "iso": "2026-07-28",
+     "state": "off",
+     "cat": "公休",
+     "code": "",
+     "time": ""
+    },
+    {
+     "iso": "2026-07-29",
+     "state": "off",
+     "cat": "公休",
+     "code": "",
+     "time": ""
+    },
+    {
+     "iso": "2026-07-30",
+     "state": "off",
+     "cat": "公休",
+     "code": "",
+     "time": ""
+    },
+    {
+     "iso": "2026-07-31",
+     "state": "off",
+     "cat": "公休",
+     "code": "",
+     "time": ""
+    },
+    {
+     "iso": "2026-08-01",
+     "state": "off",
+     "cat": "公休",
+     "code": "",
+     "time": ""
+    },
+    {
+     "iso": "2026-08-02",
+     "state": "off",
+     "cat": "公休",
+     "code": "",
+     "time": ""
+    },
+    {
+     "iso": "2026-08-03",
+     "state": "work",
+     "cat": "中番",
+     "code": "８H",
+     "time": "8:30-16:30"
+    },
+    {
+     "iso": "2026-08-04",
+     "state": "off",
+     "cat": "公休",
+     "code": "",
+     "time": ""
+    },
+    {
+     "iso": "2026-08-05",
+     "state": "off",
+     "cat": "公休",
+     "code": "",
+     "time": ""
+    },
+    {
+     "iso": "2026-08-06",
+     "state": "off",
+     "cat": "公休",
+     "code": "",
+     "time": ""
+    },
+    {
+     "iso": "2026-08-07",
+     "state": "off",
+     "cat": "公休",
+     "code": "",
+     "time": ""
+    },
+    {
+     "iso": "2026-08-08",
+     "state": "off",
+     "cat": "公休",
+     "code": "",
+     "time": ""
+    },
+    {
+     "iso": "2026-08-09",
+     "state": "off",
+     "cat": "公休",
+     "code": "",
+     "time": ""
+    },
+    {
+     "iso": "2026-08-10",
+     "state": "off",
+     "cat": "公休",
+     "code": "",
+     "time": ""
+    },
+    {
+     "iso": "2026-08-11",
+     "state": "off",
+     "cat": "公休",
+     "code": "",
+     "time": ""
+    },
+    {
+     "iso": "2026-08-12",
+     "state": "off",
+     "cat": "公休",
+     "code": "",
+     "time": ""
+    },
+    {
+     "iso": "2026-08-13",
+     "state": "off",
+     "cat": "公休",
+     "code": "",
+     "time": ""
+    },
+    {
+     "iso": "2026-08-14",
+     "state": "off",
+     "cat": "公休",
+     "code": "",
+     "time": ""
+    },
+    {
+     "iso": "2026-08-15",
+     "state": "off",
+     "cat": "公休",
+     "code": "",
+     "time": ""
+    }
+   ]
+  },
+  {
+   "name": "中村 恵",
+   "shifts": [
+    {
+     "iso": "2026-07-16",
+     "state": "work",
+     "cat": "遅番",
+     "code": "午5.5",
+     "time": "11:00-16:30"
+    },
+    {
+     "iso": "2026-07-17",
+     "state": "work",
+     "cat": "中番",
+     "code": "7.5",
+     "time": "8:30-16:00"
+    },
+    {
+     "iso": "2026-07-18",
+     "state": "off",
+     "cat": "公休",
+     "code": "",
+     "time": ""
+    },
+    {
+     "iso": "2026-07-19",
+     "state": "off",
+     "cat": "公休",
+     "code": "",
+     "time": ""
+    },
+    {
+     "iso": "2026-07-20",
+     "state": "off",
+     "cat": "公休",
+     "code": "",
+     "time": ""
+    },
+    {
+     "iso": "2026-07-21",
+     "state": "work",
+     "cat": "中番",
+     "code": "5.5H",
+     "time": "8:30-14:00"
+    },
+    {
+     "iso": "2026-07-22",
+     "state": "work",
+     "cat": "中番",
+     "code": "7.5",
+     "time": "8:30-16:00"
+    },
+    {
+     "iso": "2026-07-23",
+     "state": "work",
+     "cat": "中番",
+     "code": "7.5",
+     "time": "8:30-16:00"
+    },
+    {
+     "iso": "2026-07-24",
+     "state": "work",
+     "cat": "中番",
+     "code": "5.5H",
+     "time": "8:30-14:00"
+    },
+    {
+     "iso": "2026-07-25",
+     "state": "off",
+     "cat": "公休",
+     "code": "",
+     "time": ""
+    },
+    {
+     "iso": "2026-07-26",
+     "state": "off",
+     "cat": "公休",
+     "code": "",
+     "time": ""
+    },
+    {
+     "iso": "2026-07-27",
+     "state": "work",
+     "cat": "中番",
+     "code": "7.5",
+     "time": "8:30-16:00"
+    },
+    {
+     "iso": "2026-07-28",
+     "state": "work",
+     "cat": "中番",
+     "code": "7.5",
+     "time": "8:30-16:00"
+    },
+    {
+     "iso": "2026-07-29",
+     "state": "work",
+     "cat": "中番",
+     "code": "7.5",
+     "time": "8:30-16:00"
+    },
+    {
+     "iso": "2026-07-30",
+     "state": "work",
+     "cat": "中番",
+     "code": "7.5",
+     "time": "8:30-16:00"
+    },
+    {
+     "iso": "2026-07-31",
+     "state": "work",
+     "cat": "中番",
+     "code": "午３",
+     "time": "13:00-16:00"
+    },
+    {
+     "iso": "2026-08-01",
+     "state": "off",
+     "cat": "公休",
+     "code": "",
+     "time": ""
+    },
+    {
+     "iso": "2026-08-02",
+     "state": "off",
+     "cat": "公休",
+     "code": "",
+     "time": ""
+    },
+    {
+     "iso": "2026-08-03",
+     "state": "work",
+     "cat": "中番",
+     "code": "7.5",
+     "time": "8:30-16:00"
+    },
+    {
+     "iso": "2026-08-04",
+     "state": "work",
+     "cat": "中番",
+     "code": "7.5",
+     "time": "8:30-16:00"
+    },
+    {
+     "iso": "2026-08-05",
+     "state": "work",
+     "cat": "中番",
+     "code": "早７",
+     "time": "8:30-15:30"
+    },
+    {
+     "iso": "2026-08-06",
+     "state": "work",
+     "cat": "中番",
+     "code": "7.5",
+     "time": "8:30-16:00"
+    },
+    {
+     "iso": "2026-08-07",
+     "state": "off",
+     "cat": "公休",
+     "code": "",
+     "time": ""
+    },
+    {
+     "iso": "2026-08-08",
+     "state": "off",
+     "cat": "公休",
+     "code": "",
+     "time": ""
+    },
+    {
+     "iso": "2026-08-09",
+     "state": "off",
+     "cat": "公休",
+     "code": "",
+     "time": ""
+    },
+    {
+     "iso": "2026-08-10",
+     "state": "work",
+     "cat": "中番",
+     "code": "5.5H",
+     "time": "8:30-14:00"
+    },
+    {
+     "iso": "2026-08-11",
+     "state": "off",
+     "cat": "公休",
+     "code": "",
+     "time": ""
+    },
+    {
+     "iso": "2026-08-12",
+     "state": "work",
+     "cat": "中番",
+     "code": "5.5H",
+     "time": "8:30-14:00"
+    },
+    {
+     "iso": "2026-08-13",
+     "state": "work",
+     "cat": "中番",
+     "code": "5.5H",
+     "time": "8:30-14:00"
+    },
+    {
+     "iso": "2026-08-14",
+     "state": "work",
+     "cat": "中番",
+     "code": "5.5H",
+     "time": "8:30-14:00"
+    },
+    {
+     "iso": "2026-08-15",
+     "state": "off",
+     "cat": "公休",
+     "code": "",
+     "time": ""
+    }
+   ]
+  },
+  {
+   "name": "小林 遥",
+   "shifts": [
+    {
+     "iso": "2026-07-16",
+     "state": "work",
+     "cat": "中番",
+     "code": "2.5H",
+     "time": "8:30-11:00"
+    },
+    {
+     "iso": "2026-07-17",
+     "state": "leave",
+     "cat": "有給",
+     "code": "有休",
+     "time": ""
+    },
+    {
+     "iso": "2026-07-18",
+     "state": "off",
+     "cat": "公休",
+     "code": "",
+     "time": ""
+    },
+    {
+     "iso": "2026-07-19",
+     "state": "off",
+     "cat": "公休",
+     "code": "",
+     "time": ""
+    },
+    {
+     "iso": "2026-07-20",
+     "state": "off",
+     "cat": "公休",
+     "code": "",
+     "time": ""
+    },
+    {
+     "iso": "2026-07-21",
+     "state": "off",
+     "cat": "公休",
+     "code": "",
+     "time": ""
+    },
+    {
+     "iso": "2026-07-22",
+     "state": "off",
+     "cat": "公休",
+     "code": "",
+     "time": ""
+    },
+    {
+     "iso": "2026-07-23",
+     "state": "off",
+     "cat": "公休",
+     "code": "",
+     "time": ""
+    },
+    {
+     "iso": "2026-07-24",
+     "state": "off",
+     "cat": "公休",
+     "code": "",
+     "time": ""
+    },
+    {
+     "iso": "2026-07-25",
+     "state": "off",
+     "cat": "公休",
+     "code": "",
+     "time": ""
+    },
+    {
+     "iso": "2026-07-26",
+     "state": "off",
+     "cat": "公休",
+     "code": "",
+     "time": ""
+    },
+    {
+     "iso": "2026-07-27",
+     "state": "off",
+     "cat": "公休",
+     "code": "",
+     "time": ""
+    },
+    {
+     "iso": "2026-07-28",
+     "state": "off",
+     "cat": "公休",
+     "code": "",
+     "time": ""
+    },
+    {
+     "iso": "2026-07-29",
+     "state": "off",
+     "cat": "公休",
+     "code": "",
+     "time": ""
+    },
+    {
+     "iso": "2026-07-30",
+     "state": "off",
+     "cat": "公休",
+     "code": "",
+     "time": ""
+    },
+    {
+     "iso": "2026-07-31",
+     "state": "work",
+     "cat": "中番",
+     "code": "4.5H",
+     "time": "8:30-13:00"
+    },
+    {
+     "iso": "2026-08-01",
+     "state": "off",
+     "cat": "公休",
+     "code": "",
+     "time": ""
+    },
+    {
+     "iso": "2026-08-02",
+     "state": "off",
+     "cat": "公休",
+     "code": "",
+     "time": ""
+    },
+    {
+     "iso": "2026-08-03",
+     "state": "leave",
+     "cat": "有給",
+     "code": "夏休",
+     "time": ""
+    },
+    {
+     "iso": "2026-08-04",
+     "state": "leave",
+     "cat": "有給",
+     "code": "夏休",
+     "time": ""
+    },
+    {
+     "iso": "2026-08-05",
+     "state": "off",
+     "cat": "公休",
+     "code": "",
+     "time": ""
+    },
+    {
+     "iso": "2026-08-06",
+     "state": "off",
+     "cat": "公休",
+     "code": "",
+     "time": ""
+    },
+    {
+     "iso": "2026-08-07",
+     "state": "work",
+     "cat": "中番",
+     "code": "4.5H",
+     "time": "8:30-13:00"
+    },
+    {
+     "iso": "2026-08-08",
+     "state": "off",
+     "cat": "公休",
+     "code": "",
+     "time": ""
+    },
+    {
+     "iso": "2026-08-09",
+     "state": "off",
+     "cat": "公休",
+     "code": "",
+     "time": ""
+    },
+    {
+     "iso": "2026-08-10",
+     "state": "off",
+     "cat": "公休",
+     "code": "",
+     "time": ""
+    },
+    {
+     "iso": "2026-08-11",
+     "state": "off",
+     "cat": "公休",
+     "code": "",
+     "time": ""
+    },
+    {
+     "iso": "2026-08-12",
+     "state": "off",
+     "cat": "公休",
+     "code": "",
+     "time": ""
+    },
+    {
+     "iso": "2026-08-13",
+     "state": "off",
+     "cat": "公休",
+     "code": "",
+     "time": ""
+    },
+    {
+     "iso": "2026-08-14",
+     "state": "off",
+     "cat": "公休",
+     "code": "",
+     "time": ""
+    },
+    {
+     "iso": "2026-08-15",
+     "state": "off",
+     "cat": "公休",
+     "code": "",
+     "time": ""
+    }
+   ]
+  },
+  {
+   "name": "加藤 里奈",
+   "shifts": [
+    {
+     "iso": "2026-07-16",
+     "state": "work",
+     "cat": "中番",
+     "code": "7.5",
+     "time": "8:30-16:00"
+    },
+    {
+     "iso": "2026-07-17",
+     "state": "work",
+     "cat": "中番",
+     "code": "7.5",
+     "time": "8:30-16:00"
+    },
+    {
+     "iso": "2026-07-18",
+     "state": "off",
+     "cat": "公休",
+     "code": "",
+     "time": ""
+    },
+    {
+     "iso": "2026-07-19",
+     "state": "off",
+     "cat": "公休",
+     "code": "",
+     "time": ""
+    },
+    {
+     "iso": "2026-07-20",
+     "state": "off",
+     "cat": "公休",
+     "code": "",
+     "time": ""
+    },
+    {
+     "iso": "2026-07-21",
+     "state": "off",
+     "cat": "公休",
+     "code": "",
+     "time": ""
+    },
+    {
+     "iso": "2026-07-22",
+     "state": "work",
+     "cat": "中番",
+     "code": "早7.5",
+     "time": "8:00-15:30"
+    },
+    {
+     "iso": "2026-07-23",
+     "state": "work",
+     "cat": "中番",
+     "code": "7.5",
+     "time": "8:30-16:00"
+    },
+    {
+     "iso": "2026-07-24",
+     "state": "work",
+     "cat": "中番",
+     "code": "7.5",
+     "time": "8:30-16:00"
+    },
+    {
+     "iso": "2026-07-25",
+     "state": "off",
+     "cat": "公休",
+     "code": "",
+     "time": ""
+    },
+    {
+     "iso": "2026-07-26",
+     "state": "off",
+     "cat": "公休",
+     "code": "",
+     "time": ""
+    },
+    {
+     "iso": "2026-07-27",
+     "state": "leave",
+     "cat": "有給",
+     "code": "有休",
+     "time": ""
+    },
+    {
+     "iso": "2026-07-28",
+     "state": "leave",
+     "cat": "有給",
+     "code": "有休",
+     "time": ""
+    },
+    {
+     "iso": "2026-07-29",
+     "state": "work",
+     "cat": "中番",
+     "code": "早7.5",
+     "time": "8:00-15:30"
+    },
+    {
+     "iso": "2026-07-30",
+     "state": "work",
+     "cat": "中番",
+     "code": "7.5",
+     "time": "8:30-16:00"
+    },
+    {
+     "iso": "2026-07-31",
+     "state": "work",
+     "cat": "中番",
+     "code": "7.5",
+     "time": "8:30-16:00"
+    },
+    {
+     "iso": "2026-08-01",
+     "state": "off",
+     "cat": "公休",
+     "code": "",
+     "time": ""
+    },
+    {
+     "iso": "2026-08-02",
+     "state": "off",
+     "cat": "公休",
+     "code": "",
+     "time": ""
+    },
+    {
+     "iso": "2026-08-03",
+     "state": "work",
+     "cat": "中番",
+     "code": "7.5",
+     "time": "8:30-16:00"
+    },
+    {
+     "iso": "2026-08-04",
+     "state": "work",
+     "cat": "中番",
+     "code": "7.5",
+     "time": "8:30-16:00"
+    },
+    {
+     "iso": "2026-08-05",
+     "state": "leave",
+     "cat": "有給",
+     "code": "有休",
+     "time": ""
+    },
+    {
+     "iso": "2026-08-06",
+     "state": "leave",
+     "cat": "有給",
+     "code": "有休",
+     "time": ""
+    },
+    {
+     "iso": "2026-08-07",
+     "state": "work",
+     "cat": "中番",
+     "code": "7.5",
+     "time": "8:30-16:00"
+    },
+    {
+     "iso": "2026-08-08",
+     "state": "off",
+     "cat": "公休",
+     "code": "",
+     "time": ""
+    },
+    {
+     "iso": "2026-08-09",
+     "state": "off",
+     "cat": "公休",
+     "code": "",
+     "time": ""
+    },
+    {
+     "iso": "2026-08-10",
+     "state": "leave",
+     "cat": "有給",
+     "code": "夏休",
+     "time": ""
+    },
+    {
+     "iso": "2026-08-11",
+     "state": "off",
+     "cat": "公休",
+     "code": "",
+     "time": ""
+    },
+    {
+     "iso": "2026-08-12",
+     "state": "leave",
+     "cat": "有給",
+     "code": "夏休",
+     "time": ""
+    },
+    {
+     "iso": "2026-08-13",
+     "state": "leave",
+     "cat": "有給",
+     "code": "夏休",
+     "time": ""
+    },
+    {
+     "iso": "2026-08-14",
+     "state": "leave",
+     "cat": "有給",
+     "code": "夏休",
+     "time": ""
+    },
+    {
+     "iso": "2026-08-15",
+     "state": "off",
+     "cat": "公休",
+     "code": "",
+     "time": ""
+    }
+   ]
+  },
+  {
+   "name": "吉田 沙織",
+   "shifts": [
+    {
+     "iso": "2026-07-16",
+     "state": "work",
+     "cat": "遅番",
+     "code": "午5.5",
+     "time": "11:00-16:30"
+    },
+    {
+     "iso": "2026-07-17",
+     "state": "work",
+     "cat": "中番",
+     "code": "早８",
+     "time": "8:00-16:00"
+    },
+    {
+     "iso": "2026-07-18",
+     "state": "off",
+     "cat": "公休",
+     "code": "",
+     "time": ""
+    },
+    {
+     "iso": "2026-07-19",
+     "state": "off",
+     "cat": "公休",
+     "code": "",
+     "time": ""
+    },
+    {
+     "iso": "2026-07-20",
+     "state": "off",
+     "cat": "公休",
+     "code": "",
+     "time": ""
+    },
+    {
+     "iso": "2026-07-21",
+     "state": "work",
+     "cat": "中番",
+     "code": "遅８",
+     "time": "9:00-17:00"
+    },
+    {
+     "iso": "2026-07-22",
+     "state": "work",
+     "cat": "中番",
+     "code": "遅８",
+     "time": "9:00-17:00"
+    },
+    {
+     "iso": "2026-07-23",
+     "state": "work",
+     "cat": "中番",
+     "code": "８H",
+     "time": "8:30-16:30"
+    },
+    {
+     "iso": "2026-07-24",
+     "state": "work",
+     "cat": "中番",
+     "code": "早８",
+     "time": "8:00-16:00"
+    },
+    {
+     "iso": "2026-07-25",
+     "state": "off",
+     "cat": "公休",
+     "code": "",
+     "time": ""
+    },
+    {
+     "iso": "2026-07-26",
+     "state": "off",
+     "cat": "公休",
+     "code": "",
+     "time": ""
+    },
+    {
+     "iso": "2026-07-27",
+     "state": "work",
+     "cat": "中番",
+     "code": "早８",
+     "time": "8:00-16:00"
+    },
+    {
+     "iso": "2026-07-28",
+     "state": "work",
+     "cat": "中番",
+     "code": "遅８",
+     "time": "9:00-17:00"
+    },
+    {
+     "iso": "2026-07-29",
+     "state": "work",
+     "cat": "中番",
+     "code": "遅８",
+     "time": "9:00-17:00"
+    },
+    {
+     "iso": "2026-07-30",
+     "state": "work",
+     "cat": "中番",
+     "code": "遅８",
+     "time": "9:00-17:00"
+    },
+    {
+     "iso": "2026-07-31",
+     "state": "leave",
+     "cat": "有給",
+     "code": "有休",
+     "time": ""
+    },
+    {
+     "iso": "2026-08-01",
+     "state": "off",
+     "cat": "公休",
+     "code": "",
+     "time": ""
+    },
+    {
+     "iso": "2026-08-02",
+     "state": "off",
+     "cat": "公休",
+     "code": "",
+     "time": ""
+    },
+    {
+     "iso": "2026-08-03",
+     "state": "work",
+     "cat": "中番",
+     "code": "早８",
+     "time": "8:00-16:00"
+    },
+    {
+     "iso": "2026-08-04",
+     "state": "work",
+     "cat": "中番",
+     "code": "遅８",
+     "time": "9:00-17:00"
+    },
+    {
+     "iso": "2026-08-05",
+     "state": "work",
+     "cat": "中番",
+     "code": "早８",
+     "time": "8:00-16:00"
+    },
+    {
+     "iso": "2026-08-06",
+     "state": "work",
+     "cat": "中番",
+     "code": "遅８",
+     "time": "9:00-17:00"
+    },
+    {
+     "iso": "2026-08-07",
+     "state": "work",
+     "cat": "中番",
+     "code": "早８",
+     "time": "8:00-16:00"
+    },
+    {
+     "iso": "2026-08-08",
+     "state": "off",
+     "cat": "公休",
+     "code": "",
+     "time": ""
+    },
+    {
+     "iso": "2026-08-09",
+     "state": "off",
+     "cat": "公休",
+     "code": "",
+     "time": ""
+    },
+    {
+     "iso": "2026-08-10",
+     "state": "leave",
+     "cat": "有給",
+     "code": "夏休",
+     "time": ""
+    },
+    {
+     "iso": "2026-08-11",
+     "state": "off",
+     "cat": "公休",
+     "code": "",
+     "time": ""
+    },
+    {
+     "iso": "2026-08-12",
+     "state": "leave",
+     "cat": "有給",
+     "code": "夏休",
+     "time": ""
+    },
+    {
+     "iso": "2026-08-13",
+     "state": "leave",
+     "cat": "有給",
+     "code": "夏休",
+     "time": ""
+    },
+    {
+     "iso": "2026-08-14",
+     "state": "leave",
+     "cat": "有給",
+     "code": "夏休",
+     "time": ""
+    },
+    {
+     "iso": "2026-08-15",
+     "state": "off",
+     "cat": "公休",
+     "code": "",
+     "time": ""
+    }
+   ]
+  },
+  {
+   "name": "山田 真央",
+   "shifts": [
+    {
+     "iso": "2026-07-16",
+     "state": "work",
+     "cat": "中番",
+     "code": "早7.5",
+     "time": "8:00-15:30"
+    },
+    {
+     "iso": "2026-07-17",
+     "state": "work",
+     "cat": "中番",
+     "code": "遅８",
+     "time": "9:00-17:00"
+    },
+    {
+     "iso": "2026-07-18",
+     "state": "off",
+     "cat": "公休",
+     "code": "",
+     "time": ""
+    },
+    {
+     "iso": "2026-07-19",
+     "state": "off",
+     "cat": "公休",
+     "code": "",
+     "time": ""
+    },
+    {
+     "iso": "2026-07-20",
+     "state": "off",
+     "cat": "公休",
+     "code": "",
+     "time": ""
+    },
+    {
+     "iso": "2026-07-21",
+     "state": "work",
+     "cat": "中番",
+     "code": "早８",
+     "time": "8:00-16:00"
+    },
+    {
+     "iso": "2026-07-22",
+     "state": "work",
+     "cat": "中番",
+     "code": "８H",
+     "time": "8:30-16:30"
+    },
+    {
+     "iso": "2026-07-23",
+     "state": "leave",
+     "cat": "有給",
+     "code": "有休",
+     "time": ""
+    },
+    {
+     "iso": "2026-07-24",
+     "state": "work",
+     "cat": "中番",
+     "code": "遅８",
+     "time": "9:00-17:00"
+    },
+    {
+     "iso": "2026-07-25",
+     "state": "off",
+     "cat": "公休",
+     "code": "",
+     "time": ""
+    },
+    {
+     "iso": "2026-07-26",
+     "state": "off",
+     "cat": "公休",
+     "code": "",
+     "time": ""
+    },
+    {
+     "iso": "2026-07-27",
+     "state": "work",
+     "cat": "中番",
+     "code": "遅８",
+     "time": "9:00-17:00"
+    },
+    {
+     "iso": "2026-07-28",
+     "state": "work",
+     "cat": "中番",
+     "code": "早８",
+     "time": "8:00-16:00"
+    },
+    {
+     "iso": "2026-07-29",
+     "state": "leave",
+     "cat": "有給",
+     "code": "有休",
+     "time": ""
+    },
+    {
+     "iso": "2026-07-30",
+     "state": "work",
+     "cat": "中番",
+     "code": "早7.5",
+     "time": "8:00-15:30"
+    },
+    {
+     "iso": "2026-07-31",
+     "state": "work",
+     "cat": "中番",
+     "code": "遅８",
+     "time": "9:00-17:00"
+    },
+    {
+     "iso": "2026-08-01",
+     "state": "off",
+     "cat": "公休",
+     "code": "",
+     "time": ""
+    },
+    {
+     "iso": "2026-08-02",
+     "state": "off",
+     "cat": "公休",
+     "code": "",
+     "time": ""
+    },
+    {
+     "iso": "2026-08-03",
+     "state": "work",
+     "cat": "中番",
+     "code": "遅８",
+     "time": "9:00-17:00"
+    },
+    {
+     "iso": "2026-08-04",
+     "state": "leave",
+     "cat": "有給",
+     "code": "有休",
+     "time": ""
+    },
+    {
+     "iso": "2026-08-05",
+     "state": "work",
+     "cat": "中番",
+     "code": "遅８",
+     "time": "9:00-17:00"
+    },
+    {
+     "iso": "2026-08-06",
+     "state": "work",
+     "cat": "中番",
+     "code": "早7.5",
+     "time": "8:00-15:30"
+    },
+    {
+     "iso": "2026-08-07",
+     "state": "work",
+     "cat": "中番",
+     "code": "遅８",
+     "time": "9:00-17:00"
+    },
+    {
+     "iso": "2026-08-08",
+     "state": "off",
+     "cat": "公休",
+     "code": "",
+     "time": ""
+    },
+    {
+     "iso": "2026-08-09",
+     "state": "off",
+     "cat": "公休",
+     "code": "",
+     "time": ""
+    },
+    {
+     "iso": "2026-08-10",
+     "state": "work",
+     "cat": "中番",
+     "code": "5.5H",
+     "time": "8:30-14:00"
+    },
+    {
+     "iso": "2026-08-11",
+     "state": "off",
+     "cat": "公休",
+     "code": "",
+     "time": ""
+    },
+    {
+     "iso": "2026-08-12",
+     "state": "leave",
+     "cat": "有給",
+     "code": "夏休",
+     "time": ""
+    },
+    {
+     "iso": "2026-08-13",
+     "state": "leave",
+     "cat": "有給",
+     "code": "夏休",
+     "time": ""
+    },
+    {
+     "iso": "2026-08-14",
+     "state": "leave",
+     "cat": "有給",
+     "code": "夏休",
+     "time": ""
+    },
+    {
+     "iso": "2026-08-15",
+     "state": "off",
+     "cat": "公休",
+     "code": "",
+     "time": ""
+    }
+   ]
+  },
+  {
+   "name": "佐々木 桃子",
+   "shifts": [
+    {
+     "iso": "2026-07-16",
+     "state": "work",
+     "cat": "中番",
+     "code": "中4.5",
+     "time": "8:45-13:15"
+    },
+    {
+     "iso": "2026-07-17",
+     "state": "off",
+     "cat": "公休",
+     "code": "",
+     "time": ""
+    },
+    {
+     "iso": "2026-07-18",
+     "state": "off",
+     "cat": "公休",
+     "code": "",
+     "time": ""
+    },
+    {
+     "iso": "2026-07-19",
+     "state": "off",
+     "cat": "公休",
+     "code": "",
+     "time": ""
+    },
+    {
+     "iso": "2026-07-20",
+     "state": "off",
+     "cat": "公休",
+     "code": "",
+     "time": ""
+    },
+    {
+     "iso": "2026-07-21",
+     "state": "work",
+     "cat": "中番",
+     "code": "中4.5",
+     "time": "8:45-13:15"
+    },
+    {
+     "iso": "2026-07-22",
+     "state": "leave",
+     "cat": "有給",
+     "code": "有休",
+     "time": ""
+    },
+    {
+     "iso": "2026-07-23",
+     "state": "work",
+     "cat": "中番",
+     "code": "中4.5",
+     "time": "8:45-13:15"
+    },
+    {
+     "iso": "2026-07-24",
+     "state": "work",
+     "cat": "中番",
+     "code": "中4.5",
+     "time": "8:45-13:15"
+    },
+    {
+     "iso": "2026-07-25",
+     "state": "off",
+     "cat": "公休",
+     "code": "",
+     "time": ""
+    },
+    {
+     "iso": "2026-07-26",
+     "state": "off",
+     "cat": "公休",
+     "code": "",
+     "time": ""
+    },
+    {
+     "iso": "2026-07-27",
+     "state": "work",
+     "cat": "中番",
+     "code": "中4.5",
+     "time": "8:45-13:15"
+    },
+    {
+     "iso": "2026-07-28",
+     "state": "work",
+     "cat": "中番",
+     "code": "中4.5",
+     "time": "8:45-13:15"
+    },
+    {
+     "iso": "2026-07-29",
+     "state": "work",
+     "cat": "中番",
+     "code": "中4.5",
+     "time": "8:45-13:15"
+    },
+    {
+     "iso": "2026-07-30",
+     "state": "work",
+     "cat": "中番",
+     "code": "中4.5",
+     "time": "8:45-13:15"
+    },
+    {
+     "iso": "2026-07-31",
+     "state": "off",
+     "cat": "公休",
+     "code": "",
+     "time": ""
+    },
+    {
+     "iso": "2026-08-01",
+     "state": "off",
+     "cat": "公休",
+     "code": "",
+     "time": ""
+    },
+    {
+     "iso": "2026-08-02",
+     "state": "off",
+     "cat": "公休",
+     "code": "",
+     "time": ""
+    },
+    {
+     "iso": "2026-08-03",
+     "state": "off",
+     "cat": "公休",
+     "code": "",
+     "time": ""
+    },
+    {
+     "iso": "2026-08-04",
+     "state": "work",
+     "cat": "中番",
+     "code": "中4.5",
+     "time": "8:45-13:15"
+    },
+    {
+     "iso": "2026-08-05",
+     "state": "work",
+     "cat": "中番",
+     "code": "中4.5",
+     "time": "8:45-13:15"
+    },
+    {
+     "iso": "2026-08-06",
+     "state": "work",
+     "cat": "中番",
+     "code": "中4.5",
+     "time": "8:45-13:15"
+    },
+    {
+     "iso": "2026-08-07",
+     "state": "leave",
+     "cat": "有給",
+     "code": "夏休",
+     "time": ""
+    },
+    {
+     "iso": "2026-08-08",
+     "state": "off",
+     "cat": "公休",
+     "code": "",
+     "time": ""
+    },
+    {
+     "iso": "2026-08-09",
+     "state": "off",
+     "cat": "公休",
+     "code": "",
+     "time": ""
+    },
+    {
+     "iso": "2026-08-10",
+     "state": "leave",
+     "cat": "有給",
+     "code": "夏休",
+     "time": ""
+    },
+    {
+     "iso": "2026-08-11",
+     "state": "off",
+     "cat": "公休",
+     "code": "",
+     "time": ""
+    },
+    {
+     "iso": "2026-08-12",
+     "state": "leave",
+     "cat": "有給",
+     "code": "夏休",
+     "time": ""
+    },
+    {
+     "iso": "2026-08-13",
+     "state": "off",
+     "cat": "公休",
+     "code": "",
+     "time": ""
+    },
+    {
+     "iso": "2026-08-14",
+     "state": "off",
+     "cat": "公休",
+     "code": "",
+     "time": ""
+    },
+    {
+     "iso": "2026-08-15",
+     "state": "off",
+     "cat": "公休",
+     "code": "",
+     "time": ""
+    }
+   ]
+  }
+ ]
+};
+const staff = DATA.staff, dates = DATA.dates, today = DATA.today;
+let current = null, curScreen="home", showAllPeriod=false, shiftTab="me";
+
+const CAT = {
+ "早番":{cls:"cell-early",bg:"--early-bg",ink:"--early-ink",label:"早番"},
+ "中番":{cls:"cell-mid",bg:"--mid-bg",ink:"--mid-ink",label:"日勤"},
+ "遅番":{cls:"cell-late",bg:"--late-bg",ink:"--late-ink",label:"遅番"},
+ "研修":{cls:"cell-train",bg:"--train-bg",ink:"--train-ink",label:"研修"},
+ "有給":{cls:"cell-leave",bg:"--leave-bg",ink:"--leave-ink",label:"有休"},
+ "公休":{cls:"cell-off",bg:"--off-bg",ink:"--off-ink",label:"休"},
+};
+const stateCat=sh=>sh.state==="leave"?"有給":sh.state==="off"?"公休":sh.state==="training"?"研修":(sh.cat in CAT?sh.cat:"中番");
+const initials=n=>(n||"").replace(/\s/g,"").slice(0,1);
+const parseStart=t=>{const m=(t||"").match(/(\d{1,2}):(\d{2})/);return m?(+m[1]+ (+m[2])/60):null;};
+const pill=(bg,ink,txt)=>`<span class="pill" style="background:var(${bg});color:var(${ink})">${txt}</span>`;
+
+/* icons */
+const IC={
+ shift:'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>',
+ uq:'<svg viewBox="0 0 24 24"><path d="M12 3a6 6 0 0 1 6 6c0 1.5-.5 2.5-1.5 3.5"/><path d="M3 13h18"/><path d="M6 13v0a6 6 0 0 0 12 0"/><path d="M12 13v8"/><path d="M8 21h8"/></svg>',
+ news:'<svg viewBox="0 0 24 24"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M10.3 21a1.9 1.9 0 0 0 3.4 0"/></svg>',
+ cal:'<svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 9h18M8 3v4M16 3v4"/></svg>',
+ doc:'<svg viewBox="0 0 24 24"><path d="M6 3h8l4 4v14a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z"/><path d="M13 3v5h5M8 13h8M8 17h6"/></svg>',
+ bot:'<svg viewBox="0 0 24 24"><rect x="4" y="8" width="16" height="11" rx="3"/><path d="M12 8V4M8 13h.01M16 13h.01M9 19l-2 2M15 19l2 2"/></svg>',
+ book:'<svg viewBox="0 0 24 24"><path d="M4 5a2 2 0 0 1 2-2h12v16H6a2 2 0 0 0-2 2z"/><path d="M6 3v16"/></svg>',
+ box:'<svg viewBox="0 0 24 24"><path d="M4 13l2-8h12l2 8"/><path d="M4 13h5l1 2h4l1-2h5v6a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1z"/></svg>',
+};
+
+/* シフト管理ログイン（園→名前） */
+function goShiftLogin(){
+  document.getElementById('brandtxt').textContent='シフト管理';
+  renderShiftLogin();
+  show('shiftlogin');
+}
+function renderShiftLogin(){
+  var fac=DATA.facility.replace(/（(デモ|サンプル)）/,'');
+  var names=staff.map(function(s,i){
+    return '<button onclick="pickShift('+i+')"><span class="av round">'+initials(s.name)+'</span><span>'+s.name+'</span></button>';
+  }).join('');
+  document.getElementById('screen-shiftlogin').innerHTML=
+    '<div class="login"><div class="login-card">'+
+      '<div class="login-fac">'+fac+'</div>'+
+      '<h2 class="round">シフト管理</h2>'+
+      '<p class="login-hint">自分の名前を選ぶと、あなたのシフトが開きます。</p>'+
+      '<div class="namelist">'+names+'</div>'+
+    '</div></div>';
+}
+function pickShift(i){current=i;goShift();}
+function logout(){current=null;goHome();}
+
+/* router */
+function show(name){
+  curScreen=name;
+  document.getElementById('screen-home').hidden=name!=="home";
+  document.getElementById('screen-shiftlogin').hidden=name!=="shiftlogin";
+  document.getElementById('screen-shift').hidden=name!=="shift";
+  document.getElementById('screen-stub').hidden=name!=="stub";
+  document.getElementById('screen-omeyasu').hidden=name!=="omeyasu";
+  document.getElementById('backbtn').classList.toggle('on',name!=="home");
+  document.getElementById('logoutbtn').style.display=(name==="shift")?"":"none";
+  window.scrollTo({top:0});
+}
+function goHome(){document.getElementById('brandtxt').textContent='職員ダッシュボード';show("home");}
+function goShift(){document.getElementById('brandtxt').textContent='シフト管理';renderShift();show("shift");}
+function goStub(title,icon,tint){
+  document.getElementById('brandtxt').textContent=title;
+  document.getElementById('screen-stub').innerHTML=
+    `<div class="stub"><div class="ic ${tint}">${IC[icon]}</div><h2 class="round">${title}</h2>
+     <p>この画面は準備中です。<br>本番ではここに「${title}」の中身が入ります。<br>ログインは共通なので、開くだけで使えます。</p>
+     <button class="back" onclick="goHome()">ホームに戻る</button></div>`;
+  show("stub");
+}
+
+/* 外部リンク先の土台 */
+const UQ_BASE="https://hojyokinsenyo-cell.github.io/uqcheck/staff_standalone.html"; // ?garden=園名 を付ける
+const DOME_BASE="https://kimkat01.github.io/dome-chat/";                            // ?en=園キー を付ける
+
+/* 園名 → ドメボットの園キー（en）。園を増やしたらここに足す */
+const DOME_KEY={
+  "しおどめ保育園八潮茜町":"yashio_akanemachi",
+  "認定こども園しおどめの森":"shiodome_no_mori",
+  "しおどめ保育園江戸川中央":"edogawa_chuo",
+  "しおどめ保育園三郷中央":"misato_chuo",
+  "しおどめ保育園春日部":"kasukabe",
+  "しおどめ保育園つくば":"tsukuba",
+  "守谷しおどめ保育園":"moriya_shiodome",
+  "八潮しおどめ保育園":"yashio_shiodome",
+  "しおどめなかよし保育園":"shiodome_nakayoshi",
+};
+/* デモ園がUQ/ドメボットに未登録のときに使う代表値（動作確認用） */
+const DEMO_UQ_GARDEN="しおどめ保育園稲城";   // UQchecker職員マスタに登録済みの園名
+const DEMO_DOME_KEY="yashio_akanemachi";      // ドメボットの代表園キー（稲城のキーは未確認）
+
+function gardenName(){return (DATA.facility||"").replace(/（(デモ|サンプル)）/,"").trim();}
+function uqUrl(){
+  var g=DATA.uqGarden||DEMO_UQ_GARDEN;         // 本番は園データのuqGardenを使用
+  return UQ_BASE+"?garden="+encodeURIComponent(g);
+}
+function domeUrl(){
+  var key=DATA.domeKey||DOME_KEY[gardenName()]||DEMO_DOME_KEY;
+  return DOME_BASE+"?en="+encodeURIComponent(key);
+}
+const LINKS={ shift:"" };  // シフト管理（空なら内蔵シフト画面を開く）
+function goLink(url,title,icon,tint){
+  if(url){window.open(url,'_blank','noopener');return;}
+  document.getElementById('brandtxt').textContent=title;
+  document.getElementById('screen-stub').innerHTML=
+    '<div class="stub"><div class="ic '+tint+'">'+IC[icon]+'</div><h2 class="round">'+title+'</h2>'+
+    '<p>リンク先URLが未設定です。<br>URLを入れると、ここから直接ひらきます。</p>'+
+    '<button class="back" onclick="goHome()">ホームに戻る</button></div>';
+  show("stub");
+}
+
+/* ===== 目安箱（型B・内蔵） ===== */
+/* (1) GASウェブアプリの /exec URL を入れる */
+var OM_GAS_URL="https://script.google.com/macros/s/AKfycbyoMG_xWmGzGYb2N2cu_j2RIK3pztpJ9U6ck9YFcSIHWtTKjLvxxMa-D8oQHJApVfNb/exec";
+var omLastCode="";
+
+/* (2) 身元フック：ログイン中の園・氏名を返す。ここでしか名前を扱わず、URLには一切出さない */
+function getOmeyasuIdentity(){
+  var g=(typeof gardenName==='function')?gardenName():((typeof DATA!=='undefined'&&DATA.facility)||"");
+  var n=(current!=null && staff[current])?staff[current].name:"";
+  return {garden:g,name:n};
+}
+
+function goOmeyasu(){
+  document.getElementById('brandtxt').textContent='目安箱';
+  document.getElementById('omFormCard').className='ocard';
+  document.getElementById('omDoneCard').className='ocard ocode-box ohidden';
+  var pm=document.getElementById('omPostMsg');pm.textContent='';pm.className='omsg';
+  document.getElementById('omBody').value='';
+  omeyasuMode('post');
+  show('omeyasu');
+}
+function omeyasuMode(mode){
+  var post=(mode==='post');
+  document.getElementById('omTabPost').className=post?'on':'';
+  document.getElementById('omTabCheck').className=post?'':'on';
+  document.getElementById('omPanePost').className=post?'':'ohidden';
+  document.getElementById('omPaneCheck').className=post?'ohidden':'';
+}
+function omeyasuSubmit(){
+  var body=document.getElementById('omBody').value.trim();
+  var msg=document.getElementById('omPostMsg');msg.className='omsg';
+  if(!OM_GAS_URL){msg.className='omsg err';msg.textContent='送信先(OM_GAS_URL)が未設定です。';return;}
+  if(!body){msg.className='omsg err';msg.textContent='内容を入力してください。';return;}
+  var id=getOmeyasuIdentity();
+  var btn=document.getElementById('omSendBtn');btn.disabled=true;msg.textContent='送信中…';
+  var payload={category:document.getElementById('omCat').value,body:body,garden:id.garden||'',name:id.name||''};
+  fetch(OM_GAS_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(payload)})
+    .then(function(r){return r.json();})
+    .then(function(res){
+      btn.disabled=false;
+      if(res&&res.ok){
+        omLastCode=res.code;
+        document.getElementById('omCodeText').textContent=res.code;
+        document.getElementById('omFormCard').className='ocard ohidden';
+        document.getElementById('omDoneCard').className='ocard ocode-box';
+      }else{msg.className='omsg err';msg.textContent='送信に失敗しました。時間をおいて再度お試しください。';}
+    })
+    .catch(function(){btn.disabled=false;msg.className='omsg err';msg.textContent='通信エラーが発生しました。';});
+}
+function omeyasuCopy(){
+  var cm=document.getElementById('omCopyMsg');
+  if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(omLastCode).then(function(){cm.textContent='コピーしました。';});}
+  else{cm.textContent=omLastCode;}
+}
+function omeyasuCheck(){
+  var code=document.getElementById('omCodeIn').value.trim();
+  var msg=document.getElementById('omCheckMsg');var box=document.getElementById('omResultBox');
+  msg.className='omsg';box.className='oresult ohidden';
+  if(!OM_GAS_URL){msg.className='omsg err';msg.textContent='送信先(OM_GAS_URL)が未設定です。';return;}
+  if(!code){msg.className='omsg err';msg.textContent='コードを入力してください。';return;}
+  var btn=document.getElementById('omCheckBtn');btn.disabled=true;msg.textContent='確認中…';
+  var url=OM_GAS_URL+'?code='+encodeURIComponent(code)+'&t='+Date.now();
+  fetch(url).then(function(r){return r.json();}).then(function(res){
+    btn.disabled=false;
+    if(res&&res.ok){msg.textContent='';
+      document.getElementById('omRStatus').textContent=res.status||'未対応';
+      document.getElementById('omRCat').textContent=res.category||'—';
+      document.getElementById('omRReply').textContent=res.reply?res.reply:'（まだ返信はありません）';
+      box.className='oresult';
+    }else if(res&&res.error==='not_found'){msg.className='omsg err';msg.textContent='このコードの投稿が見つかりませんでした。';}
+    else{msg.className='omsg err';msg.textContent='確認に失敗しました。';}
+  }).catch(function(){btn.disabled=false;msg.className='omsg err';msg.textContent='通信エラーが発生しました。';});
+}
+
+/* HOME */
+const MENU=[
+ {t:"シフト管理",d:"今週のシフトと園の予定",ic:"shift",tint:"i-mid",go:()=>{if(LINKS.shift){window.open(LINKS.shift,'_blank','noopener');}else{goShiftLogin();}},flag:"NEW"},
+ {t:"有給チェッカー",d:"有給の残り日数をチェック",ic:"uq",tint:"i-early",go:()=>goLink(uqUrl(),"有給チェッカー","uq","i-early")},
+ {t:"お知らせ",d:"本部・園からのお知らせ",ic:"news",tint:"i-late",go:()=>goStub("お知らせ","news","i-late")},
+ {t:"カレンダー",d:"行事・園の予定",ic:"cal",tint:"i-brand",go:()=>goStub("カレンダー","cal","i-brand")},
+ {t:"規約・マニュアル",d:"就業規則・各種マニュアル",ic:"doc",tint:"i-slate",go:()=>goStub("規約・マニュアル","doc","i-slate")},
+ {t:"ドメボット",d:"チャットで質問・相談",ic:"bot",tint:"i-rose",go:()=>goLink(domeUrl(),"ドメボット","bot","i-rose")},
+ {t:"目安箱",d:"匿名で本部に届ける",ic:"box",tint:"i-mid",go:()=>goOmeyasu(),flag:"NEW"},
+ {t:"コーポレートブック",d:"会社案内・理念ブック",ic:"book",tint:"i-gold",go:()=>goStub("コーポレートブック","book","i-gold")},
+];
+function renderHome(){
+  const tiles=MENU.map(function(m,i){
+     var flag=m.flag?'<span class="flag">'+m.flag+'</span>':'';
+     return '<button class="tile" onclick="MENU['+i+'].go()">'+flag+
+       '<span class="ic '+m.tint+'">'+IC[m.ic]+'</span>'+
+       '<span class="tt round">'+m.t+'</span><span class="ds">'+m.d+'</span></button>';
+  }).join("");
+
+  document.getElementById('screen-home').innerHTML=`
+   <div class="sec-label" style="margin-top:6px">メニュー</div>
+   <div class="grid">${tiles}</div>
+   <p class="foot"><b>これは試作です。</b>ログイン（園→名前）は共通で、全メニューに有効。1つの入口・1回のログインで全部ひらきます。</p>`;
+}
+
+/* SHIFT screen (personal + facility) */
+function renderShift(){
+  const host=document.getElementById('screen-shift');
+  host.innerHTML=`<div class="seg"><button id="tab-me" onclick="shiftTab='me';renderShift()">自分のシフト</button>
+    <button id="tab-all" onclick="shiftTab='all';renderShift()">園ぜんたい</button></div>
+    <div id="sh-body"></div>`;
+  document.getElementById('tab-me').classList.toggle('on',shiftTab==='me');
+  document.getElementById('tab-all').classList.toggle('on',shiftTab==='all');
+  document.getElementById('sh-body').innerHTML = shiftTab==='me'?meHTML():allHTML();
+}
+function meHTML(){
+  const s=staff[current];const map={};s.shifts.forEach(x=>map[x.iso]=x);
+  const evMap={};dates.forEach(d=>evMap[d.iso]=d);
+  const t=map[today],td=evMap[today]||{};
+  const cat=t?stateCat(t):"公休",c=CAT[cat];const working=t&&(t.state==="work"||t.state==="training");
+  let head,time="",track="";
+  if(working){head=t.code;time=t.time||"";}
+  else if(t&&t.state==="leave"){head="有休";time="おやすみ";}
+  else{head="お休み";time="きょうは勤務なし";}
+  if(working&&t.time){const st=parseStart(t.time);const m=t.time.match(/-(\d{1,2}):(\d{2})/);
+    const en=m?(+m[1]+ (+m[2])/60):(st?st+8:null);const L=7,R=19,cl=x=>Math.max(0,Math.min(1,(x-L)/(R-L)));
+    if(st!=null&&en!=null){const a=cl(st)*100,w=(cl(en)-cl(st))*100;
+      const col=cat==="早番"?"var(--early)":cat==="遅番"?"var(--late)":"var(--mid)";
+      track=`<div class="track"><div class="scale"><span>7:00</span><span>13:00</span><span>19:00</span></div>
+        <div class="rail"><div class="span" style="left:${a}%;width:${w}%;background:${col}"></div></div>
+        <div class="cap">この時間帯に勤務</div></div>`;}}
+  const ev=td.event?`<div class="ev">📌 きょうの予定 ・ ${td.event}</div>`:"";
+  const hero=`<div class="today2"><div class="eyebrow">
+     <span class="date round">${td.md?td.md.replace('/','月')+'日（'+td.dow+'）':''} ・ きょうのあなた</span>
+     <span class="dot" style="background:var(${c.bg});color:var(${c.ink})">${c.label}</span></div>
+     <div class="headline round">${head}</div><div class="time">${time}</div>${track}${ev}</div>`;
+
+  const base=new Date(today);const dow=(base.getDay()+6)%7;const mon=new Date(base);mon.setDate(base.getDate()-dow);
+  let rows="";
+  for(let i=0;i<7;i++){const dd=new Date(mon);dd.setDate(mon.getDate()+i);const iso=dd.toISOString().slice(0,10);
+    const de=evMap[iso],sh=map[iso],wn=["月","火","水","木","金","土","日"][i];
+    const wc=i===5?"sat":i===6?"sun":"";
+    if(!de){rows+=`<div class="day out"><div class="dcol"><div class="d round">${dd.getDate()}</div><div class="w ${wc}">${wn}</div></div><div class="badge"><span class="mutedrow">対象期間外</span></div></div>`;continue;}
+    const ct=sh?stateCat(sh):"公休",cc=CAT[ct],now=iso===today;let b;
+    if(sh&&(sh.state==="work"||sh.state==="training"))b=pill(cc.bg,cc.ink,sh.code)+`<span class="tm">${sh.time||""}</span>`;
+    else if(sh&&sh.state==="leave")b=pill("--leave-bg","--leave-ink","有休");
+    else b=pill("--off-bg","--off-ink","お休み");
+    const el=de.event?`<div class="ev2">📌 ${de.event}</div>`:"";
+    rows+=`<div class="day ${now?'now':''}"><div class="dcol"><div class="d round">${dd.getDate()}</div><div class="w ${wc}">${wn}</div></div><div style="flex:1;min-width:0"><div class="badge">${b}</div>${el}</div></div>`;}
+  let full="";
+  if(showAllPeriod){full=`<div class="sh-label">この期間ぜんぶ（${DATA.period.start}〜${DATA.period.end}）</div><div class="week">`;
+    dates.forEach(d=>{const sh=map[d.iso],ct=sh?stateCat(sh):"公休",cc=CAT[ct],now=d.iso===today;let b;
+      if(sh&&(sh.state==="work"||sh.state==="training"))b=pill(cc.bg,cc.ink,sh.code)+`<span class="tm">${sh.time||""}</span>`;
+      else if(sh&&sh.state==="leave")b=pill("--leave-bg","--leave-ink","有休");else b=pill("--off-bg","--off-ink","お休み");
+      const wc=d.dow==="土"?"sat":d.dow==="日"?"sun":"";
+      b+=d.event?`<span class="ev2" style="margin-left:6px">📌 ${d.event}</span>`:"";
+      full+=`<div class="day ${now?'now':''}"><div class="dcol"><div class="d round">${d.d}</div><div class="w ${wc}">${d.dow}</div></div><div class="badge">${b}</div></div>`;});
+    full+=`</div>`;}
+  const mb=`<button class="more" onclick="showAllPeriod=!showAllPeriod;renderShift()">${showAllPeriod?'今週だけに戻す':'期間ぜんたい（'+DATA.period.start+'〜'+DATA.period.end+'）を見る'}</button>`;
+  return hero+`<div class="sh-label">今週のシフト</div><div class="week">${rows}</div>`+mb+full;
+}
+function allHTML(){
+  const legend=`<div class="legend">
+    <span><i style="background:var(--early)"></i>早番</span><span><i style="background:var(--mid)"></i>日勤（中番）</span>
+    <span><i style="background:var(--late)"></i>遅番</span><span><i style="background:var(--leave)"></i>有休・夏休</span>
+    <span><i style="background:var(--train)"></i>研修</span><span><i style="background:var(--off)"></i>休</span></div>`;
+  let head=`<tr><th class="namecol">職員</th>`;
+  dates.forEach(d=>{const now=d.iso===today?"now":"",sc=d.dow==="日"?"sun":"";
+    head+=`<th class="${now} ${sc}">${d.d}<span class="wk">${d.dow}</span></th>`;});head+=`</tr>`;
+  let body="";
+  staff.forEach((s,i)=>{const me=i===current?"me":"";body+=`<tr class="${me}"><td class="namecol">${s.name}</td>`;
+    const map={};s.shifts.forEach(x=>map[x.iso]=x);
+    dates.forEach(d=>{const sh=map[d.iso],ct=sh?stateCat(sh):"公休",cc=CAT[ct],now=d.iso===today?"now":"",sc=d.dow==="日"?"sun":"";
+      let txt="・",cls="cell-off";
+      if(sh&&(sh.state==="work"||sh.state==="training")){cls=cc.cls;txt=sh.code;}
+      else if(sh&&sh.state==="leave"){cls="cell-leave";txt="有";}
+      body+=`<td class="${now} ${sc}"><span class="c ${cls}">${txt}</span></td>`;});body+=`</tr>`;});
+  return legend+`<div class="gridwrap"><div class="gridscroll"><table class="sg"><thead>${head}</thead><tbody>${body}</tbody></table></div></div>
+    <p class="foot">よこにスクロールできます。あなたの行は枠、今日は緑の列。マス内は略号（早番C／日勤A など）。</p>`;
+}
+
+/* boot */
+renderHome();goHome();
+</script>
+</body>
+</html>
