@@ -217,6 +217,33 @@ tbody tr.me .namecol{color:var(--brand)}
 #screen-omeyasu .oresult{border-left:4px solid var(--brand-blue);padding:10px 14px;background:#f5f8ff;border-radius:8px;margin-top:12px;}
 #screen-omeyasu .oresult .orow{font-size:14px;margin:4px 0;}
 #screen-omeyasu .oresult .orow b{display:inline-block;min-width:70px;color:var(--ink-soft);font-weight:700;}
+/* ===== 職員紹介制度（実名リファラル・UIのみ / 送信先は後日設定 RF_SUBMIT_URL） ===== */
+#screen-referral .rwrap{max-width:440px;margin:0 auto;padding:16px;}
+#screen-referral .rcard{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:14px;box-shadow:var(--shadow);}
+#screen-referral .rintro{border:1px solid #cfe6e1;background:#f1f8f6;}
+#screen-referral .rintro .rlead{font-size:15px;font-weight:800;color:var(--brand);margin-bottom:6px;}
+#screen-referral .rintro .rbody{font-size:13px;line-height:1.8;color:var(--ink);}
+#screen-referral .rintro .rbody b{color:var(--brand);}
+#screen-referral .rident{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:13px;color:var(--ink-soft);background:#f6f8ff;border:1px solid #dfe6f5;border-radius:10px;padding:10px 12px;margin-bottom:14px;}
+#screen-referral .rident b{color:var(--ink);}
+#screen-referral label{display:block;font-size:13px;font-weight:700;margin:0 0 6px;}
+#screen-referral input[type=text],#screen-referral textarea{width:100%;padding:12px;border:1px solid var(--line);border-radius:10px;font-size:15px;font-family:inherit;background:#fff;color:var(--ink);}
+#screen-referral textarea{min-height:80px;resize:vertical;line-height:1.6;}
+#screen-referral .rfield{margin-bottom:14px;}
+#screen-referral .rreq{color:#c0392b;font-size:12px;font-weight:700;margin-left:4px;}
+#screen-referral .rhint{font-size:12px;color:var(--ink-soft);margin-top:4px;}
+#screen-referral .rcheck{display:flex;gap:8px;align-items:flex-start;font-size:13px;line-height:1.6;color:var(--ink);margin-bottom:14px;}
+#screen-referral .rcheck input{margin-top:3px;flex:0 0 auto;width:auto;}
+#screen-referral .rbtn{width:100%;padding:14px;border:none;border-radius:12px;background:var(--brand-blue);color:#fff;font-size:16px;font-weight:800;cursor:pointer;font-family:inherit;}
+#screen-referral .rbtn:active{background:var(--brand-blue-d);}
+#screen-referral .rbtn[disabled]{opacity:.5;}
+#screen-referral .rmsg{font-size:13px;margin-top:10px;min-height:18px;line-height:1.6;}
+#screen-referral .rmsg.err{color:#c0392b;}
+#screen-referral .rmsg.ok{color:var(--brand);}
+#screen-referral .rhidden{display:none;}
+#screen-referral .rdone{text-align:center;border:1px solid #cfe6e1;background:#f1f8f6;}
+#screen-referral .rdone h3{margin:0 0 8px;color:var(--brand);font-size:16px;}
+#screen-referral .rdone p{font-size:13px;color:var(--ink-soft);line-height:1.7;margin:0 0 12px;}
 </style>
 </head>
 <body>
@@ -236,17 +263,16 @@ tbody tr.me .namecol{color:var(--brand)}
         <div class="ocard osafe">
           <div class="olead">🔒 匿名で投稿できます</div>
           <div class="obody">
-            お名前は表示されません。<b>園長にも同僚にも、誰が書いたかは分かりません。</b><br>
+            お名前は表示されません。<b>誰が書いたかは分かりません。</b><br>
             投稿内容が人事評価や処遇に使われることもありません。<br>
-            気づいたこと・困っていること・提案など、どうか安心してそのままお書きください。<b>小さなことでも大歓迎です。</b>
+            相談ごと・困っていること・こうしたらどうかなどの提案など、ご意見・ご要望などありましたらお書きください。<b>小さなことでも大歓迎です。</b>
           </div>
         </div>
         <div class="ocard oinfo">
           <div class="oilead">💬 返信の受け取り方</div>
           <div class="oibody">
             送信すると、あなた専用の<b>「シークレットコード」</b>（例：MB-3F9K2A）が発行されます。<br>
-            お名前の代わりに、このコードが<b>あなたと本部をつなぐ番号</b>です。本部からの返信は、下の「返信を確認する」からこのコードで読めます。<br>
-            <b>控えていないと返信を確認できません。</b>送信後に必ずメモかコピーをしてください。
+            お名前の代わりに、このコードがあなたと本部をつなぐ番号になります。返信不要の場合は無視して結構です。
           </div>
         </div>
         <div class="otabs">
@@ -256,15 +282,8 @@ tbody tr.me .namecol{color:var(--brand)}
         <div id="omPanePost">
           <div class="ocard" id="omFormCard">
             <div class="ofield">
-              <label for="omCat">カテゴリ</label>
-              <select id="omCat">
-                <option>職場環境</option><option>人間関係</option><option>業務・シフト</option>
-                <option>設備・備品</option><option>保育内容</option><option>ハラスメント</option><option>その他</option>
-              </select>
-            </div>
-            <div class="ofield">
               <label for="omBody">内容（自由記入）</label>
-              <textarea id="omBody" placeholder="気づいたこと・困っていること・提案などをご記入ください。"></textarea>
+              <textarea id="omBody" placeholder="ご意見、提案、アイデア、相談事など、自由にお書き下さい。"></textarea>
             </div>
             <button class="obtn" id="omSendBtn" onclick="omeyasuSubmit()">送信する</button>
             <div class="omsg" id="omPostMsg"></div>
@@ -276,7 +295,7 @@ tbody tr.me .namecol{color:var(--brand)}
             <div class="ocode-note">
               名前の代わりに、このコードで<b>あなたと本部がやり取り</b>します。<br>
               本部からの返信は「返信を確認する」から<b>このコードで確認</b>できます。<br>
-              <b>控えていないと返信を読めなくなります。</b>必ずメモかコピーをしてください。
+              返信が必要な場合は控えておいてください。
             </div>
             <button class="ocopy" onclick="omeyasuCopy()">コードをコピー</button>
             <div class="omsg ok" id="omCopyMsg"></div>
@@ -296,11 +315,68 @@ tbody tr.me .namecol{color:var(--brand)}
             <div class="omsg" id="omCheckMsg"></div>
             <div class="oresult ohidden" id="omResultBox">
               <div class="orow"><b>状態</b><span id="omRStatus"></span></div>
-              <div class="orow"><b>カテゴリ</b><span id="omRCat"></span></div>
               <div class="orow"><b>本部返信</b><span id="omRReply"></span></div>
             </div>
           </div>
         </div>
+      </div>
+    </section>
+    <section id="screen-referral" hidden>
+      <div class="rwrap">
+
+        <div class="rcard rintro">
+          <div class="rlead">🤝 職員紹介制度について</div>
+          <div class="rbody" id="rfIntroBody">
+            【ここに制度の案内（謝礼・条件など）が入ります】<br>
+            ※この文面は後ほど差し込みます。一緒に働きたい方がいたら、下のフォームからご紹介ください。
+          </div>
+        </div>
+
+        <div class="rident" id="rfIdent">
+          <span>紹介する職員：<b id="rfWho">—</b></span>
+        </div>
+
+        <div class="rcard" id="rfFormCard">
+          <div class="rfield">
+            <label for="rfName">あなたのお名前<span class="rreq">必須</span></label>
+            <input type="text" id="rfName" placeholder="例：しおどめ 花子">
+            <div class="rhint">ログイン中の場合は自動で入ります。</div>
+          </div>
+          <div class="rfield">
+            <label for="rfCandName">ご紹介する方のお名前<span class="rreq">必須</span></label>
+            <input type="text" id="rfCandName" placeholder="例：山田 太郎">
+          </div>
+          <div class="rfield">
+            <label for="rfContact">ご紹介する方の連絡先（電話またはメール）<span class="rreq">必須</span></label>
+            <input type="text" id="rfContact" placeholder="例：090-1234-5678／taro@example.com">
+          </div>
+          <div class="rfield">
+            <label for="rfRelation">あなたとの間柄</label>
+            <input type="text" id="rfRelation" placeholder="例：友人／元同僚／家族 など">
+          </div>
+          <div class="rfield">
+            <label for="rfWhen">働けそうな時期</label>
+            <input type="text" id="rfWhen" placeholder="例：すぐ／来年4月ごろ など">
+          </div>
+          <div class="rfield">
+            <label for="rfGarden">希望の園（任意）</label>
+            <input type="text" id="rfGarden" placeholder="例：しおどめ保育園○○">
+          </div>
+          <div class="rfield">
+            <label for="rfNote">ひとこと推薦（任意）</label>
+            <textarea id="rfNote" placeholder="人柄や得意なこと、おすすめの理由などがあればお書きください。"></textarea>
+          </div>
+          <label class="rcheck"><input type="checkbox" id="rfConsent"><span>ご紹介する方本人の同意を得たうえで、連絡先を記入しています。</span></label>
+          <button class="rbtn" id="rfSendBtn" onclick="referralSubmit()">送信する</button>
+          <div class="rmsg" id="rfMsg"></div>
+        </div>
+
+        <div class="rcard rdone rhidden" id="rfDoneCard">
+          <h3>ご紹介ありがとうございます</h3>
+          <p>内容を受け付けました。担当より、必要に応じてあなたまでご連絡します。</p>
+          <button class="rbtn" onclick="goHome()" style="max-width:220px;margin:0 auto;">ホームに戻る</button>
+        </div>
+
       </div>
     </section>
   </main>
@@ -3511,6 +3587,7 @@ const IC={
  bot:'<svg viewBox="0 0 24 24"><rect x="4" y="8" width="16" height="11" rx="3"/><path d="M12 8V4M8 13h.01M16 13h.01M9 19l-2 2M15 19l2 2"/></svg>',
  book:'<svg viewBox="0 0 24 24"><path d="M4 5a2 2 0 0 1 2-2h12v16H6a2 2 0 0 0-2 2z"/><path d="M6 3v16"/></svg>',
  box:'<svg viewBox="0 0 24 24"><path d="M4 13l2-8h12l2 8"/><path d="M4 13h5l1 2h4l1-2h5v6a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1z"/></svg>',
+ ref:'<svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.2"/><path d="M3.5 20a5.5 5.5 0 0 1 11 0"/><path d="M18 7v6M15 10h6"/></svg>',
 };
 
 /* シフト管理ログイン（園→名前） */
@@ -3543,6 +3620,7 @@ function show(name){
   document.getElementById('screen-shift').hidden=name!=="shift";
   document.getElementById('screen-stub').hidden=name!=="stub";
   document.getElementById('screen-omeyasu').hidden=name!=="omeyasu";
+  document.getElementById('screen-referral').hidden=name!=="referral";
   document.getElementById('backbtn').classList.toggle('on',name!=="home");
   document.getElementById('logoutbtn').style.display=(name==="shift")?"":"none";
   window.scrollTo({top:0});
@@ -3611,7 +3689,7 @@ function getOmeyasuIdentity(){
 }
 
 function goOmeyasu(){
-  document.getElementById('brandtxt').textContent='目安箱';
+  document.getElementById('brandtxt').textContent='ご意見箱';
   document.getElementById('omFormCard').className='ocard';
   document.getElementById('omDoneCard').className='ocard ocode-box ohidden';
   var pm=document.getElementById('omPostMsg');pm.textContent='';pm.className='omsg';
@@ -3633,7 +3711,7 @@ function omeyasuSubmit(){
   if(!body){msg.className='omsg err';msg.textContent='内容を入力してください。';return;}
   var id=getOmeyasuIdentity();
   var btn=document.getElementById('omSendBtn');btn.disabled=true;msg.textContent='送信中…';
-  var payload={category:document.getElementById('omCat').value,body:body,garden:id.garden||'',name:id.name||''};
+  var payload={category:'',body:body,garden:id.garden||'',name:id.name||''};
   fetch(OM_GAS_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(payload)})
     .then(function(r){return r.json();})
     .then(function(res){
@@ -3664,7 +3742,6 @@ function omeyasuCheck(){
     btn.disabled=false;
     if(res&&res.ok){msg.textContent='';
       document.getElementById('omRStatus').textContent=res.status||'未対応';
-      document.getElementById('omRCat').textContent=res.category||'—';
       document.getElementById('omRReply').textContent=res.reply?res.reply:'（まだ返信はありません）';
       box.className='oresult';
     }else if(res&&res.error==='not_found'){msg.className='omsg err';msg.textContent='このコードの投稿が見つかりませんでした。';}
@@ -3673,15 +3750,62 @@ function omeyasuCheck(){
 }
 
 /* HOME */
+/* ===== 職員紹介制度（実名リファラル・UIのみ） ===== */
+/* 送信先は後日設定。空のうちは「受付準備中」を表示し、送信は行わない（OM_GAS_URL と同じ作法で後から差す） */
+var RF_SUBMIT_URL="";
+function goReferral(){
+  document.getElementById('brandtxt').textContent='職員紹介制度';
+  var id=getOmeyasuIdentity();
+  var who=id.name?(id.name+(id.garden?'（'+id.garden+'）':'')):'（未ログイン）';
+  document.getElementById('rfWho').textContent=who;
+  document.getElementById('rfName').value=id.name||'';
+  document.getElementById('rfCandName').value='';
+  document.getElementById('rfContact').value='';
+  document.getElementById('rfRelation').value='';
+  document.getElementById('rfWhen').value='';
+  document.getElementById('rfGarden').value='';
+  document.getElementById('rfNote').value='';
+  document.getElementById('rfConsent').checked=false;
+  var m=document.getElementById('rfMsg');m.textContent='';m.className='rmsg';
+  document.getElementById('rfFormCard').className='rcard';
+  document.getElementById('rfDoneCard').className='rcard rdone rhidden';
+  show('referral');
+}
+function referralSubmit(){
+  var name=document.getElementById('rfName').value.trim();
+  var cand=document.getElementById('rfCandName').value.trim();
+  var contact=document.getElementById('rfContact').value.trim();
+  var consent=document.getElementById('rfConsent').checked;
+  var m=document.getElementById('rfMsg');m.className='rmsg';
+  if(!name){m.className='rmsg err';m.textContent='あなたのお名前を入力してください。';return;}
+  if(!cand){m.className='rmsg err';m.textContent='ご紹介する方のお名前を入力してください。';return;}
+  if(!contact){m.className='rmsg err';m.textContent='ご紹介する方の連絡先を入力してください。';return;}
+  if(!consent){m.className='rmsg err';m.textContent='ご本人の同意についてのチェックを入れてください。';return;}
+  if(!RF_SUBMIT_URL){m.className='rmsg ok';m.textContent='入力内容はOKです。現在このフォームは受付準備中です（送信先の設定待ち）。設定後に送信できるようになります。';return;}
+  var id=getOmeyasuIdentity();
+  var payload={referrerName:name,referrerGarden:id.garden||'',candidateName:cand,candidateContact:contact,relation:document.getElementById('rfRelation').value.trim(),availableFrom:document.getElementById('rfWhen').value.trim(),preferredGarden:document.getElementById('rfGarden').value.trim(),note:document.getElementById('rfNote').value.trim(),consent:true};
+  var btn=document.getElementById('rfSendBtn');btn.disabled=true;m.textContent='送信中…';
+  fetch(RF_SUBMIT_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(payload)})
+    .then(function(r){return r.json();})
+    .then(function(res){
+      btn.disabled=false;
+      if(res&&res.ok){
+        document.getElementById('rfFormCard').className='rcard rhidden';
+        document.getElementById('rfDoneCard').className='rcard rdone';
+      }else{m.className='rmsg err';m.textContent='送信に失敗しました。時間をおいて再度お試しください。';}
+    })
+    .catch(function(){btn.disabled=false;m.className='rmsg err';m.textContent='通信エラーが発生しました。';});
+}
+
 const MENU=[
  {t:"シフト管理",d:"今週のシフトと園の予定",ic:"shift",tint:"i-mid",go:()=>{if(LINKS.shift){window.open(LINKS.shift,'_blank','noopener');}else{goShiftLogin();}},flag:"NEW"},
  {t:"有給チェッカー",d:"有給の残り日数をチェック",ic:"uq",tint:"i-early",go:()=>goLink(uqUrl(),"有給チェッカー","uq","i-early")},
  {t:"お知らせ",d:"本部・園からのお知らせ",ic:"news",tint:"i-late",go:()=>goStub("お知らせ","news","i-late")},
- {t:"カレンダー",d:"行事・園の予定",ic:"cal",tint:"i-brand",go:()=>goStub("カレンダー","cal","i-brand")},
  {t:"規約・マニュアル",d:"就業規則・各種マニュアル",ic:"doc",tint:"i-slate",go:()=>goStub("規約・マニュアル","doc","i-slate")},
  {t:"ドメボット",d:"チャットで質問・相談",ic:"bot",tint:"i-rose",go:()=>goLink(domeUrl(),"ドメボット","bot","i-rose")},
- {t:"目安箱",d:"匿名で本部に届ける",ic:"box",tint:"i-mid",go:()=>goOmeyasu(),flag:"NEW"},
  {t:"コーポレートブック",d:"会社案内・理念ブック",ic:"book",tint:"i-gold",go:()=>goStub("コーポレートブック","book","i-gold")},
+ {t:"ご意見箱",d:"匿名で本部に届ける",ic:"box",tint:"i-mid",go:()=>goOmeyasu(),flag:"NEW"},
+ {t:"職員紹介制度",d:"一緒に働く仲間をご紹介",ic:"ref",tint:"i-brand",go:()=>goReferral()},
 ];
 function renderHome(){
   const tiles=MENU.map(function(m,i){
