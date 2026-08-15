@@ -4100,6 +4100,8 @@ function nsBack(){
 const GD_BASE="https://kimkat01.github.io/shiodome-knowledge/";
 /* 全文キーワード検索できる既存の規約ビューア（manual.html）。フッターのリンク先。 */
 const GD_VIEWER="https://kimkat01.github.io/shiodome-knowledge/manual.html";
+/* コーポレートブック（完成済みのHTMLフリップブック）。タイルから新タブで開くだけ。 */
+const CORP_URL="https://kimkat01.github.io/shiodome-knowledge/corporate-book-flipbook.html";
 /* (B) 文書一覧（グループ分け）。追加は該当グループの docs に1行足すだけ。
    title=表示名／file=PDFファイル名（GD_BASE からの相対・半角推奨）。 */
 const MANUALS=[
@@ -4151,7 +4153,7 @@ const MENU=[
  {t:"お知らせ",d:"本部・園からのお知らせ",ic:"news",tint:"i-late",go:()=>goNews()},
  {t:"規約・マニュアル",d:"就業規則・各種マニュアル",ic:"doc",tint:"i-slate",go:()=>goManual()},
  {t:"ドメボット",d:"チャットで質問・相談",ic:"bot",tint:"i-rose",go:()=>goLink(domeUrl(),"ドメボット","bot","i-rose")},
- {t:"コーポレートブック",d:"会社案内・理念ブック",ic:"book",tint:"i-gold",go:()=>goStub("コーポレートブック","book","i-gold")},
+ {t:"コーポレートブック",d:"会社案内・理念ブック",ic:"book",tint:"i-gold",go:()=>goLink(CORP_URL,"コーポレートブック","book","i-gold")},
  {t:"ご意見箱",d:"匿名で本部に届ける",ic:"box",tint:"i-mid",go:()=>goOmeyasu(),flag:"NEW"},
  {t:"職員紹介制度",d:"一緒に働く仲間をご紹介",ic:"ref",tint:"i-brand",go:()=>goReferral()},
 ];
