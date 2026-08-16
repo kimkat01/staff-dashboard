@@ -72,6 +72,8 @@ main{padding:16px}
 .todaycard .ev{font-size:11px;color:#155e51;font-weight:700;margin-top:3px}
 
 .sec-label{font-size:11.5px;font-weight:800;color:var(--ink-soft);letter-spacing:.06em;margin:22px 2px 11px;}
+.home-date-row{display:flex;align-items:center;justify-content:flex-end;}
+.home-date{font-size:19px;font-weight:800;color:var(--ink);letter-spacing:.01em;}
 .grid{display:flex;flex-wrap:wrap;gap:11px;}
 .tile{background:transparent;border:0;border-radius:18px;padding:0;
   box-shadow:var(--shadow);cursor:pointer;text-align:left;display:block;
@@ -4202,8 +4204,12 @@ function renderHome(){
        '</span></button>';
   }).join("");
 
+  const dnow=new Date();
+  const dwn=["日","月","火","水","木","金","土"][dnow.getDay()];
+  const dateStr=(dnow.getMonth()+1)+"月"+dnow.getDate()+"日（"+dwn+"）";
+
   document.getElementById('screen-home').innerHTML=`
-   <div class="sec-label" style="margin-top:6px">メニュー</div>
+   <div class="sec-label home-date-row" style="margin-top:6px"><span></span><span class="home-date round">${dateStr}</span></div>
    <div class="grid">${tiles}</div>
    <p class="foot"><b>これは試作です。</b>ログイン（園→名前）は共通で、全メニューに有効。1つの入口・1回のログインで全部ひらきます。</p>`;
 }
