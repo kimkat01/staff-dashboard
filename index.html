@@ -4238,10 +4238,10 @@ function renderHome(){
   const anpiChip=ANPI_ACTIVE?'<span class="wide-chip on">実施中</span>':'<span class="wide-chip off">未実施</span>';
   const anpiDesc=ANPI_ACTIVE?'回答をお願いします':'災害時に自分の安否を報告';
   const anpiCard=
-    '<button class="tile tile-wide" onclick="goStub(\'安否確認\',\'anpi\',\'i-red\')">'+anpiFlag+
+    '<button class="tile tile-wide" onclick="goStub(\'危機管理対応状況\',\'anpi\',\'i-red\')">'+anpiFlag+
     '<span class="tileclip">'+
       '<span class="ictop"><span class="ic i-red ic-anpi">'+IC.anpi+'</span></span>'+
-      '<span class="tbody"><span class="tt round">安否確認</span><span class="ds">'+anpiDesc+'</span></span>'+
+      '<span class="tbody"><span class="tt round">危機管理対応状況</span><span class="ds">'+anpiDesc+'</span></span>'+
       '<span class="wide-status">'+anpiChip+'<span class="wide-go">›</span></span>'+
     '</span></button>';
 
