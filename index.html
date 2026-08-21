@@ -377,18 +377,17 @@ tbody tr.me .namecol{color:var(--brand)}
     <section id="screen-omeyasu" hidden>
       <div class="owrap">
         <div class="ocard osafe">
-          <div class="olead">🔒 匿名で投稿できます</div>
+          <div class="olead">💡 ご意見・ご提案をお寄せください</div>
           <div class="obody">
-            お名前は表示されません。<b>誰が書いたかは分かりません。</b><br>
-            投稿内容が人事評価や処遇に使われることもありません。<br>
-            相談ごと・困っていること・こうしたらどうかなどの提案など、ご意見・ご要望などありましたらお書きください。<b>小さなことでも大歓迎です。</b>
+            現場で感じたこと、「こうしたらもっと良くなるかも」というアイデアなど、どんなことでも歓迎です。<b>小さなことでも大歓迎です。</b><br>
+            <b>お名前を伝えて送る</b>か<b>匿名で送る</b>か、下のボタンで選べます。
           </div>
         </div>
         <div class="ocard oinfo">
           <div class="oilead">💬 返信の受け取り方</div>
           <div class="oibody">
             送信すると、あなた専用の<b>「シークレットコード」</b>（例：MB-3F9K2A）が発行されます。<br>
-            お名前の代わりに、このコードがあなたと本部をつなぐ番号になります。返信不要の場合は無視して結構です。
+            匿名で送った場合も、このコードで本部からの返信を確認できます。返信不要の場合は無視して結構です。
           </div>
         </div>
         <div class="otabs">
@@ -398,8 +397,16 @@ tbody tr.me .namecol{color:var(--brand)}
         <div id="omPanePost">
           <div class="ocard" id="omFormCard">
             <div class="ofield">
+              <label>送り方を選んでください</label>
+              <div class="otabs">
+                <button id="omModeNamed" class="on" onclick="omeyasuSetIdentityMode('named')">🙂 お名前を伝えて送る</button>
+                <button id="omModeAnon" onclick="omeyasuSetIdentityMode('anon')">🙈 匿名で送る</button>
+              </div>
+              <div class="ocode-note" id="omIdentityNote" style="margin-top:8px"></div>
+            </div>
+            <div class="ofield">
               <label for="omBody">内容（自由記入）</label>
-              <textarea id="omBody" placeholder="ご意見、提案、アイデア、相談事など、自由にお書き下さい。"></textarea>
+              <textarea id="omBody" placeholder="こうしたらもっと良くなる、というアイデアやご提案をお書きください。"></textarea>
             </div>
             <button class="obtn" id="omSendBtn" onclick="omeyasuSubmit()">送信する</button>
             <div class="omsg" id="omPostMsg"></div>
@@ -409,7 +416,7 @@ tbody tr.me .namecol{color:var(--brand)}
             <div class="ocode-note" style="margin-top:6px">これがあなた専用の<b>シークレットコード</b>です</div>
             <div class="ocode" id="omCodeText">MB-XXXXXX</div>
             <div class="ocode-note">
-              名前の代わりに、このコードで<b>あなたと本部がやり取り</b>します。<br>
+              このコードで<b>あなたと本部がやり取り</b>します。<br>
               本部からの返信は「返信を確認する」から<b>このコードで確認</b>できます。<br>
               返信が必要な場合は控えておいてください。
             </div>
@@ -3878,12 +3885,31 @@ function getOmeyasuIdentity(){
   return {garden:g,name:n};
 }
 
+var omIdentityMode='named';
+function omeyasuSetIdentityMode(mode){
+  omIdentityMode=mode;
+  var named=(mode==='named');
+  document.getElementById('omModeNamed').className=named?'on':'';
+  document.getElementById('omModeAnon').className=named?'':'on';
+  var note=document.getElementById('omIdentityNote');
+  if(named){
+    var id=getOmeyasuIdentity();
+    var who=id.name?(id.name+(id.garden?'（'+id.garden+'）':'')):'';
+    note.textContent=who?('「'+who+'」としてお伝えします。担当より個別にお話を伺うことがあります。'):'お名前を伝えて送ります。担当より個別にお話を伺うことがあります。';
+  }else{
+    note.textContent='他の職員や園長に、あなたが書いたことは伝わりません。気兼ねなく、思ったままをお書きください。';
+  }
+  document.getElementById('omBody').placeholder=named
+    ? 'こうしたらもっと良くなる、というアイデアやご提案をお書きください。'
+    : '困っていること、言いにくいことなど、遠慮なく率直にお書きください。';
+}
 function goOmeyasu(){
   document.getElementById('brandtxt').textContent='ご意見箱';
   document.getElementById('omFormCard').className='ocard';
   document.getElementById('omDoneCard').className='ocard ocode-box ohidden';
   var pm=document.getElementById('omPostMsg');pm.textContent='';pm.className='omsg';
   document.getElementById('omBody').value='';
+  omeyasuSetIdentityMode('named');
   omeyasuMode('post');
   show('omeyasu');
 }
