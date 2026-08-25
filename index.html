@@ -397,12 +397,34 @@ tbody tr.me .namecol{color:var(--brand)}
         <div id="omPanePost">
           <div class="ocard" id="omFormCard">
             <div class="ofield">
+              <label for="omCategory">何についてのご意見ですか</label>
+              <select id="omCategory">
+                <option value="">選択してください</option>
+                <option value="設備について">設備について</option>
+                <option value="法人内制度について">法人内制度について</option>
+                <option value="ハラスメントについて">ハラスメントについて</option>
+                <option value="人事について">人事について</option>
+                <option value="業務効率化について">業務効率化について</option>
+                <option value="その他">その他</option>
+              </select>
+            </div>
+            <div class="ofield">
               <label>送り方を選んでください</label>
               <div class="otabs">
                 <button id="omModeNamed" class="on" onclick="omeyasuSetIdentityMode('named')">🙂 お名前を伝えて送る</button>
                 <button id="omModeAnon" onclick="omeyasuSetIdentityMode('anon')">🙈 匿名で送る</button>
               </div>
               <div class="ocode-note" id="omIdentityNote" style="margin-top:8px"></div>
+            </div>
+            <div id="omIdentityFields">
+              <div class="ofield">
+                <label for="omGarden">園名</label>
+                <input type="text" id="omGarden" placeholder="例：しおどめ保育園○○">
+              </div>
+              <div class="ofield">
+                <label for="omName">お名前</label>
+                <input type="text" id="omName" placeholder="例：しおどめ 花子">
+              </div>
             </div>
             <div class="ofield">
               <label for="omBody">内容（自由記入）</label>
@@ -3891,11 +3913,13 @@ function omeyasuSetIdentityMode(mode){
   var named=(mode==='named');
   document.getElementById('omModeNamed').className=named?'on':'';
   document.getElementById('omModeAnon').className=named?'':'on';
+  document.getElementById('omIdentityFields').className=named?'':'ohidden';
   var note=document.getElementById('omIdentityNote');
   if(named){
     var id=getOmeyasuIdentity();
-    var who=id.name?(id.name+(id.garden?'（'+id.garden+'）':'')):'';
-    note.textContent=who?('「'+who+'」としてお伝えします。担当より個別にお話を伺うことがあります。'):'お名前を伝えて送ります。担当より個別にお話を伺うことがあります。';
+    if(!document.getElementById('omGarden').value)document.getElementById('omGarden').value=id.garden||'';
+    if(!document.getElementById('omName').value)document.getElementById('omName').value=id.name||'';
+    note.textContent='園名・お名前を伝えて送ります。担当より個別にお話を伺うことがあります。';
   }else{
     note.textContent='他の職員や園長に、あなたが書いたことは伝わりません。気兼ねなく、思ったままをお書きください。';
   }
@@ -3909,6 +3933,9 @@ function goOmeyasu(){
   document.getElementById('omDoneCard').className='ocard ocode-box ohidden';
   var pm=document.getElementById('omPostMsg');pm.textContent='';pm.className='omsg';
   document.getElementById('omBody').value='';
+  document.getElementById('omCategory').value='';
+  document.getElementById('omGarden').value='';
+  document.getElementById('omName').value='';
   omeyasuSetIdentityMode('named');
   omeyasuMode('post');
   show('omeyasu');
@@ -3925,9 +3952,15 @@ function omeyasuSubmit(){
   var msg=document.getElementById('omPostMsg');msg.className='omsg';
   if(!OM_GAS_URL){msg.className='omsg err';msg.textContent='送信先(OM_GAS_URL)が未設定です。';return;}
   if(!body){msg.className='omsg err';msg.textContent='内容を入力してください。';return;}
+  var category=document.getElementById('omCategory').value;
   var id=getOmeyasuIdentity();
+  var garden=id.garden||'',name=id.name||'';
+  if(omIdentityMode==='named'){
+    garden=document.getElementById('omGarden').value.trim()||garden;
+    name=document.getElementById('omName').value.trim()||name;
+  }
   var btn=document.getElementById('omSendBtn');btn.disabled=true;msg.textContent='送信中…';
-  var payload={category:'',body:body,garden:id.garden||'',name:id.name||''};
+  var payload={category:category,body:body,garden:garden,name:name};
   fetch(OM_GAS_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(payload)})
     .then(function(r){return r.json();})
     .then(function(res){
