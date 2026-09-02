@@ -35,16 +35,15 @@ body{font-family:"Hiragino Kaku Gothic ProN","Hiragino Sans","Yu Gothic",YuGothi
 header.topbar{position:sticky;top:0;z-index:20;background:#2A8CF4;color:#fff;
   display:flex;align-items:center;gap:10px;
   padding:calc(env(safe-area-inset-top,0px) + 15px) 16px 15px;}
-.tb-back{border:0;background:transparent;color:#fff;font-size:26px;line-height:1;cursor:pointer;
-  width:30px;height:30px;margin:-6px 2px -6px -6px;border-radius:9px;display:none;flex:0 0 auto;}
-.tb-back.on{display:grid;place-items:center}
 .tb-title{flex:1;min-width:0;font-size:19px;font-weight:800;color:#fff;letter-spacing:.01em;
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .tb-mascot{height:38px;width:auto;flex:0 0 auto;display:block;}
-.tb-logout{flex:0 0 auto;border:1.5px solid rgba(255,255,255,.75);background:transparent;color:#fff;
-  font-size:12.5px;font-weight:800;padding:6px 14px;border-radius:999px;cursor:pointer;font-family:inherit;
-  white-space:nowrap;}
-.tb-logout:active{background:rgba(255,255,255,.16)}
+.tb-home{flex:0 0 auto;display:none;align-items:center;gap:5px;border:1.5px solid rgba(255,255,255,.8);
+  background:transparent;color:#fff;font-size:12.5px;font-weight:800;padding:6px 12px 6px 9px;
+  border-radius:999px;cursor:pointer;font-family:inherit;white-space:nowrap;}
+.tb-home.on{display:inline-flex}
+.tb-home:active{background:rgba(255,255,255,.16)}
+.tb-home svg{width:16px;height:16px;flex:0 0 auto;}
 
 .userbar{display:flex;align-items:center;gap:12px;width:100%;
   background:var(--card);border:0;border-bottom:1px solid var(--line);
@@ -364,10 +363,16 @@ tbody tr.me .namecol{color:var(--brand)}
 <body>
 <div class="wrap">
   <header class="topbar">
-    <button class="tb-back round" id="backbtn" onclick="goHome()" aria-label="ホームに戻る">‹</button>
     <img class="tb-mascot" id="brandmascot" src="" alt="">
     <div class="tb-title" id="brandtxt">職員ダッシュボード</div>
-    <button class="tb-logout" id="logoutbtn" onclick="logout()">ログアウト</button>
+    <button class="tb-home" id="homebtn" onclick="goHome()" aria-label="ホームに戻る">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M4 11L12 4L20 11"></path>
+        <path d="M6 10V19a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1V10"></path>
+        <path d="M10 20v-5h4v5"></path>
+      </svg>
+      Home
+    </button>
   </header>
   <main>
     <section id="screen-home"></section>
@@ -3819,8 +3824,6 @@ function renderShiftLogin(){
     '</div></div>';
 }
 function pickShift(i){current=i;goShift();}
-function logout(){current=null;goHome();}
-
 /* router */
 function show(name){
   curScreen=name;
@@ -3832,9 +3835,8 @@ function show(name){
   document.getElementById('screen-referral').hidden=name!=="referral";
   document.getElementById('screen-news').hidden=name!=="news";
   document.getElementById('screen-manual').hidden=name!=="manual";
-  document.getElementById('backbtn').classList.toggle('on',name!=="home");
+  document.getElementById('homebtn').classList.toggle('on',name!=="home");
   document.getElementById('brandmascot').style.display=(name==="home")?"":"none";
-  document.getElementById('logoutbtn').style.display=(name==="shift")?"":"none";
   window.scrollTo({top:0});
 }
 function goHome(){document.getElementById('brandtxt').textContent='職員ダッシュボード';show("home");}
