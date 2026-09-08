@@ -98,7 +98,7 @@ main{padding:16px}
 .tile .flag{position:absolute;top:11px;right:11px;font-size:9.5px;font-weight:800;color:var(--brand);
   background:var(--brand-soft);padding:3px 7px;border-radius:999px;z-index:1;}
 .tile .flag.flag-anpi{color:#fff;background:var(--red);}
-.tile .flag.flag-pulse{color:#fff;background:#1e824c;animation:omFlagPulse 1.3s ease-in-out infinite;}
+.tile .flag.flag-pulse{color:#fff;background:var(--red);animation:omFlagPulse 1.3s ease-in-out infinite;}
 @keyframes omFlagPulse{0%,100%{opacity:1;}50%{opacity:.35;}}
 
 /* 安否確認：一番下・横2枚分の幅（薄型・横長） */
@@ -6890,7 +6890,7 @@ function show(name){
   document.getElementById('brandmascot').style.display=(name==="home")?"":"none";
   window.scrollTo({top:0});
 }
-function goHome(){document.getElementById('brandtxt').textContent='職員ダッシュボード';show("home");}
+function goHome(){document.getElementById('brandtxt').textContent='職員ダッシュボード';show("home");if(typeof omCheckPending==='function')omCheckPending();}
 function goShift(){document.getElementById('brandtxt').textContent='シフト管理';renderShift();show("shift");}
 function goStub(title,icon,tint){
   document.getElementById('brandtxt').textContent=title;
@@ -7371,7 +7371,7 @@ const MENU=[
 ];
 function renderHome(){
   const tiles=MENU.map(function(m,i){
-     var flag=m.flag?'<span class="flag">'+m.flag+'</span>':(m.flagId?'<span class="flag flag-pulse" id="'+m.flagId+'" style="display:none">✅受領</span>':'');
+     var flag=m.flag?'<span class="flag">'+m.flag+'</span>':(m.flagId?'<span class="flag flag-pulse" id="'+m.flagId+'" style="display:none">🔴受領</span>':'');
      var lg=m.ic==='bot'?' ic-lg':'';
      return '<button class="tile" onclick="MENU['+i+'].go()">'+flag+
        '<span class="tileclip">'+
@@ -7480,7 +7480,7 @@ function allHTML(){
 }
 
 /* boot */
-renderHome();goHome();omCheckPending();
+renderHome();goHome();
 </script>
 </body>
 </html>
