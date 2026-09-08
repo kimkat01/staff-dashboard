@@ -370,9 +370,10 @@ tbody tr.me .namecol{color:var(--brand)}
     display:flex;align-items:flex-start;justify-content:center;overflow-y:auto;
     -webkit-font-smoothing:antialiased;}
   #pinGate .login-card{width:100%;max-width:440px;margin-top:10vh;}
-  .pin-input{width:100%;font-size:34px;letter-spacing:18px;text-align:center;padding:14px 0;
-    border:1.5px solid var(--line);border-radius:14px;background:#fff;
-    font-variant-numeric:tabular-nums;box-sizing:border-box;}
+  .pin-boxes{display:flex;gap:10px;justify-content:center;padding:0 10px;}
+  .pin-box{width:56px;height:64px;font-size:30px;text-align:center;border:1.5px solid var(--line);
+    border-radius:12px;background:#fff;font-variant-numeric:tabular-nums;box-sizing:border-box;}
+  .pin-box:focus{outline:none;border-color:#005FFF;box-shadow:0 0 0 2px rgba(0,95,255,.2);}
   .pin-btn{width:100%;margin-top:14px;border:0;background:#005FFF;color:#fff;font-weight:800;
     font-size:16px;padding:14px;border-radius:12px;cursor:pointer;font-family:inherit;}
   .pin-btn:disabled{opacity:.5;}
@@ -394,14 +395,24 @@ tbody tr.me .namecol{color:var(--brand)}
     <div id="pgPinStep" style="display:none;padding:0 10px;">
       <button class="pin-back" onclick="pgBackToName()">← 名前選びに戻る</button>
       <p class="login-hint" id="pgPinLabel"></p>
-      <input class="pin-input" id="pgPinInput" type="tel" inputmode="numeric" maxlength="4" pattern="[0-9]*" autocomplete="off">
+      <div class="pin-boxes" id="pgPinBoxes">
+        <input class="pin-box" type="tel" inputmode="numeric" maxlength="1" pattern="[0-9]" autocomplete="off">
+        <input class="pin-box" type="tel" inputmode="numeric" maxlength="1" pattern="[0-9]" autocomplete="off">
+        <input class="pin-box" type="tel" inputmode="numeric" maxlength="1" pattern="[0-9]" autocomplete="off">
+        <input class="pin-box" type="tel" inputmode="numeric" maxlength="1" pattern="[0-9]" autocomplete="off">
+      </div>
       <div class="pin-err" id="pgErr"></div>
       <button class="pin-btn" id="pgLoginBtn" onclick="pgSubmit()">ログイン</button>
     </div>
 
     <div id="pgPinChangeStep" style="display:none;padding:0 10px;">
       <p class="login-hint">初期パスワード「0000」のままです。よろしければ、お好きな4桁に変更できます。</p>
-      <input class="pin-input" id="pgNewPin" type="tel" inputmode="numeric" maxlength="4" pattern="[0-9]*" autocomplete="off" placeholder="新しいパスワード">
+      <div class="pin-boxes" id="pgNewPinBoxes">
+        <input class="pin-box" type="tel" inputmode="numeric" maxlength="1" pattern="[0-9]" autocomplete="off">
+        <input class="pin-box" type="tel" inputmode="numeric" maxlength="1" pattern="[0-9]" autocomplete="off">
+        <input class="pin-box" type="tel" inputmode="numeric" maxlength="1" pattern="[0-9]" autocomplete="off">
+        <input class="pin-box" type="tel" inputmode="numeric" maxlength="1" pattern="[0-9]" autocomplete="off">
+      </div>
       <div class="pin-err" id="pgErr2"></div>
       <button class="pin-btn" id="pgChangeBtn" onclick="pgSubmitChange()">この番号に変更する</button>
       <button class="pin-back" onclick="pgSkipChange()">あとで変更する（このまま進む）</button>
@@ -451,15 +462,41 @@ tbody tr.me .namecol{color:var(--brand)}
       });
   }
 
+  function setupPinBoxes(containerId){
+    var boxes = document.querySelectorAll('#' + containerId + ' .pin-box');
+    for(var i = 0; i < boxes.length; i++){
+      (function(box, idx){
+        box.addEventListener('input', function(){
+          box.value = box.value.replace(/[^0-9]/g, '').slice(0, 1);
+          if(box.value && idx < boxes.length - 1){ boxes[idx + 1].focus(); }
+        });
+        box.addEventListener('keydown', function(e){
+          if(e.key === 'Backspace' && !box.value && idx > 0){ boxes[idx - 1].focus(); }
+        });
+      })(boxes[i], i);
+    }
+  }
+  function getPinBoxesValue(containerId){
+    var boxes = document.querySelectorAll('#' + containerId + ' .pin-box');
+    var val = '';
+    for(var i = 0; i < boxes.length; i++){ val += boxes[i].value; }
+    return val;
+  }
+  function clearPinBoxes(containerId){
+    var boxes = document.querySelectorAll('#' + containerId + ' .pin-box');
+    for(var i = 0; i < boxes.length; i++){ boxes[i].value = ''; }
+    if(boxes[0]){ boxes[0].focus(); }
+  }
+  setupPinBoxes('pgPinBoxes');
+  setupPinBoxes('pgNewPinBoxes');
+
   window.pgPickName = function(name){
     pgSelectedName = name;
     document.getElementById('pgNameList').style.display = 'none';
     document.getElementById('pgHint').style.display = 'none';
     document.getElementById('pgPinStep').style.display = 'block';
     document.getElementById('pgPinLabel').textContent = name + 'さんのパスワード（4桁）を入力してください';
-    var input = document.getElementById('pgPinInput');
-    input.value = '';
-    input.focus();
+    clearPinBoxes('pgPinBoxes');
   };
 
   window.pgBackToName = function(){
@@ -470,7 +507,7 @@ tbody tr.me .namecol{color:var(--brand)}
   };
 
   window.pgSubmit = function(){
-    var pin = document.getElementById('pgPinInput').value.trim();
+    var pin = getPinBoxesValue('pgPinBoxes');
     var err = document.getElementById('pgErr');
     err.textContent = '';
     if(!/^[0-9]{4}$/.test(pin)){ err.textContent = 'パスワードは4桁の数字で入力してください'; return; }
@@ -485,6 +522,7 @@ tbody tr.me .namecol{color:var(--brand)}
           if(data.isDefaultPin){
             document.getElementById('pgPinStep').style.display = 'none';
             document.getElementById('pgPinChangeStep').style.display = 'block';
+            clearPinBoxes('pgNewPinBoxes');
           } else {
             hideGate();
           }
@@ -499,7 +537,7 @@ tbody tr.me .namecol{color:var(--brand)}
   };
 
   window.pgSubmitChange = function(){
-    var newPin = document.getElementById('pgNewPin').value.trim();
+    var newPin = getPinBoxesValue('pgNewPinBoxes');
     var err = document.getElementById('pgErr2');
     err.textContent = '';
     if(!/^[0-9]{4}$/.test(newPin)){ err.textContent = '新しいパスワードは4桁の数字で入力してください'; return; }
