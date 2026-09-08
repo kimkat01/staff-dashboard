@@ -362,7 +362,7 @@ tbody tr.me .namecol{color:var(--brand)}
 </head>
 <body>
 <!-- ============================================================
-     PINログインゲート（staff-dashboard 共通ログイン）
+     パスワードログインゲート（staff-dashboard 共通ログイン）
      挿入位置：<body> の直後、<div class="wrap"> の手前
      ============================================================ -->
 <style>
@@ -373,9 +373,10 @@ tbody tr.me .namecol{color:var(--brand)}
   .pin-input{width:100%;font-size:34px;letter-spacing:18px;text-align:center;padding:14px 0;
     border:1.5px solid var(--line);border-radius:14px;background:#fff;
     font-variant-numeric:tabular-nums;box-sizing:border-box;}
-  .pin-btn{width:100%;margin-top:14px;border:0;background:var(--brand);color:#fff;font-weight:800;
+  .pin-btn{width:100%;margin-top:14px;border:0;background:#005FFF;color:#fff;font-weight:800;
     font-size:16px;padding:14px;border-radius:12px;cursor:pointer;font-family:inherit;}
   .pin-btn:disabled{opacity:.5;}
+  #pinGate .namelist .av{background:#005FFF;color:#fff;}
   .pin-err{color:#c0392b;font-size:13px;margin:8px 10px 0;min-height:18px;}
   .pin-back{display:block;background:none;border:0;color:var(--ink-soft);font-size:13px;
     margin:14px auto 0;cursor:pointer;font-family:inherit;text-decoration:underline;}
@@ -399,8 +400,8 @@ tbody tr.me .namecol{color:var(--brand)}
     </div>
 
     <div id="pgPinChangeStep" style="display:none;padding:0 10px;">
-      <p class="login-hint">初期PIN「0000」のままです。よろしければ、お好きな4桁に変更できます。</p>
-      <input class="pin-input" id="pgNewPin" type="tel" inputmode="numeric" maxlength="4" pattern="[0-9]*" autocomplete="off" placeholder="新しいPIN">
+      <p class="login-hint">初期パスワード「0000」のままです。よろしければ、お好きな4桁に変更できます。</p>
+      <input class="pin-input" id="pgNewPin" type="tel" inputmode="numeric" maxlength="4" pattern="[0-9]*" autocomplete="off" placeholder="新しいパスワード">
       <div class="pin-err" id="pgErr2"></div>
       <button class="pin-btn" id="pgChangeBtn" onclick="pgSubmitChange()">この番号に変更する</button>
       <button class="pin-back" onclick="pgSkipChange()">あとで変更する（このまま進む）</button>
@@ -455,7 +456,7 @@ tbody tr.me .namecol{color:var(--brand)}
     document.getElementById('pgNameList').style.display = 'none';
     document.getElementById('pgHint').style.display = 'none';
     document.getElementById('pgPinStep').style.display = 'block';
-    document.getElementById('pgPinLabel').textContent = name + 'さんのPIN（4桁）を入力してください';
+    document.getElementById('pgPinLabel').textContent = name + 'さんのパスワード（4桁）を入力してください';
     var input = document.getElementById('pgPinInput');
     input.value = '';
     input.focus();
@@ -472,7 +473,7 @@ tbody tr.me .namecol{color:var(--brand)}
     var pin = document.getElementById('pgPinInput').value.trim();
     var err = document.getElementById('pgErr');
     err.textContent = '';
-    if(!/^[0-9]{4}$/.test(pin)){ err.textContent = 'PINは4桁の数字で入力してください'; return; }
+    if(!/^[0-9]{4}$/.test(pin)){ err.textContent = 'パスワードは4桁の数字で入力してください'; return; }
     var btn = document.getElementById('pgLoginBtn');
     btn.disabled = true; btn.textContent = '確認中…';
     fetch(GAS_URL, { method:'POST', body: JSON.stringify({ action:'login', garden:GARDEN, name:pgSelectedName, pin:pin }) })
@@ -488,7 +489,7 @@ tbody tr.me .namecol{color:var(--brand)}
             hideGate();
           }
         } else {
-          err.textContent = (data && data.message) || 'お名前またはPINが正しくありません';
+          err.textContent = (data && data.message) || 'お名前またはパスワードが正しくありません';
         }
       })
       .catch(function(){
@@ -501,7 +502,7 @@ tbody tr.me .namecol{color:var(--brand)}
     var newPin = document.getElementById('pgNewPin').value.trim();
     var err = document.getElementById('pgErr2');
     err.textContent = '';
-    if(!/^[0-9]{4}$/.test(newPin)){ err.textContent = '新しいPINは4桁の数字で入力してください'; return; }
+    if(!/^[0-9]{4}$/.test(newPin)){ err.textContent = '新しいパスワードは4桁の数字で入力してください'; return; }
     var btn = document.getElementById('pgChangeBtn');
     btn.disabled = true; btn.textContent = '変更中…';
     fetch(GAS_URL, { method:'POST', body: JSON.stringify({ action:'changePin', garden:GARDEN, name:pgSelectedName, oldPin:'0000', newPin:newPin }) })
@@ -521,7 +522,7 @@ tbody tr.me .namecol{color:var(--brand)}
 })();
 </script>
 <!-- ============================================================
-     PINログインゲート ここまで
+     パスワードログインゲート ここまで
      ============================================================ -->
 
 <div class="wrap">
