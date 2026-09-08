@@ -230,8 +230,8 @@ tbody tr.me .namecol{color:var(--brand)}
 #screen-omeyasu .ocard{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:14px;box-shadow:var(--shadow);}
 #screen-omeyasu .osafe{border:1px solid #cfe8d8;background:#f2fbf6;}
 #screen-omeyasu .osafe .olead{font-size:15px;font-weight:800;color:#1e824c;margin-bottom:6px;}
-#screen-omeyasu .osafe .obody{font-size:13px;line-height:1.8;color:var(--ink);}
-#screen-omeyasu .osafe .obody b{color:#1e824c;}
+#screen-omeyasu .osafe .obody{font-size:13px;line-height:1.8;color:var(--ink);font-weight:700;}
+#screen-omeyasu .osafe .obody b{font-weight:700;}
 #screen-omeyasu .otabs{display:flex;gap:8px;margin-bottom:14px;}
 #screen-omeyasu .otabs button{flex:1;padding:12px;border:1px solid var(--line);background:#fff;color:var(--ink-soft);border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;}
 #screen-omeyasu .otabs button.on{background:var(--brand-blue);color:#fff;border-color:var(--brand-blue);}
@@ -247,7 +247,7 @@ tbody tr.me .namecol{color:var(--brand)}
 #screen-omeyasu .omsg.ok{color:#1e824c;}
 #screen-omeyasu .ohidden{display:none;}
 #screen-omeyasu .ocode-box{text-align:center;padding:18px;}
-#screen-omeyasu .ocode-note{font-size:13px;color:var(--ink-soft);line-height:1.7;}
+#screen-omeyasu .ocode-note{font-size:13px;color:var(--ink-soft);line-height:1.7;font-weight:700;}
 /* ===== 職員紹介制度（実名リファラル・UIのみ / 送信先は後日設定 RF_SUBMIT_URL） ===== */
 #screen-referral .rwrap{max-width:440px;margin:0 auto;padding:16px;}
 #screen-referral .rcard{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:14px;box-shadow:var(--shadow);}
@@ -579,8 +579,8 @@ tbody tr.me .namecol{color:var(--brand)}
         <div class="ocard osafe">
           <div class="olead">💡 ご意見・ご提案をお寄せください</div>
           <div class="obody">
-            現場で感じたこと、「こうしたらもっと良くなるかも」というアイデアなど、どんなことでも歓迎です。<b>小さなことでも大歓迎です。</b><br>
-            <b>記名で送る</b>か<b>匿名で送る</b>か、下のボタンで選べます。
+            現場で感じたこと、「こうしたらもっと良くなるかも」というアイデアなど、どんなことでも歓迎です。小さなことでも大歓迎です。<br>
+            記名で送るか匿名で送るか、下のボタンで選べます。
           </div>
         </div>
         <div class="ocard osafe ohidden" id="omReceivedNotice">
@@ -7053,7 +7053,9 @@ function omCheckPending(){
     fetch(OM_GAS_URL+'?code='+encodeURIComponent(item.code)+'&t='+Date.now())
       .then(function(r){return r.json();})
       .then(function(res){
-        if(res&&res.ok&&res.status&&res.status!=='未対応'){
+        var statusChanged=res&&res.ok&&res.status&&res.status!=='未対応';
+        var hasReply=res&&res.ok&&res.reply&&String(res.reply).trim()!=='';
+        if(statusChanged||hasReply){
           item.confirmed=true;
           omShowTileBadge();
         }
