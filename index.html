@@ -7318,7 +7318,7 @@ const CORP_PW="shiodome8000";
    title=表示名／file=PDFファイル名（GD_BASE からの相対・半角推奨）。 */
 const MANUALS=[
   {label:"規約・マニュアル", docs:[
-    {title:"就業規則（正規職員）",   file:"seiki-shugyo-kisoku.pdf"},
+    {title:"就業規則（正規職員）",   file:"tsukuba-seiki-shugyo-kisoku.pdf", local:true},
     {title:"就業規則（パート職員）", file:"part-shugyo-kisoku.pdf"},
     {title:"給与規定（正規職員）",   file:"seiki-kyuyo-kitei.pdf"},
     {title:"管理規程（法人）",       file:"kanri-kitei.pdf"},
@@ -7333,7 +7333,9 @@ const MANUALS=[
 ];
 var GD_EXT_ICON='<svg viewBox="0 0 24 24"><path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></svg>';
 function gdEsc(s){return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
-function gdOpenDoc(file){window.open(GD_BASE+encodeURIComponent(file),'_blank','noopener');}
+/* local=true の場合は GD_BASE(shiodome-knowledge=三郷中央専用) を経由せず、
+   このダッシュボード（staff-dashboard＝つくば用）のリポジトリ直下のPDFを直接開く。 */
+function gdOpenDoc(file,local){window.open(local?file:GD_BASE+encodeURIComponent(file),'_blank','noopener');}
 function gdOpenViewer(){window.open(GD_VIEWER,'_blank','noopener');}
 function gdRender(){
   var html='';
@@ -7342,7 +7344,7 @@ function gdRender(){
     html+='<div class="gdgroup"><div class="gdglabel">'+gdEsc(grp.label)+'</div>';
     for(var d=0;d<grp.docs.length;d++){
       var doc=grp.docs[d];
-      html+='<button class="gddoc" onclick="gdOpenDoc(\''+doc.file+'\')">'
+      html+='<button class="gddoc" onclick="gdOpenDoc(\''+doc.file+'\','+(!!doc.local)+')">'
           +'<span class="gdfic">'+IC.doc+'</span>'
           +'<span class="gdmeta"><span class="gdt">'+gdEsc(doc.title)+'</span><span class="gdpill">PDF</span></span>'
           +'<span class="gdchev">'+GD_EXT_ICON+'</span>'
