@@ -6957,6 +6957,16 @@ var omLastCode="";
 function getOmeyasuIdentity(){
   var g=(typeof gardenName==='function')?gardenName():((typeof DATA!=='undefined'&&DATA.facility)||"");
   var n=(current!=null && staff[current])?staff[current].name:"";
+  if(!n){
+    /* シフト画面で名前を選んでいなくても、PINログイン時の情報を身元として使う */
+    try{
+      var pin=JSON.parse(localStorage.getItem('sd_pin_login')||'null');
+      if(pin&&pin.name){
+        n=pin.name;
+        if(!g)g=pin.garden||g;
+      }
+    }catch(e){}
+  }
   return {garden:g,name:n};
 }
 
