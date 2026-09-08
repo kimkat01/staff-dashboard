@@ -7371,7 +7371,7 @@ const MENU=[
 ];
 function renderHome(){
   const tiles=MENU.map(function(m,i){
-     var flag=m.flag?'<span class="flag">'+m.flag+'</span>':(m.flagId?'<span class="flag flag-pulse" id="'+m.flagId+'" style="display:none">🔴受領</span>':'');
+     var flag=m.flag?'<span class="flag">'+m.flag+'</span>':(m.flagId?'<span class="flag flag-pulse" id="'+m.flagId+'" style="display:none">受領</span>':'');
      var lg=m.ic==='bot'?' ic-lg':'';
      return '<button class="tile" onclick="MENU['+i+'].go()">'+flag+
        '<span class="tileclip">'+
