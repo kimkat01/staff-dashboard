@@ -98,6 +98,8 @@ main{padding:16px}
 .tile .flag{position:absolute;top:11px;right:11px;font-size:9.5px;font-weight:800;color:var(--brand);
   background:var(--brand-soft);padding:3px 7px;border-radius:999px;z-index:1;}
 .tile .flag.flag-anpi{color:#fff;background:var(--red);}
+.tile .flag.flag-pulse{color:#fff;background:#1e824c;animation:omFlagPulse 1.3s ease-in-out infinite;}
+@keyframes omFlagPulse{0%,100%{opacity:1;}50%{opacity:.35;}}
 
 /* 安否確認：一番下・横2枚分の幅（薄型・横長） */
 .tile-wide{width:100%;min-height:0;}
@@ -230,10 +232,6 @@ tbody tr.me .namecol{color:var(--brand)}
 #screen-omeyasu .osafe .olead{font-size:15px;font-weight:800;color:#1e824c;margin-bottom:6px;}
 #screen-omeyasu .osafe .obody{font-size:13px;line-height:1.8;color:var(--ink);}
 #screen-omeyasu .osafe .obody b{color:#1e824c;}
-#screen-omeyasu .oinfo{border:1px solid #dfe6f5;background:#f4f7ff;}
-#screen-omeyasu .oinfo .oilead{font-size:14px;font-weight:800;color:var(--brand-blue);margin-bottom:6px;}
-#screen-omeyasu .oinfo .oibody{font-size:13px;line-height:1.8;color:var(--ink);}
-#screen-omeyasu .oinfo .oibody b{color:var(--brand-blue);}
 #screen-omeyasu .otabs{display:flex;gap:8px;margin-bottom:14px;}
 #screen-omeyasu .otabs button{flex:1;padding:12px;border:1px solid var(--line);background:#fff;color:var(--ink-soft);border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;}
 #screen-omeyasu .otabs button.on{background:var(--brand-blue);color:#fff;border-color:var(--brand-blue);}
@@ -249,12 +247,7 @@ tbody tr.me .namecol{color:var(--brand)}
 #screen-omeyasu .omsg.ok{color:#1e824c;}
 #screen-omeyasu .ohidden{display:none;}
 #screen-omeyasu .ocode-box{text-align:center;padding:18px;}
-#screen-omeyasu .ocode{font-size:26px;font-weight:800;letter-spacing:2px;color:var(--brand-blue);margin:8px 0;}
 #screen-omeyasu .ocode-note{font-size:13px;color:var(--ink-soft);line-height:1.7;}
-#screen-omeyasu .ocopy{margin-top:10px;padding:10px 16px;border:1px solid var(--brand-blue);background:#fff;color:var(--brand-blue);border-radius:10px;font-weight:800;cursor:pointer;font-family:inherit;}
-#screen-omeyasu .oresult{border-left:4px solid var(--brand-blue);padding:10px 14px;background:#f5f8ff;border-radius:8px;margin-top:12px;}
-#screen-omeyasu .oresult .orow{font-size:14px;margin:4px 0;}
-#screen-omeyasu .oresult .orow b{display:inline-block;min-width:70px;color:var(--ink-soft);font-weight:700;}
 /* ===== 職員紹介制度（実名リファラル・UIのみ / 送信先は後日設定 RF_SUBMIT_URL） ===== */
 #screen-referral .rwrap{max-width:440px;margin:0 auto;padding:16px;}
 #screen-referral .rcard{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:14px;box-shadow:var(--shadow);}
@@ -587,19 +580,12 @@ tbody tr.me .namecol{color:var(--brand)}
           <div class="olead">💡 ご意見・ご提案をお寄せください</div>
           <div class="obody">
             現場で感じたこと、「こうしたらもっと良くなるかも」というアイデアなど、どんなことでも歓迎です。<b>小さなことでも大歓迎です。</b><br>
-            <b>お名前を伝えて送る</b>か<b>匿名で送る</b>か、下のボタンで選べます。
+            <b>記名で送る</b>か<b>匿名で送る</b>か、下のボタンで選べます。
           </div>
         </div>
-        <div class="ocard oinfo">
-          <div class="oilead">💬 返信の受け取り方</div>
-          <div class="oibody">
-            送信すると、あなた専用の<b>「シークレットコード」</b>（例：MB-3F9K2A）が発行されます。<br>
-            匿名で送った場合も、このコードで本部からの返信を確認できます。返信不要の場合は無視して結構です。
-          </div>
-        </div>
-        <div class="otabs">
-          <button id="omTabPost" class="on" onclick="omeyasuMode('post')">投稿する</button>
-          <button id="omTabCheck" onclick="omeyasuMode('check')">返信を確認する</button>
+        <div class="ocard osafe ohidden" id="omReceivedNotice">
+          <div class="olead">📬 本部が確認しました</div>
+          <div class="obody">以前お送りいただいたご意見について、本部が確認済みです。</div>
         </div>
         <div id="omPanePost">
           <div class="ocard" id="omFormCard">
@@ -618,7 +604,7 @@ tbody tr.me .namecol{color:var(--brand)}
             <div class="ofield">
               <label>送り方を選んでください</label>
               <div class="otabs">
-                <button id="omModeNamed" class="on" onclick="omeyasuSetIdentityMode('named')">🙂 お名前を伝えて送る</button>
+                <button id="omModeNamed" class="on" onclick="omeyasuSetIdentityMode('named')">🙂 記名で送る</button>
                 <button id="omModeAnon" onclick="omeyasuSetIdentityMode('anon')">🙈 匿名で送る</button>
               </div>
               <div class="ocode-note" id="omIdentityNote" style="margin-top:8px"></div>
@@ -641,34 +627,9 @@ tbody tr.me .namecol{color:var(--brand)}
             <div class="omsg" id="omPostMsg"></div>
           </div>
           <div class="ocard ocode-box ohidden" id="omDoneCard">
-            <div style="font-weight:800">投稿を受け付けました</div>
-            <div class="ocode-note" style="margin-top:6px">これがあなた専用の<b>シークレットコード</b>です</div>
-            <div class="ocode" id="omCodeText">MB-XXXXXX</div>
-            <div class="ocode-note">
-              このコードで<b>あなたと本部がやり取り</b>します。<br>
-              本部からの返信は「返信を確認する」から<b>このコードで確認</b>できます。<br>
-              返信が必要な場合は控えておいてください。
-            </div>
-            <button class="ocopy" onclick="omeyasuCopy()">コードをコピー</button>
-            <div class="omsg ok" id="omCopyMsg"></div>
-          </div>
-        </div>
-        <div id="omPaneCheck" class="ohidden">
-          <div class="ocard">
-            <div class="ocode-note" style="margin-bottom:12px">
-              投稿したときに発行された<b>シークレットコード</b>（例：MB-3F9K2A）を入力すると、本部からの返信を確認できます。<br>
-              コードを控えていない場合は、この画面からは確認できません。恐れ入りますが、もう一度投稿してください。
-            </div>
-            <div class="ofield">
-              <label for="omCodeIn">シークレットコードを入力</label>
-              <input type="text" id="omCodeIn" placeholder="例：MB-3F9K2A" autocapitalize="characters">
-            </div>
-            <button class="obtn" id="omCheckBtn" onclick="omeyasuCheck()">確認する</button>
-            <div class="omsg" id="omCheckMsg"></div>
-            <div class="oresult ohidden" id="omResultBox">
-              <div class="orow"><b>状態</b><span id="omRStatus"></span></div>
-              <div class="orow"><b>本部返信</b><span id="omRReply"></span></div>
-            </div>
+            <div style="font-size:32px">🙏</div>
+            <div style="font-weight:800;margin-top:6px">送信しました。ありがとうございました。</div>
+            <div class="ocode-note" style="margin-top:6px">内容は本部に届いています。</div>
           </div>
         </div>
       </div>
@@ -7029,15 +6990,8 @@ function goOmeyasu(){
   document.getElementById('omGarden').value='';
   document.getElementById('omName').value='';
   omeyasuSetIdentityMode('named');
-  omeyasuMode('post');
+  omApplyReceivedNotice();
   show('omeyasu');
-}
-function omeyasuMode(mode){
-  var post=(mode==='post');
-  document.getElementById('omTabPost').className=post?'on':'';
-  document.getElementById('omTabCheck').className=post?'':'on';
-  document.getElementById('omPanePost').className=post?'':'ohidden';
-  document.getElementById('omPaneCheck').className=post?'ohidden':'';
 }
 function omeyasuSubmit(){
   var body=document.getElementById('omBody').value.trim();
@@ -7059,35 +7013,66 @@ function omeyasuSubmit(){
       btn.disabled=false;
       if(res&&res.ok){
         omLastCode=res.code;
-        document.getElementById('omCodeText').textContent=res.code;
+        if(res.code)omAddLocalCode(res.code);
         document.getElementById('omFormCard').className='ocard ohidden';
         document.getElementById('omDoneCard').className='ocard ocode-box';
       }else{msg.className='omsg err';msg.textContent='送信に失敗しました。時間をおいて再度お試しください。';}
     })
     .catch(function(){btn.disabled=false;msg.className='omsg err';msg.textContent='通信エラーが発生しました。';});
 }
-function omeyasuCopy(){
-  var cm=document.getElementById('omCopyMsg');
-  if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(omLastCode).then(function(){cm.textContent='コピーしました。';});}
-  else{cm.textContent=omLastCode;}
+
+/* ===== ご意見箱：受領通知（本部が確認済みにすると、ホームのタイルにスタンプが点滅） ===== */
+var OM_LOCAL_KEY='om_local_codes_v1';
+function omGetLocalCodes(){try{return JSON.parse(localStorage.getItem(OM_LOCAL_KEY)||'[]');}catch(e){return [];}}
+function omSetLocalCodes(list){try{localStorage.setItem(OM_LOCAL_KEY,JSON.stringify(list));}catch(e){}}
+function omAddLocalCode(code){
+  var list=omGetLocalCodes();
+  if(!list.some(function(x){return x.code===code;})){
+    list.push({code:code,confirmed:false,seen:false});
+    omSetLocalCodes(list);
+  }
 }
-function omeyasuCheck(){
-  var code=document.getElementById('omCodeIn').value.trim();
-  var msg=document.getElementById('omCheckMsg');var box=document.getElementById('omResultBox');
-  msg.className='omsg';box.className='oresult ohidden';
-  if(!OM_GAS_URL){msg.className='omsg err';msg.textContent='送信先(OM_GAS_URL)が未設定です。';return;}
-  if(!code){msg.className='omsg err';msg.textContent='コードを入力してください。';return;}
-  var btn=document.getElementById('omCheckBtn');btn.disabled=true;msg.textContent='確認中…';
-  var url=OM_GAS_URL+'?code='+encodeURIComponent(code)+'&t='+Date.now();
-  fetch(url).then(function(r){return r.json();}).then(function(res){
-    btn.disabled=false;
-    if(res&&res.ok){msg.textContent='';
-      document.getElementById('omRStatus').textContent=res.status||'未対応';
-      document.getElementById('omRReply').textContent=res.reply?res.reply:'（まだ返信はありません）';
-      box.className='oresult';
-    }else if(res&&res.error==='not_found'){msg.className='omsg err';msg.textContent='このコードの投稿が見つかりませんでした。';}
-    else{msg.className='omsg err';msg.textContent='確認に失敗しました。';}
-  }).catch(function(){btn.disabled=false;msg.className='omsg err';msg.textContent='通信エラーが発生しました。';});
+function omShowTileBadge(){
+  var el=document.getElementById('omTileFlag');
+  if(el)el.style.display='';
+}
+function omHideTileBadge(){
+  var el=document.getElementById('omTileFlag');
+  if(el)el.style.display='none';
+}
+/* 起動時に、未確認（seen:false）の投稿コードだけ本部のステータスを確認する。
+   status が「未対応」以外になっていれば「本部が確認済み」とみなしてバッジを点滅させる。 */
+function omCheckPending(){
+  if(!OM_GAS_URL)return;
+  var list=omGetLocalCodes();
+  var targets=list.filter(function(x){return !x.seen;});
+  if(!targets.length)return;
+  var remaining=targets.length;
+  function omDone(){remaining--;if(remaining===0)omSetLocalCodes(list);}
+  targets.forEach(function(item){
+    fetch(OM_GAS_URL+'?code='+encodeURIComponent(item.code)+'&t='+Date.now())
+      .then(function(r){return r.json();})
+      .then(function(res){
+        if(res&&res.ok&&res.status&&res.status!=='未対応'){
+          item.confirmed=true;
+          omShowTileBadge();
+        }
+        omDone();
+      })
+      .catch(function(){omDone();});
+  });
+}
+/* ご意見箱の画面を開いたときに呼ぶ。確認済みの投稿があれば案内を出し、既読にしてバッジを消す */
+function omApplyReceivedNotice(){
+  var list=omGetLocalCodes();
+  var hasConfirmed=list.some(function(x){return x.confirmed&&!x.seen;});
+  var notice=document.getElementById('omReceivedNotice');
+  if(notice)notice.className=hasConfirmed?'ocard osafe':'ocard osafe ohidden';
+  if(hasConfirmed){
+    list.forEach(function(x){if(x.confirmed)x.seen=true;});
+    omSetLocalCodes(list);
+    omHideTileBadge();
+  }
 }
 
 /* HOME */
@@ -7369,12 +7354,12 @@ const MENU=[
  {t:"規約・マニュアル",d:"就業規則・各種マニュアル",ic:"doc",tint:"i-lav",go:()=>goManual()},
  {t:"ドメボット",d:"チャットで質問・相談",ic:"bot",tint:"i-rose",go:()=>goLink(domeUrl(),"ドメボット","bot","i-rose")},
  {t:"コーポレートブック",d:"会社案内・理念ブック",ic:"book",tint:"i-gold",go:()=>goLinkPw(CORP_URL,"コーポレートブック","book","i-gold",CORP_PW)},
- {t:"ご意見箱",d:"匿名で本部に届ける",ic:"box",tint:"i-mid",go:()=>goOmeyasu(),flag:"🔴NEW"},
+ {t:"ご意見箱",d:"匿名で本部に届ける",ic:"box",tint:"i-mid",go:()=>goOmeyasu(),flagId:"omTileFlag"},
  {t:"職員紹介制度",d:"一緒に働く仲間をご紹介",ic:"ref",tint:"i-sun",go:()=>goReferral()},
 ];
 function renderHome(){
   const tiles=MENU.map(function(m,i){
-     var flag=m.flag?'<span class="flag">'+m.flag+'</span>':'';
+     var flag=m.flag?'<span class="flag">'+m.flag+'</span>':(m.flagId?'<span class="flag flag-pulse" id="'+m.flagId+'" style="display:none">✅受領</span>':'');
      var lg=m.ic==='bot'?' ic-lg':'';
      return '<button class="tile" onclick="MENU['+i+'].go()">'+flag+
        '<span class="tileclip">'+
@@ -7483,7 +7468,7 @@ function allHTML(){
 }
 
 /* boot */
-renderHome();goHome();
+renderHome();goHome();omCheckPending();
 </script>
 </body>
 </html>
