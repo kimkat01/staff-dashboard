@@ -757,10 +757,13 @@ function showLoginError(){
 
 function renderStaffOptions(staffList){
   const list = [...staffList].sort((a,b)=>a.name.localeCompare(b.name,'ja'));
-  document.getElementById('staffSelect').innerHTML =
-    list.map(s=>`<option value="${s.id}">${s.name}（${s.type}）</option>`).join('');
+  const sel = document.getElementById('staffSelect');
+  const prevValue = sel.value; // 自動更新で選択が巻き戻らないよう、選択中の職員IDを保持
+  sel.innerHTML = list.map(s=>`<option value="${s.id}">${s.name}（${s.type}）</option>`).join('');
+  if(prevValue && list.some(s=>s.id===prevValue)){
+    sel.value = prevValue; // 再描画後も選択状態を復元
+  }
 }
-
 // ★デモ固定：ローカルのダミー職員（デモ園に属する13名）のみを一覧表示し、GASへは接続しない
 function buildLoginList(){
   document.getElementById('gardenLabel').textContent = MY_GARDEN + '（デモ）';
