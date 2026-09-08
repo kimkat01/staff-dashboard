@@ -361,6 +361,169 @@ tbody tr.me .namecol{color:var(--brand)}
 </style>
 </head>
 <body>
+<!-- ============================================================
+     PINログインゲート（staff-dashboard 共通ログイン）
+     挿入位置：<body> の直後、<div class="wrap"> の手前
+     ============================================================ -->
+<style>
+  #pinGate{position:fixed;inset:0;z-index:99999;background:var(--paper);
+    display:flex;align-items:flex-start;justify-content:center;overflow-y:auto;
+    -webkit-font-smoothing:antialiased;}
+  #pinGate .login-card{width:100%;max-width:440px;margin-top:10vh;}
+  .pin-input{width:100%;font-size:34px;letter-spacing:18px;text-align:center;padding:14px 0;
+    border:1.5px solid var(--line);border-radius:14px;background:#fff;
+    font-variant-numeric:tabular-nums;box-sizing:border-box;}
+  .pin-btn{width:100%;margin-top:14px;border:0;background:var(--brand);color:#fff;font-weight:800;
+    font-size:16px;padding:14px;border-radius:12px;cursor:pointer;font-family:inherit;}
+  .pin-btn:disabled{opacity:.5;}
+  .pin-err{color:#c0392b;font-size:13px;margin:8px 10px 0;min-height:18px;}
+  .pin-back{display:block;background:none;border:0;color:var(--ink-soft);font-size:13px;
+    margin:14px auto 0;cursor:pointer;font-family:inherit;text-decoration:underline;}
+</style>
+
+<div id="pinGate">
+  <div class="login-card">
+    <div class="login-fac" id="pgFac"></div>
+    <h2 class="round">ログイン</h2>
+    <p class="login-hint" id="pgHint">お名前を選んでください</p>
+    <div class="namelist" id="pgNameList">
+      <div style="padding:20px;color:var(--ink-soft);font-size:13px;">読み込み中…</div>
+    </div>
+
+    <div id="pgPinStep" style="display:none;padding:0 10px;">
+      <button class="pin-back" onclick="pgBackToName()">← 名前選びに戻る</button>
+      <p class="login-hint" id="pgPinLabel"></p>
+      <input class="pin-input" id="pgPinInput" type="tel" inputmode="numeric" maxlength="4" pattern="[0-9]*" autocomplete="off">
+      <div class="pin-err" id="pgErr"></div>
+      <button class="pin-btn" id="pgLoginBtn" onclick="pgSubmit()">ログイン</button>
+    </div>
+
+    <div id="pgPinChangeStep" style="display:none;padding:0 10px;">
+      <p class="login-hint">初期PIN「0000」のままです。よろしければ、お好きな4桁に変更できます。</p>
+      <input class="pin-input" id="pgNewPin" type="tel" inputmode="numeric" maxlength="4" pattern="[0-9]*" autocomplete="off" placeholder="新しいPIN">
+      <div class="pin-err" id="pgErr2"></div>
+      <button class="pin-btn" id="pgChangeBtn" onclick="pgSubmitChange()">この番号に変更する</button>
+      <button class="pin-back" onclick="pgSkipChange()">あとで変更する（このまま進む）</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  // ★★★ ここに、GASをデプロイして発行された「.../exec」で終わるURLを貼り付けてください ★★★
+  var GAS_URL = 'https://script.google.com/macros/s/AKfycbwnTzHQ5XdHPPLdf9QnWJLA-Dc7oBIYzfr1MfFd-Uunyarw0QWc48WzzAme6hR1muBisg/exec';
+
+  var params = new URLSearchParams(location.search);
+  var GARDEN = params.get('garden') || '';
+  var SESSION_KEY = 'sd_pin_login';
+  var pgSelectedName = null;
+
+  var gateEl = document.getElementById('pinGate');
+  document.getElementById('pgFac').textContent = GARDEN || '（園名が設定されていないURLです）';
+
+  function hideGate(){ gateEl.style.display='none'; document.body.style.overflow=''; }
+
+  var saved = null;
+  try{ saved = JSON.parse(localStorage.getItem(SESSION_KEY) || 'null'); }catch(e){}
+  if(saved && saved.garden === GARDEN && saved.name){
+    hideGate();
+  } else {
+    document.body.style.overflow = 'hidden';
+    loadNames();
+  }
+
+  function loadNames(){
+    fetch(GAS_URL + '?action=getStaffList&garden=' + encodeURIComponent(GARDEN))
+      .then(function(r){ return r.json(); })
+      .then(function(data){
+        var names = (data && data.names) || [];
+        var html = names.map(function(n){
+          var safe = n.replace(/'/g, "\\'");
+          return '<button onclick="pgPickName(\'' + safe + '\')"><span class="av round">' + (n[0]||'?') + '</span><span>' + n + '</span></button>';
+        }).join('');
+        document.getElementById('pgNameList').innerHTML = html ||
+          '<div style="padding:20px;color:var(--ink-soft);font-size:13px;">この園の職員一覧が見つかりませんでした</div>';
+      })
+      .catch(function(){
+        document.getElementById('pgNameList').innerHTML =
+          '<div style="padding:20px;color:#c0392b;font-size:13px;">通信エラーです。電波の良い場所でもう一度開いてください。</div>';
+      });
+  }
+
+  window.pgPickName = function(name){
+    pgSelectedName = name;
+    document.getElementById('pgNameList').style.display = 'none';
+    document.getElementById('pgHint').style.display = 'none';
+    document.getElementById('pgPinStep').style.display = 'block';
+    document.getElementById('pgPinLabel').textContent = name + 'さんのPIN（4桁）を入力してください';
+    var input = document.getElementById('pgPinInput');
+    input.value = '';
+    input.focus();
+  };
+
+  window.pgBackToName = function(){
+    document.getElementById('pgPinStep').style.display = 'none';
+    document.getElementById('pgNameList').style.display = '';
+    document.getElementById('pgHint').style.display = '';
+    document.getElementById('pgErr').textContent = '';
+  };
+
+  window.pgSubmit = function(){
+    var pin = document.getElementById('pgPinInput').value.trim();
+    var err = document.getElementById('pgErr');
+    err.textContent = '';
+    if(!/^[0-9]{4}$/.test(pin)){ err.textContent = 'PINは4桁の数字で入力してください'; return; }
+    var btn = document.getElementById('pgLoginBtn');
+    btn.disabled = true; btn.textContent = '確認中…';
+    fetch(GAS_URL, { method:'POST', body: JSON.stringify({ action:'login', garden:GARDEN, name:pgSelectedName, pin:pin }) })
+      .then(function(r){ return r.json(); })
+      .then(function(data){
+        btn.disabled = false; btn.textContent = 'ログイン';
+        if(data && data.ok){
+          try{ localStorage.setItem(SESSION_KEY, JSON.stringify({ garden:GARDEN, name:pgSelectedName, token:data.token })); }catch(e){}
+          if(data.isDefaultPin){
+            document.getElementById('pgPinStep').style.display = 'none';
+            document.getElementById('pgPinChangeStep').style.display = 'block';
+          } else {
+            hideGate();
+          }
+        } else {
+          err.textContent = (data && data.message) || 'お名前またはPINが正しくありません';
+        }
+      })
+      .catch(function(){
+        btn.disabled = false; btn.textContent = 'ログイン';
+        err.textContent = '通信エラーです。もう一度お試しください。';
+      });
+  };
+
+  window.pgSubmitChange = function(){
+    var newPin = document.getElementById('pgNewPin').value.trim();
+    var err = document.getElementById('pgErr2');
+    err.textContent = '';
+    if(!/^[0-9]{4}$/.test(newPin)){ err.textContent = '新しいPINは4桁の数字で入力してください'; return; }
+    var btn = document.getElementById('pgChangeBtn');
+    btn.disabled = true; btn.textContent = '変更中…';
+    fetch(GAS_URL, { method:'POST', body: JSON.stringify({ action:'changePin', garden:GARDEN, name:pgSelectedName, oldPin:'0000', newPin:newPin }) })
+      .then(function(r){ return r.json(); })
+      .then(function(data){
+        btn.disabled = false; btn.textContent = 'この番号に変更する';
+        if(data && data.ok){ hideGate(); }
+        else { err.textContent = (data && data.message) || '変更に失敗しました'; }
+      })
+      .catch(function(){
+        btn.disabled = false; btn.textContent = 'この番号に変更する';
+        err.textContent = '通信エラーです。もう一度お試しください。';
+      });
+  };
+
+  window.pgSkipChange = function(){ hideGate(); };
+})();
+</script>
+<!-- ============================================================
+     PINログインゲート ここまで
+     ============================================================ -->
+
 <div class="wrap">
   <header class="topbar">
     <img class="tb-mascot" id="brandmascot" src="" alt="">
