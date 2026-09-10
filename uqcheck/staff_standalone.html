@@ -445,36 +445,44 @@ const API = {
 // ★ アプリ名: UQ checker（変更する場合は各HTMLの<title>とhd-titleを修正）
 // 共有データストア (localStorage)
 const DB = {
-  KEY_STAFF: 'ym_staff',
-  KEY_REQUESTS: 'ym_requests',
+  KEY_STAFF: 'ym_staff_fureai_shiodome',
+  KEY_REQUESTS: 'ym_requests_fureai_shiodome',
 
-  defaultStaff: [
-    {id:'EMP001',name:'新井 淳子',type:'パート',hire:'2019-04-01',grantDate:'2026-04-01',grant:18,carry:3,used:6,summerUsed:3,summerTotal:5,basicPay:0,allowance:0,avgMonthlyHours:0,hourlyWage:1100,email:'sato.hanako@shiba.ed.jp',garden:'しおどめ保育園つくば'},
-    {id:'EMP002',name:'古橋 陸斗',type:'正規',hire:'2021-04-01',grantDate:'2026-04-01',grant:14,carry:2,used:4,summerUsed:2,summerTotal:5,basicPay:230000,allowance:15000,avgMonthlyHours:160,email:'suzuki.misaki@shiba.ed.jp',garden:'しおどめ保育園つくば'},
-    {id:'EMP003',name:'佐倉 智子',type:'パート',hire:'2022-10-01',grantDate:'2026-04-01',grant:11,carry:1,used:3,summerUsed:0,summerTotal:5,basicPay:0,allowance:0,avgMonthlyHours:0,hourlyWage:1050,email:'takahashi.yuki@shiba.ed.jp',garden:'しおどめ保育園つくば'},
-    {id:'EMP004',name:'髙橋 豊子',type:'正規',hire:'2023-04-01',grantDate:'2026-04-01',grant:10,carry:2,used:1,summerUsed:0,summerTotal:0,basicPay:250000,allowance:18000,avgMonthlyHours:160,email:'tanaka.ayaka@shiba.ed.jp',garden:'しおどめ保育園つくば'},
-    {id:'EMP005',name:'野口 優衣奈',type:'パート',hire:'2024-01-01',grantDate:'2026-04-01',grant:10,carry:0,used:0,summerUsed:0,summerTotal:0,basicPay:0,allowance:0,avgMonthlyHours:0,hourlyWage:1050,email:'watanabe.mai@shiba.ed.jp',garden:'しおどめ保育園つくば'},
-    {id:'EMP006',name:'飯島 聡子',type:'正規',hire:'2017-04-01',grantDate:'2026-04-01',grant:20,carry:5,used:8,summerUsed:5,summerTotal:5,basicPay:270000,allowance:20000,avgMonthlyHours:160,email:'ito.nana@shiba.ed.jp',garden:'しおどめ保育園つくば'},
-    {id:'EMP007',name:'山本 悦美',type:'パート',hire:'2020-04-01',grantDate:'2026-04-01',grant:16,carry:2,used:5,summerUsed:3,summerTotal:5,basicPay:0,allowance:0,avgMonthlyHours:0,hourlyWage:1120,email:'yamamoto.chinatsu@shiba.ed.jp',garden:'しおどめ保育園つくば'},
-    {id:'EMP008',name:'若槙 紀子',type:'パート',hire:'2022-09-01',grantDate:'2026-04-01',grant:11,carry:1,used:2,summerUsed:0,summerTotal:0,basicPay:0,allowance:0,avgMonthlyHours:0,hourlyWage:1120,email:'nakamura.megumi@shiba.ed.jp',garden:'しおどめ保育園つくば'},
-    {id:'EMP009',name:'神谷 彰男',type:'正規',hire:'2023-04-01',grantDate:'2026-04-01',grant:10,carry:0,used:2,summerUsed:1,summerTotal:5,basicPay:210000,allowance:12000,avgMonthlyHours:160,email:'kobayashi.haruka@shiba.ed.jp',garden:'しおどめ保育園つくば'},
-    {id:'EMP010',name:'吉沼 めぐみ',type:'正規',hire:'2021-06-01',grantDate:'2026-04-01',grant:11,carry:2,used:3,summerUsed:0,summerTotal:0,basicPay:230000,allowance:15000,avgMonthlyHours:160,email:'kato.rina@shiba.ed.jp',garden:'しおどめ保育園つくば'},
-    {id:'EMP011',name:'田﨑 未愛',type:'嘱託',hire:'2020-10-01',grantDate:'2026-04-01',grant:12,carry:1,used:4,summerUsed:0,summerTotal:5,basicPay:205000,allowance:11000,avgMonthlyHours:160,email:'yoshida.saori@shiba.ed.jp',garden:'しおどめ保育園つくば'},
-    {id:'EMP012',name:'津久井 沙織',type:'正規',hire:'2024-04-01',grantDate:'2026-04-01',grant:10,carry:0,used:0,summerUsed:0,summerTotal:0,basicPay:200000,allowance:10000,avgMonthlyHours:160,email:'yamada.mao@shiba.ed.jp',garden:'しおどめ保育園つくば'},
-    {id:'EMP013',name:'塚田 夏海',type:'パート',hire:'2019-10-01',grantDate:'2026-04-01',grant:18,carry:3,used:7,summerUsed:4,summerTotal:5,basicPay:0,allowance:0,avgMonthlyHours:0,hourlyWage:1080,email:'sasaki.momoko@shiba.ed.jp',garden:'しおどめ保育園つくば'},
-    {id:'EMP014',name:'山越 栄美',type:'パート',hire:'2019-04-01',grantDate:'2026-04-01',grant:18,carry:3,used:6,summerUsed:3,summerTotal:5,basicPay:0,allowance:0,avgMonthlyHours:0,hourlyWage:1150,email:'sato.hanako@shiba.ed.jp',garden:'しおどめ保育園つくば'},
-    {id:'EMP015',name:'久松 悦子',type:'正規',hire:'2021-04-01',grantDate:'2026-04-01',grant:14,carry:2,used:4,summerUsed:2,summerTotal:5,basicPay:230000,allowance:15000,avgMonthlyHours:160,email:'suzuki.misaki@shiba.ed.jp',garden:'しおどめ保育園つくば'},
-    {id:'EMP016',name:'及川 美咲',type:'嘱託',hire:'2022-10-01',grantDate:'2026-04-01',grant:11,carry:1,used:3,summerUsed:0,summerTotal:5,basicPay:200000,allowance:10000,avgMonthlyHours:160,email:'takahashi.yuki@shiba.ed.jp',garden:'しおどめ保育園つくば'},
-    {id:'EMP017',name:'荒井 美香子',type:'正規',hire:'2023-04-01',grantDate:'2026-04-01',grant:10,carry:2,used:1,summerUsed:0,summerTotal:0,basicPay:270000,allowance:20000,avgMonthlyHours:160,email:'tanaka.ayaka@shiba.ed.jp',garden:'しおどめ保育園つくば'},
-    {id:'EMP018',name:'髙波 郁子',type:'正規',hire:'2024-01-01',grantDate:'2026-04-01',grant:10,carry:0,used:0,summerUsed:0,summerTotal:0,basicPay:240000,allowance:16000,avgMonthlyHours:160,email:'watanabe.mai@shiba.ed.jp',garden:'しおどめ保育園つくば'},
-    {id:'EMP019',name:'斉藤 由紀子',type:'正規',hire:'2017-04-01',grantDate:'2026-04-01',grant:20,carry:5,used:8,summerUsed:5,summerTotal:5,basicPay:270000,allowance:20000,avgMonthlyHours:160,email:'ito.nana@shiba.ed.jp',garden:'しおどめ保育園つくば'},
-    {id:'EMP020',name:'小﨑 奏子',type:'正規',hire:'2020-04-01',grantDate:'2026-04-01',grant:16,carry:2,used:5,summerUsed:3,summerTotal:5,basicPay:240000,allowance:16000,avgMonthlyHours:160,email:'yamamoto.chinatsu@shiba.ed.jp',garden:'しおどめ保育園つくば'},
-    {id:'EMP021',name:'山下 明日香',type:'正規',hire:'2022-09-01',grantDate:'2026-04-01',grant:11,carry:1,used:2,summerUsed:0,summerTotal:0,basicPay:210000,allowance:12000,avgMonthlyHours:160,email:'nakamura.megumi@shiba.ed.jp',garden:'しおどめ保育園つくば'},
-    {id:'EMP022',name:'近藤 美貴',type:'正規',hire:'2023-04-01',grantDate:'2026-04-01',grant:10,carry:0,used:2,summerUsed:1,summerTotal:5,basicPay:210000,allowance:12000,avgMonthlyHours:160,email:'kobayashi.haruka@shiba.ed.jp',garden:'しおどめ保育園つくば'},
-    {id:'EMP023',name:'大澤 茉希',type:'正規',hire:'2021-06-01',grantDate:'2026-04-01',grant:11,carry:2,used:3,summerUsed:0,summerTotal:0,basicPay:245000,allowance:17000,avgMonthlyHours:160,email:'kato.rina@shiba.ed.jp',garden:'しおどめ保育園つくば'},
-    {id:'EMP024',name:'山﨑 美枝子',type:'嘱託',hire:'2020-10-01',grantDate:'2026-04-01',grant:12,carry:1,used:4,summerUsed:0,summerTotal:5,basicPay:205000,allowance:11000,avgMonthlyHours:160,email:'yoshida.saori@shiba.ed.jp',garden:'しおどめ保育園つくば'},
-    {id:'EMP025',name:'野口 しのぶ',type:'正規',hire:'2024-04-01',grantDate:'2026-04-01',grant:10,carry:0,used:0,summerUsed:0,summerTotal:0,basicPay:250000,allowance:18000,avgMonthlyHours:160,email:'yamada.mao@shiba.ed.jp',garden:'しおどめ保育園つくば'},
-    {id:'EMP026',name:'飯田 裕子',type:'正規',hire:'2019-10-01',grantDate:'2026-04-01',grant:18,carry:3,used:7,summerUsed:4,summerTotal:5,basicPay:245000,allowance:17000,avgMonthlyHours:160,email:'sasaki.momoko@shiba.ed.jp',garden:'しおどめ保育園つくば'},
+    defaultStaff: [
+    /* TODO: type(雇用形態)/hire(入社日)/grant(付与日数)/carry(繰越)/used(使用済み)/basicPay/allowance/avgMonthlyHours/hourlyWage/email は未入力です。実際の値に置き換えてください。 */
+    {id:'EMP001',name:'井波　美由紀',type:'',hire:'',grantDate:'2026-04-01',grant:0,carry:0,used:0,summerUsed:0,summerTotal:0,basicPay:0,allowance:0,avgMonthlyHours:0,hourlyWage:0,email:'',garden:'ふれあいしおどめ保育園'},
+    {id:'EMP002',name:'成田　麻里',type:'',hire:'',grantDate:'2026-04-01',grant:0,carry:0,used:0,summerUsed:0,summerTotal:0,basicPay:0,allowance:0,avgMonthlyHours:0,hourlyWage:0,email:'',garden:'ふれあいしおどめ保育園'},
+    {id:'EMP003',name:'背黒　美波',type:'',hire:'',grantDate:'2026-04-01',grant:0,carry:0,used:0,summerUsed:0,summerTotal:0,basicPay:0,allowance:0,avgMonthlyHours:0,hourlyWage:0,email:'',garden:'ふれあいしおどめ保育園'},
+    {id:'EMP004',name:'宮本　聡美',type:'',hire:'',grantDate:'2026-04-01',grant:0,carry:0,used:0,summerUsed:0,summerTotal:0,basicPay:0,allowance:0,avgMonthlyHours:0,hourlyWage:0,email:'',garden:'ふれあいしおどめ保育園'},
+    {id:'EMP005',name:'＊土居　悦子',type:'',hire:'',grantDate:'2026-04-01',grant:0,carry:0,used:0,summerUsed:0,summerTotal:0,basicPay:0,allowance:0,avgMonthlyHours:0,hourlyWage:0,email:'',garden:'ふれあいしおどめ保育園'},
+    {id:'EMP006',name:'勝村　絵里菜',type:'',hire:'',grantDate:'2026-04-01',grant:0,carry:0,used:0,summerUsed:0,summerTotal:0,basicPay:0,allowance:0,avgMonthlyHours:0,hourlyWage:0,email:'',garden:'ふれあいしおどめ保育園'},
+    {id:'EMP007',name:'野村　瑛美子',type:'',hire:'',grantDate:'2026-04-01',grant:0,carry:0,used:0,summerUsed:0,summerTotal:0,basicPay:0,allowance:0,avgMonthlyHours:0,hourlyWage:0,email:'',garden:'ふれあいしおどめ保育園'},
+    {id:'EMP008',name:'中﨑　杏奈',type:'',hire:'',grantDate:'2026-04-01',grant:0,carry:0,used:0,summerUsed:0,summerTotal:0,basicPay:0,allowance:0,avgMonthlyHours:0,hourlyWage:0,email:'',garden:'ふれあいしおどめ保育園'},
+    {id:'EMP009',name:'高橋　佳子',type:'',hire:'',grantDate:'2026-04-01',grant:0,carry:0,used:0,summerUsed:0,summerTotal:0,basicPay:0,allowance:0,avgMonthlyHours:0,hourlyWage:0,email:'',garden:'ふれあいしおどめ保育園'},
+    {id:'EMP010',name:'＊鈴木　マユミ',type:'',hire:'',grantDate:'2026-04-01',grant:0,carry:0,used:0,summerUsed:0,summerTotal:0,basicPay:0,allowance:0,avgMonthlyHours:0,hourlyWage:0,email:'',garden:'ふれあいしおどめ保育園'},
+    {id:'EMP011',name:'＊阿部　佳奈子',type:'',hire:'',grantDate:'2026-04-01',grant:0,carry:0,used:0,summerUsed:0,summerTotal:0,basicPay:0,allowance:0,avgMonthlyHours:0,hourlyWage:0,email:'',garden:'ふれあいしおどめ保育園'},
+    {id:'EMP012',name:'霜田　侑花',type:'',hire:'',grantDate:'2026-04-01',grant:0,carry:0,used:0,summerUsed:0,summerTotal:0,basicPay:0,allowance:0,avgMonthlyHours:0,hourlyWage:0,email:'',garden:'ふれあいしおどめ保育園'},
+    {id:'EMP013',name:'岩﨑　愛',type:'',hire:'',grantDate:'2026-04-01',grant:0,carry:0,used:0,summerUsed:0,summerTotal:0,basicPay:0,allowance:0,avgMonthlyHours:0,hourlyWage:0,email:'',garden:'ふれあいしおどめ保育園'},
+    {id:'EMP014',name:'橋本　奈千加',type:'',hire:'',grantDate:'2026-04-01',grant:0,carry:0,used:0,summerUsed:0,summerTotal:0,basicPay:0,allowance:0,avgMonthlyHours:0,hourlyWage:0,email:'',garden:'ふれあいしおどめ保育園'},
+    {id:'EMP015',name:'＊町田　美明',type:'',hire:'',grantDate:'2026-04-01',grant:0,carry:0,used:0,summerUsed:0,summerTotal:0,basicPay:0,allowance:0,avgMonthlyHours:0,hourlyWage:0,email:'',garden:'ふれあいしおどめ保育園'},
+    {id:'EMP016',name:'遠藤　咲',type:'',hire:'',grantDate:'2026-04-01',grant:0,carry:0,used:0,summerUsed:0,summerTotal:0,basicPay:0,allowance:0,avgMonthlyHours:0,hourlyWage:0,email:'',garden:'ふれあいしおどめ保育園'},
+    {id:'EMP017',name:'高橋　歩実',type:'',hire:'',grantDate:'2026-04-01',grant:0,carry:0,used:0,summerUsed:0,summerTotal:0,basicPay:0,allowance:0,avgMonthlyHours:0,hourlyWage:0,email:'',garden:'ふれあいしおどめ保育園'},
+    {id:'EMP018',name:'＊栗原　美晴',type:'',hire:'',grantDate:'2026-04-01',grant:0,carry:0,used:0,summerUsed:0,summerTotal:0,basicPay:0,allowance:0,avgMonthlyHours:0,hourlyWage:0,email:'',garden:'ふれあいしおどめ保育園'},
+    {id:'EMP019',name:'＊＊大川原　昌子',type:'',hire:'',grantDate:'2026-04-01',grant:0,carry:0,used:0,summerUsed:0,summerTotal:0,basicPay:0,allowance:0,avgMonthlyHours:0,hourlyWage:0,email:'',garden:'ふれあいしおどめ保育園'},
+    {id:'EMP020',name:'＊植村　郁子',type:'',hire:'',grantDate:'2026-04-01',grant:0,carry:0,used:0,summerUsed:0,summerTotal:0,basicPay:0,allowance:0,avgMonthlyHours:0,hourlyWage:0,email:'',garden:'ふれあいしおどめ保育園'},
+    {id:'EMP021',name:'＊谷田貝　実加',type:'',hire:'',grantDate:'2026-04-01',grant:0,carry:0,used:0,summerUsed:0,summerTotal:0,basicPay:0,allowance:0,avgMonthlyHours:0,hourlyWage:0,email:'',garden:'ふれあいしおどめ保育園'},
+    {id:'EMP022',name:'＊＊青木　真登香',type:'',hire:'',grantDate:'2026-04-01',grant:0,carry:0,used:0,summerUsed:0,summerTotal:0,basicPay:0,allowance:0,avgMonthlyHours:0,hourlyWage:0,email:'',garden:'ふれあいしおどめ保育園'},
+    {id:'EMP023',name:'＊下野　結桂子',type:'',hire:'',grantDate:'2026-04-01',grant:0,carry:0,used:0,summerUsed:0,summerTotal:0,basicPay:0,allowance:0,avgMonthlyHours:0,hourlyWage:0,email:'',garden:'ふれあいしおどめ保育園'},
+    {id:'EMP024',name:'＊＊長妻　理紗',type:'',hire:'',grantDate:'2026-04-01',grant:0,carry:0,used:0,summerUsed:0,summerTotal:0,basicPay:0,allowance:0,avgMonthlyHours:0,hourlyWage:0,email:'',garden:'ふれあいしおどめ保育園'},
+    {id:'EMP025',name:'＊＊内山　典子',type:'',hire:'',grantDate:'2026-04-01',grant:0,carry:0,used:0,summerUsed:0,summerTotal:0,basicPay:0,allowance:0,avgMonthlyHours:0,hourlyWage:0,email:'',garden:'ふれあいしおどめ保育園'},
+    {id:'EMP026',name:'＊＊伊﨑　千亜紀',type:'',hire:'',grantDate:'2026-04-01',grant:0,carry:0,used:0,summerUsed:0,summerTotal:0,basicPay:0,allowance:0,avgMonthlyHours:0,hourlyWage:0,email:'',garden:'ふれあいしおどめ保育園'},
+    {id:'EMP027',name:'山本　晴奈',type:'',hire:'',grantDate:'2026-04-01',grant:0,carry:0,used:0,summerUsed:0,summerTotal:0,basicPay:0,allowance:0,avgMonthlyHours:0,hourlyWage:0,email:'',garden:'ふれあいしおどめ保育園'},
+    {id:'EMP028',name:'渡邊　裕里子',type:'',hire:'',grantDate:'2026-04-01',grant:0,carry:0,used:0,summerUsed:0,summerTotal:0,basicPay:0,allowance:0,avgMonthlyHours:0,hourlyWage:0,email:'',garden:'ふれあいしおどめ保育園'},
+    {id:'EMP029',name:'登坂　恵美子',type:'',hire:'',grantDate:'2026-04-01',grant:0,carry:0,used:0,summerUsed:0,summerTotal:0,basicPay:0,allowance:0,avgMonthlyHours:0,hourlyWage:0,email:'',garden:'ふれあいしおどめ保育園'},
+    {id:'EMP030',name:'＊稲浪　菫花',type:'',hire:'',grantDate:'2026-04-01',grant:0,carry:0,used:0,summerUsed:0,summerTotal:0,basicPay:0,allowance:0,avgMonthlyHours:0,hourlyWage:0,email:'',garden:'ふれあいしおどめ保育園'},
+    {id:'EMP031',name:'＊＊山口　由美',type:'',hire:'',grantDate:'2026-04-01',grant:0,carry:0,used:0,summerUsed:0,summerTotal:0,basicPay:0,allowance:0,avgMonthlyHours:0,hourlyWage:0,email:'',garden:'ふれあいしおどめ保育園'},
+    {id:'EMP032',name:'＊＊吉田　奈美',type:'',hire:'',grantDate:'2026-04-01',grant:0,carry:0,used:0,summerUsed:0,summerTotal:0,basicPay:0,allowance:0,avgMonthlyHours:0,hourlyWage:0,email:'',garden:'ふれあいしおどめ保育園'},
+    {id:'EMP033',name:'（研修）高波　郁子',type:'',hire:'',grantDate:'2026-04-01',grant:0,carry:0,used:0,summerUsed:0,summerTotal:0,basicPay:0,allowance:0,avgMonthlyHours:0,hourlyWage:0,email:'',garden:'ふれあいしおどめ保育園'},
   ],
 
   defaultRequests: [
@@ -682,7 +690,7 @@ function calPick(dateStr){
 calInit();
 
 // ★デモ固定：このページは常にデモ園・ダミー職員のみを表示し、実データ（GAS本番スプレッドシート）は一切取得しない
-const MY_GARDEN = 'しおどめ保育園つくば';
+const MY_GARDEN = 'ふれあいしおどめ保育園';
 
 // ページを開くたびに、過去の本番同期などで残っているローカルデータを初回だけ一掃し、
 // 以降は園長用・職員用で共有するデモデータとして扱う（=自分が出した申請が園長画面にも反映される）
@@ -729,7 +737,10 @@ const DEMO_API = {
 
 // デモ専用GASから最新データを取ってきてローカルキャッシュに反映する。
 // URL未設定・通信失敗のときは何もせず、既存のlocalStorageデータのまま表示する。
+// ★ふれあいしおどめ保育園用：共通デモGAS側が園ごとにデータを正しく分けられていないため、
+//   一時的に無効化（ローカルのdefaultStaffのみで動作させる）。TODO: 原因確認後に復活を検討。
 async function syncDemo(){
+  return;
   const [staff, reqs] = await Promise.all([DEMO_API.getStaff(MY_GARDEN), DEMO_API.getRequests(MY_GARDEN)]);
   if(staff && staff.length) DB.saveStaff(staff);
   if(reqs) DB.saveRequests(reqs);

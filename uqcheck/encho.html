@@ -201,7 +201,7 @@ let currentReqId = null;
 let currentAction = null;
 
 // ★デモ固定：このページは常にデモ園・ダミー職員のみを表示し、実データ（GAS本番スプレッドシート）は一切取得しない
-const MY_GARDEN = 'しおどめ保育園つくば';
+const MY_GARDEN = 'ふれあいしおどめ保育園';
 
 // ============================================================
 // デモ専用GAS連携（別端末間でデータを共有するため）
@@ -244,7 +244,10 @@ const DEMO_API = {
 
 // デモ専用GASから最新データを取ってきてローカルキャッシュに反映する。
 // URL未設定・通信失敗のときは何もせず、既存のlocalStorageデータのまま表示する。
+// ★ふれあいしおどめ保育園用：共通デモGAS側が園ごとにデータを正しく分けられていないため、
+//   一時的に無効化（ローカルのdefaultStaffのみで動作させる）。TODO: 原因確認後に復活を検討。
 async function syncDemo(){
+  return;
   const [staff, reqs] = await Promise.all([DEMO_API.getStaff(MY_GARDEN), DEMO_API.getRequests(MY_GARDEN)]);
   if(staff && staff.length) DB.saveStaff(staff);
   if(reqs) DB.saveRequests(reqs);
