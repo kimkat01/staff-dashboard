@@ -6600,8 +6600,20 @@ const DATA = {
 };
 const staff = DATA.staff, dates = DATA.dates, today = DATA.today;
 let current = null, curScreen="home", showAllPeriod=false, shiftTab="me";
-/* 給食・駐車場の当日記録（見た目のみ。GAS側ができたらsaveKP内のfetchを有効化する） */
+/* 給食・駐車場の当日記録。GAS Web AppのURLをKP_ENDPOINTに設定すると、
+   実際に記録・取得されるようになる（空文字のままだと見た目だけの動作） */
 let KP_STATE = { meal:false, park:false };
+const KP_ENDPOINT = "https://script.google.com/macros/s/AKfycbxov7LyccCioWBxq64G0XdgcI-IRscXzQYghWXl3Xc8hD-tK25l7o3Bfn7Fb636v8Bzeg/exec";
+function kpFacilityId(){return (DATA.domeKey||DATA.facility||"").toString();}
+function loadKPToday(){
+  if(!KP_ENDPOINT||current===null)return;
+  const url=KP_ENDPOINT+"?action=today&facility="+encodeURIComponent(kpFacilityId())
+    +"&date="+encodeURIComponent(today)+"&name="+encodeURIComponent(staff[current].name);
+  fetch(url).then(r=>r.json()).then(d=>{
+    KP_STATE.meal=!!d.meal;KP_STATE.park=!!d.park;
+    if(curScreen==="shift")renderShift();
+  }).catch(()=>{});
+}
 
 const CAT = {
  "早番":{cls:"cell-early",bg:"--early-bg",ink:"--early-ink",label:"早番"},
@@ -6664,7 +6676,7 @@ function renderShiftLogin(){
       '<div class="namelist">'+names+'</div>'+
     '</div></div>';
 }
-function pickShift(i){current=i;goShift();}
+function pickShift(i){current=i;loadKPToday();goShift();}
 /* router */
 function show(name){
   curScreen=name;
@@ -7250,16 +7262,16 @@ function kpHTML(){
 function toggleKP(topic){
   KP_STATE[topic]=!KP_STATE[topic];
   renderShift();
-  /* TODO: GAS Web Appができたらここでfetchして記録する
-     fetch(KP_ENDPOINT, {method:"POST", body: JSON.stringify({
-       date: today, name: staff[current].name, facility: DATA.facility,
-       meal: KP_STATE.meal?1:0, park: KP_STATE.park?1:0
-     })});
-  */
+  if(KP_ENDPOINT&&current!==null){
+    fetch(KP_ENDPOINT,{method:"POST",body:JSON.stringify({
+      date:today,name:staff[current].name,facility:kpFacilityId(),
+      meal:KP_STATE.meal?1:0,park:KP_STATE.park?1:0
+    })}).catch(()=>{});
+  }
   const note=document.getElementById('kp-note');
   if(note){
     const label=topic==='meal'?'給食':'駐車場';
-    note.textContent='保存しました（'+label+'）';
+    note.textContent=(KP_ENDPOINT?'保存しました（':'（デモ・未保存）（')+label+'）';
     setTimeout(()=>{if(note)note.textContent='';},1500);
   }
 }
