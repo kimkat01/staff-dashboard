@@ -7262,16 +7262,28 @@ function kpHTML(){
 function toggleKP(topic){
   KP_STATE[topic]=!KP_STATE[topic];
   renderShift();
-  if(KP_ENDPOINT&&current!==null){
-    fetch(KP_ENDPOINT,{method:"POST",body:JSON.stringify({
-      date:today,name:staff[current].name,facility:kpFacilityId(),
-      meal:KP_STATE.meal?1:0,park:KP_STATE.park?1:0
-    })}).catch(()=>{});
-  }
   const note=document.getElementById('kp-note');
+  const label=topic==='meal'?'給食':'駐車場';
+  if(KP_ENDPOINT&&current!==null){
+    /* POSTだとGAS側のリダイレクトでGETに化けてしまうことがあるため、GETで送る */
+    const url=KP_ENDPOINT+"?action=save"
+      +"&date="+encodeURIComponent(today)
+      +"&facility="+encodeURIComponent(kpFacilityId())
+      +"&name="+encodeURIComponent(staff[current].name)
+      +"&meal="+(KP_STATE.meal?1:0)+"&park="+(KP_STATE.park?1:0);
+    fetch(url).then(r=>r.json()).then(d=>{
+      if(!note)return;
+      note.textContent=(d&&d.ok?'保存しました（':'保存に失敗しました（')+label+'）';
+      setTimeout(()=>{if(note)note.textContent='';},1500);
+    }).catch(()=>{
+      if(!note)return;
+      note.textContent='保存に失敗しました（通信エラー）';
+      setTimeout(()=>{if(note)note.textContent='';},1500);
+    });
+    return;
+  }
   if(note){
-    const label=topic==='meal'?'給食':'駐車場';
-    note.textContent=(KP_ENDPOINT?'保存しました（':'（デモ・未保存）（')+label+'）';
+    note.textContent='（デモ・未保存）（'+label+'）';
     setTimeout(()=>{if(note)note.textContent='';},1500);
   }
 }
