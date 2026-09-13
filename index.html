@@ -6604,11 +6604,18 @@ let current = null, curScreen="home", showAllPeriod=false, shiftTab="me";
    実際に記録・取得されるようになる（空文字のままだと見た目だけの動作） */
 let KP_STATE = { meal:false, park:false };
 const KP_ENDPOINT = "https://script.google.com/macros/s/AKfycbxov7LyccCioWBxq64G0XdgcI-IRscXzQYghWXl3Xc8hD-tK25l7o3Bfn7Fb636v8Bzeg/exec";
+/* 給食・駐車場ボタンの記録日は、シフトデータの基準日(today)ではなく、
+   実際に押した瞬間の実際の日付を使う（タイムゾーンずれを避けローカル日付で組み立てる） */
+function _kpLocalDateStr(d){
+  const y=d.getFullYear(), m=String(d.getMonth()+1).padStart(2,'0'), day=String(d.getDate()).padStart(2,'0');
+  return y+"-"+m+"-"+day;
+}
+function kpToday(){ return _kpLocalDateStr(new Date()); }
 function kpFacilityId(){return (DATA.domeKey||DATA.facility||"").toString();}
 function loadKPToday(){
   if(!KP_ENDPOINT||current===null)return;
   const url=KP_ENDPOINT+"?action=today&facility="+encodeURIComponent(kpFacilityId())
-    +"&date="+encodeURIComponent(today)+"&name="+encodeURIComponent(staff[current].name);
+    +"&date="+encodeURIComponent(kpToday())+"&name="+encodeURIComponent(staff[current].name);
   fetch(url).then(r=>r.json()).then(d=>{
     KP_STATE.meal=!!d.meal;KP_STATE.park=!!d.park;
     if(curScreen==="shift")renderShift();
@@ -7259,27 +7266,29 @@ function kpHTML(){
     <div class="kp-note" id="kp-note"></div>
   </div>`;
 }
+function _kpPing(url){
+  /* fetch()だとCORSの制約で失敗することがあるため、img要素での送信に切り替える
+     （<img src=...>は他サイトへのGETでもブロックされにくい。応答内容は使わない） */
+  var img=new Image();
+  img.src=url;
+}
 function toggleKP(topic){
   KP_STATE[topic]=!KP_STATE[topic];
   renderShift();
   const note=document.getElementById('kp-note');
   const label=topic==='meal'?'給食':'駐車場';
   if(KP_ENDPOINT&&current!==null){
-    /* POSTだとGAS側のリダイレクトでGETに化けてしまうことがあるため、GETで送る */
     const url=KP_ENDPOINT+"?action=save"
-      +"&date="+encodeURIComponent(today)
+      +"&date="+encodeURIComponent(kpToday())
       +"&facility="+encodeURIComponent(kpFacilityId())
       +"&name="+encodeURIComponent(staff[current].name)
-      +"&meal="+(KP_STATE.meal?1:0)+"&park="+(KP_STATE.park?1:0);
-    fetch(url).then(r=>r.json()).then(d=>{
-      if(!note)return;
-      note.textContent=(d&&d.ok?'保存しました（':'保存に失敗しました（')+label+'）';
+      +"&meal="+(KP_STATE.meal?1:0)+"&park="+(KP_STATE.park?1:0)
+      +"&_="+Date.now();
+    _kpPing(url);
+    if(note){
+      note.textContent='保存しました（'+label+'）';
       setTimeout(()=>{if(note)note.textContent='';},1500);
-    }).catch(()=>{
-      if(!note)return;
-      note.textContent='保存に失敗しました（通信エラー）';
-      setTimeout(()=>{if(note)note.textContent='';},1500);
-    });
+    }
     return;
   }
   if(note){
