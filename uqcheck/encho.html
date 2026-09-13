@@ -194,14 +194,25 @@ tbody td{padding:11px 12px;font-size:13px;vertical-align:middle}
 
 <script src="_shared.js?v=3"></script>
 <script>
+// ★ 複数園対応: URLの ?garden=園名 で園を切り替える（staff-dashboard側の getUqUrl() から
+//   ?garden=... 付きで開かれる）。未指定・未対応の値は DEFAULT_GARDEN にフォールバックする。
+//   KEY_STAFF/KEY_REQUESTS は園ごとに分ける（kimkat01.github.io 配下の別リポジトリと
+//   localStorage が共有される＝オリジン単位のため、混線を防ぐ目的）。表示される実データは
+//   このあと syncDemo() がデモ専用GASから園名付きで取得して上書きするので、ここでのローカル
+//   既定値は通信できないときだけのフォールバック。
+const SUPPORTED_GARDENS = ['しおどめ保育園つくば', 'ふれあいしおどめ保育園'];
+const DEFAULT_GARDEN = 'しおどめ保育園つくば';
+const _urlGarden = new URLSearchParams(location.search).get('garden');
+const MY_GARDEN = (_urlGarden && SUPPORTED_GARDENS.includes(_urlGarden)) ? _urlGarden : DEFAULT_GARDEN;
+const GARDEN_KEY = MY_GARDEN === 'ふれあいしおどめ保育園' ? 'fureai_shiodome' : 'tsukuba';
+DB.KEY_STAFF = 'ym_staff_' + GARDEN_KEY;
+DB.KEY_REQUESTS = 'ym_requests_' + GARDEN_KEY;
+
 // ページを開くたびに、過去の本番同期などで残っているローカルデータを初回だけ一掃し、
 // 以降は園長用・職員用で共有するデモデータとして扱う（=職員の申請が園長画面にも反映される）
 DB.ensureDemoData();
 let currentReqId = null;
 let currentAction = null;
-
-// ★デモ固定：このページは常にデモ園・ダミー職員のみを表示し、実データ（GAS本番スプレッドシート）は一切取得しない
-const MY_GARDEN = 'ふれあいしおどめ保育園';
 
 // ============================================================
 // デモ専用GAS連携（別端末間でデータを共有するため）
@@ -244,10 +255,7 @@ const DEMO_API = {
 
 // デモ専用GASから最新データを取ってきてローカルキャッシュに反映する。
 // URL未設定・通信失敗のときは何もせず、既存のlocalStorageデータのまま表示する。
-// ★ふれあいしおどめ保育園用：共通デモGAS側が園ごとにデータを正しく分けられていないため、
-//   一時的に無効化（ローカルのdefaultStaffのみで動作させる）。TODO: 原因確認後に復活を検討。
 async function syncDemo(){
-  return;
   const [staff, reqs] = await Promise.all([DEMO_API.getStaff(MY_GARDEN), DEMO_API.getRequests(MY_GARDEN)]);
   if(staff && staff.length) DB.saveStaff(staff);
   if(reqs) DB.saveRequests(reqs);
