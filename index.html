@@ -231,6 +231,9 @@ tbody tr.me .namecol{color:var(--brand)}
 #screen-omeyasu .osafe .olead{font-size:15px;font-weight:800;color:#1e824c;margin-bottom:6px;}
 #screen-omeyasu .osafe .obody{font-size:13px;line-height:1.8;color:var(--ink);font-weight:700;}
 #screen-omeyasu .osafe .obody b{font-weight:700;}
+#screen-omeyasu .oinfo{border:1px solid #dfe6f5;background:#f4f7ff;margin-bottom:14px;}
+#screen-omeyasu .oinfo .oilead{font-size:14px;font-weight:800;color:var(--brand-blue);margin-bottom:6px;}
+#screen-omeyasu .oinfo .oibody{font-size:13px;line-height:1.8;font-weight:700;color:var(--ink);white-space:pre-wrap;}
 #screen-omeyasu .otabs{display:flex;gap:8px;margin-bottom:14px;}
 #screen-omeyasu .otabs button{flex:1;padding:12px;border:1px solid var(--line);background:#fff;color:var(--ink-soft);border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;}
 #screen-omeyasu .otabs button.on{background:var(--brand-blue);color:#fff;border-color:var(--brand-blue);}
@@ -575,6 +578,7 @@ tbody tr.me .namecol{color:var(--brand)}
     <section id="screen-stub" hidden></section>
     <section id="screen-omeyasu" hidden>
       <div class="owrap">
+        <div id="omReplyList"></div>
         <div class="ocard osafe">
           <div class="olead">💡 ご意見・ご提案をお寄せください</div>
           <div class="obody">
@@ -6995,7 +6999,22 @@ function goOmeyasu(){
   document.getElementById('omGarden').value='';
   document.getElementById('omName').value='';
   omeyasuSetIdentityMode('named');
+  omRenderReplies();
   show('omeyasu');
+}
+function omRenderReplies(){
+  var host=document.getElementById('omReplyList');
+  if(!host)return;
+  var inbox=omGetReplyInbox();
+  if(!inbox.length){host.innerHTML='';return;}
+  host.innerHTML=inbox.map(function(x){
+    return '<div class="ocard oinfo"><div class="oilead">📩 本部からの返信</div><div class="oibody">'+
+      String(x.reply).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>')+
+      '</div></div>';
+  }).join('');
+  /* 表示したら既読にする（次に開いたときはもう出ない） */
+  omSetReplyInbox([]);
+  omUpdateHomeNotice();
 }
 function omeyasuSubmit(){
   var body=document.getElementById('omBody').value.trim();
@@ -7010,14 +7029,14 @@ function omeyasuSubmit(){
     name=document.getElementById('omName').value.trim()||name;
   }
   var btn=document.getElementById('omSendBtn');btn.disabled=true;msg.textContent='送信中…';
-  var payload={category:category,body:body,garden:garden,name:name};
+  var payload={category:category,body:body,garden:garden,name:name,mode:(omIdentityMode==='named'?'記名':'匿名')};
   fetch(OM_GAS_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(payload)})
     .then(function(r){return r.json();})
     .then(function(res){
       btn.disabled=false;
       if(res&&res.ok){
         omLastCode=res.code;
-        if(res.code)omAddLocalCode(res.code);
+        if(res.code)omAddLocalCode(res.code,omIdentityMode==='named');
         document.getElementById('omFormCard').className='ocard ohidden';
         document.getElementById('omDoneCard').className='ocard ocode-box';
       }else{msg.className='omsg err';msg.textContent='送信に失敗しました。時間をおいて再度お試しください。';}
@@ -7025,40 +7044,71 @@ function omeyasuSubmit(){
     .catch(function(){btn.disabled=false;msg.className='omsg err';msg.textContent='通信エラーが発生しました。';});
 }
 
-/* ===== ご意見箱：受領通知（投稿するとホームに案内を出し、本部がスプレッドシートを更新したら消える） ===== */
+/* ===== ご意見箱：受領通知（投稿するとホームに案内を出し、本部がスプレッドシートを更新したら消える） =====
+   記名で送った投稿だけ、本部の返信本文もローカルに保存して開いたときに読めるようにする。 */
 var OM_LOCAL_KEY='om_local_codes_v1';
+var OM_REPLY_KEY='om_reply_inbox_v1';
 function omGetLocalCodes(){try{return JSON.parse(localStorage.getItem(OM_LOCAL_KEY)||'[]');}catch(e){return [];}}
 function omSetLocalCodes(list){try{localStorage.setItem(OM_LOCAL_KEY,JSON.stringify(list));}catch(e){}}
-function omAddLocalCode(code){
+function omGetReplyInbox(){try{return JSON.parse(localStorage.getItem(OM_REPLY_KEY)||'[]');}catch(e){return [];}}
+function omSetReplyInbox(list){try{localStorage.setItem(OM_REPLY_KEY,JSON.stringify(list));}catch(e){}}
+function omAddLocalCode(code,named){
   var list=omGetLocalCodes();
-  if(list.indexOf(code)===-1){list.push(code);omSetLocalCodes(list);}
+  if(!list.some(function(x){return x.code===code;})){
+    list.push({code:code,named:!!named});
+    omSetLocalCodes(list);
+  }
   omUpdateHomeNotice();
 }
 function omUpdateHomeNotice(){
   var el=document.getElementById('omHomeNotice');
-  if(el)el.style.display=omGetLocalCodes().length?'':'none';
+  if(!el)return;
+  var hasReply=omGetReplyInbox().length>0;
+  var hasPending=omGetLocalCodes().length>0;
+  if(hasReply){
+    el.textContent='ご意見箱：本部から返信が届いています。タップしてご確認ください。';
+    el.style.display='';
+    el.onclick=function(){goOmeyasu();};
+    el.style.cursor='pointer';
+  }else if(hasPending){
+    el.textContent='ご意見箱：本部がご意見を受領しました。投稿ありがとうございます。';
+    el.style.display='';
+    el.onclick=null;
+    el.style.cursor='default';
+  }else{
+    el.style.display='none';
+    el.onclick=null;
+  }
 }
 /* 起動時・ホーム表示のたびに、投稿済みでまだ確認していないコードだけ本部の状態を見に行く。
-   状態(status)が「未対応」以外になった、または返信欄(reply)に何か書かれていたら「本部が確認した」とみなし、
-   その投稿はリストから外す（＝ホームの案内が消える）。 */
+   状態(status)が「未対応」以外になった、または返信欄(reply)に何か書かれていたら「本部が対応した」とみなし、
+   受領案内のリストからは外す。記名投稿で実際に返信本文があれば、返信一覧に保存する。 */
 function omCheckPending(){
   var list=omGetLocalCodes();
   if(!OM_GAS_URL||!list.length){omUpdateHomeNotice();return;}
   var remaining=list.length;
   var stillPending=list.slice();
+  var replyInbox=omGetReplyInbox();
   function omDone(){
     remaining--;
-    if(remaining===0){omSetLocalCodes(stillPending);omUpdateHomeNotice();}
+    if(remaining===0){
+      omSetLocalCodes(stillPending);
+      omSetReplyInbox(replyInbox);
+      omUpdateHomeNotice();
+    }
   }
-  list.forEach(function(code){
-    fetch(OM_GAS_URL+'?code='+encodeURIComponent(code)+'&t='+Date.now())
+  list.forEach(function(item){
+    fetch(OM_GAS_URL+'?code='+encodeURIComponent(item.code)+'&t='+Date.now())
       .then(function(r){return r.json();})
       .then(function(res){
         var statusChanged=res&&res.ok&&res.status&&res.status!=='未対応';
-        var hasReply=res&&res.ok&&res.reply&&String(res.reply).trim()!=='';
-        if(statusChanged||hasReply){
-          var idx=stillPending.indexOf(code);
+        var replyText=(res&&res.ok&&res.reply)?String(res.reply).trim():'';
+        if(statusChanged||replyText){
+          var idx=stillPending.findIndex(function(x){return x.code===item.code;});
           if(idx>-1)stillPending.splice(idx,1);
+        }
+        if(item.named&&replyText&&!replyInbox.some(function(x){return x.code===item.code;})){
+          replyInbox.push({code:item.code,reply:replyText});
         }
         omDone();
       })
