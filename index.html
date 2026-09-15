@@ -7030,7 +7030,13 @@ function omeyasuSubmit(){
   }
   var btn=document.getElementById('omSendBtn');btn.disabled=true;msg.textContent='送信中…';
   var payload={category:category,body:body,garden:garden,name:name,mode:(omIdentityMode==='named'?'記名':'匿名')};
-  fetch(OM_GAS_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(payload)})
+  var qs='action=submit'
+    +'&category='+encodeURIComponent(payload.category)
+    +'&body='+encodeURIComponent(payload.body)
+    +'&garden='+encodeURIComponent(payload.garden)
+    +'&name='+encodeURIComponent(payload.name)
+    +'&mode='+encodeURIComponent(payload.mode);
+  fetch(OM_GAS_URL+'?'+qs)
     .then(function(r){return r.json();})
     .then(function(res){
       btn.disabled=false;
