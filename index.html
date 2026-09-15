@@ -432,7 +432,7 @@ tbody tr.me .namecol{color:var(--brand)}
 
   var params = new URLSearchParams(location.search);
   var GARDEN = params.get('garden') || '';
-  var SESSION_KEY = 'sd_pin_login';
+  var SESSION_KEY = 'sd_pin_login__' + (GARDEN || 'default');
   var PASSWORD_PATTERN = /^(?=.*[a-z])(?=.*[0-9])[a-z0-9]{8}$/;
   var pgLoginId = '';
   var pgOldPassword = '';
@@ -6793,7 +6793,7 @@ function getOmeyasuIdentity(){
   if(!n){
     /* シフト画面で名前を選んでいなくても、PINログイン時の情報を身元として使う */
     try{
-      var pin=JSON.parse(localStorage.getItem('sd_pin_login')||'null');
+      var pin=JSON.parse(localStorage.getItem('sd_pin_login__'+g)||'null');
       if(pin&&pin.name){
         n=pin.name;
         if(!g)g=pin.garden||g;
