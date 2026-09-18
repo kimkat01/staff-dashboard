@@ -115,6 +115,34 @@ async function syncFromGAS(garden) {
   }
 }
 
+// ------------------------------------------------------------
+// localStorage セーフラッパー
+// ブラウザ側の設定（Cookie/サイトデータのブロック、プライベートブラウジング、
+// 一部のタブレット管理プロファイルなど）で localStorage が使えないと、
+// 通常の localStorage.getItem/setItem は例外を投げる。これが画面初期化コードの
+// 途中（DB.ensureDemoData() など）で起きると、そこでスクリプト全体が止まってしまい
+// 「ボタンを押しても真っ白のまま」という症状になる。
+// そうした環境でも壊れずに動く（＝この場合はメモリ上の値で代用し、リロードで
+// 消える以外は通常どおり動作する）ように、ここで例外を吸収する。
+// ------------------------------------------------------------
+const _lsMem = {};
+const _lsOK = (() => {
+  try { const k = '__ls_test__'; localStorage.setItem(k, '1'); localStorage.removeItem(k); return true; }
+  catch (e) { return false; }
+})();
+function lsGet(k){
+  try { if (_lsOK) return localStorage.getItem(k); } catch (e) {}
+  return Object.prototype.hasOwnProperty.call(_lsMem, k) ? _lsMem[k] : null;
+}
+function lsSet(k, v){
+  try { if (_lsOK) { localStorage.setItem(k, v); return; } } catch (e) {}
+  _lsMem[k] = v;
+}
+function lsRemove(k){
+  try { if (_lsOK) { localStorage.removeItem(k); return; } } catch (e) {}
+  delete _lsMem[k];
+}
+
 // 共有データストア (localStorage) ※GAS接続前のフォールバック/デモ用データとしても機能
 const DB = {
   KEY_STAFF: 'ym_staff',
@@ -142,8 +170,8 @@ const DB = {
   ],
 
   init(){
-    if(!localStorage.getItem(this.KEY_STAFF)) localStorage.setItem(this.KEY_STAFF, JSON.stringify(this.defaultStaff));
-    if(!localStorage.getItem(this.KEY_REQUESTS)) localStorage.setItem(this.KEY_REQUESTS, JSON.stringify(this.defaultRequests));
+    if(!lsGet(this.KEY_STAFF)) lsSet(this.KEY_STAFF, JSON.stringify(this.defaultStaff));
+    if(!lsGet(this.KEY_REQUESTS)) lsSet(this.KEY_REQUESTS, JSON.stringify(this.defaultRequests));
     // 既存データに新フィールドがなければマージ
     const staff = this.getStaff();
     let updated = false;
@@ -159,11 +187,11 @@ const DB = {
     if(updated) this.saveStaff(staff);
   },
 
-  getStaff(){ return JSON.parse(localStorage.getItem(this.KEY_STAFF)||'[]'); },
-  getRequests(){ return JSON.parse(localStorage.getItem(this.KEY_REQUESTS)||'[]'); },
+  getStaff(){ return JSON.parse(lsGet(this.KEY_STAFF)||'[]'); },
+  getRequests(){ return JSON.parse(lsGet(this.KEY_REQUESTS)||'[]'); },
   getStaffById(id){ return this.getStaff().find(s=>s.id===id); },
-  saveRequests(reqs){ localStorage.setItem(this.KEY_REQUESTS, JSON.stringify(reqs)); },
-  saveStaff(staff){ localStorage.setItem(this.KEY_STAFF, JSON.stringify(staff)); },
+  saveRequests(reqs){ lsSet(this.KEY_REQUESTS, JSON.stringify(reqs)); },
+  saveStaff(staff){ lsSet(this.KEY_STAFF, JSON.stringify(staff)); },
 
   addRequest(req){
     const reqs = this.getRequests();
@@ -208,8 +236,8 @@ const DB = {
   },
 
   reset(){
-    localStorage.removeItem(this.KEY_STAFF);
-    localStorage.removeItem(this.KEY_REQUESTS);
+    lsRemove(this.KEY_STAFF);
+    lsRemove(this.KEY_REQUESTS);
     this.init();
   },
 
@@ -217,9 +245,9 @@ const DB = {
   //   園長用(encho.html)・職員用(staff_standalone.html)で入力したデモの申請を共有し続ける
   DEMO_VERSION: 'demo-v1',
   ensureDemoData(){
-    if(localStorage.getItem('ym_demo_version') !== this.DEMO_VERSION){
+    if(lsGet('ym_demo_version') !== this.DEMO_VERSION){
       this.reset();
-      localStorage.setItem('ym_demo_version', this.DEMO_VERSION);
+      lsSet('ym_demo_version', this.DEMO_VERSION);
     } else {
       this.init();
     }

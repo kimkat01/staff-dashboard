@@ -210,7 +210,7 @@ DB.KEY_REQUESTS = 'ym_requests_' + GARDEN_KEY;
 
 // ページを開くたびに、過去の本番同期などで残っているローカルデータを初回だけ一掃し、
 // 以降は園長用・職員用で共有するデモデータとして扱う（=職員の申請が園長画面にも反映される）
-DB.ensureDemoData();
+try { DB.ensureDemoData(); } catch(e){ console.error('ensureDemoData失敗:', e); }
 let currentReqId = null;
 let currentAction = null;
 
@@ -272,14 +272,14 @@ function initialLoad(){
   setInterval(syncDemo, 5000); // 5秒ごとに職員側の申請・承認結果を取り込む
 }
 
-function getApprover(){ return localStorage.getItem('ym_approver')||'園長'; }
+function getApprover(){ return lsGet('ym_approver')||'園長'; }
 function saveApprover(){
   const v=document.getElementById('approverInput').value.trim()||'園長';
-  localStorage.setItem('ym_approver',v);
+  lsSet('ym_approver',v);
   document.getElementById('approverModal').classList.remove('open');
   alert('承認者名を「'+v+'」に設定しました');
 }
-document.getElementById('approverInput').value = getApprover();
+try { document.getElementById('approverInput').value = getApprover(); } catch(e){ console.error('approverInput初期化失敗:', e); }
 
 function showPage(name,el){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
@@ -422,7 +422,18 @@ function refreshAll(){
   renderStaff();
 }
 
-initialLoad();
+try {
+  initialLoad();
+} catch(e) {
+  console.error('初期化に失敗しました:', e);
+  // 何が起きても白画面のままにはせず、エラー内容を画面上に表示する
+  const root = document.getElementById('appRoot');
+  if (root) {
+    root.style.display = '';
+    const sub = document.getElementById('hdSub');
+    if (sub) sub.textContent = '読み込みエラーが発生しました（' + (e && e.message || e) + '）。画面を再読み込みしてください。';
+  }
+}
 </script>
 </body>
 </html>
