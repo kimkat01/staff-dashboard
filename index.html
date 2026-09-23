@@ -7342,7 +7342,8 @@ function meHTML(){
         <div class="rail"><div class="span" style="left:${a}%;width:${w}%;background:${col}"></div></div>
         <div class="cap">この時間帯に勤務</div></div>`;}}
   const ev=td.event?`<div class="ev">📌 きょうの予定 ・ ${td.event}</div>`:"";
-  const kp=working?kpHTML():"";
+  /* 給食・駐車場は休日（公休・有休）でも表示する（行事などで出勤する日があるため） */
+  const kp=kpHTML();
   const hero=`<div class="today2"><div class="eyebrow">
      <span class="date round">${td.md?td.md.replace('/','月')+'日（'+td.dow+'）':''} ・ きょうのあなた</span>
      <span class="dot" style="background:var(${c.bg});color:var(${c.ink})">${c.label}</span></div>
