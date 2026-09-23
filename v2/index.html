@@ -185,6 +185,10 @@ main{padding:16px}
 .day .dcol .w{font-size:10.5px;color:var(--ink-soft);font-weight:700;}
 .day .dcol .w.sat{color:#3d7fb0}.day .dcol .w.sun{color:#c46}
 .badge{flex:1;min-width:0;display:flex;align-items:center;gap:8px;}
+/* 給食・駐車場の履歴（見るだけ） */
+.kpmarks{margin-left:auto;display:inline-flex;gap:4px;padding-left:8px;font-size:15px;line-height:1;}
+.kp-total{display:flex;flex-wrap:wrap;align-items:center;gap:4px 12px;margin:10px 2px 0;font-size:13px;color:var(--ink-soft);}
+.kp-total b{color:var(--ink);font-weight:800;}
 .pill{font-size:12.5px;font-weight:800;padding:5px 10px;border-radius:9px;white-space:nowrap;}
 .badge .tm{font-size:12px;color:var(--ink-soft);font-weight:700;font-variant-numeric:tabular-nums;}
 .ev2{font-size:10px;color:var(--brand);font-weight:700;margin-top:2px;}
@@ -754,6 +758,8 @@ let current = null, curScreen="home", showAllPeriod=false, shiftTab="me";
 /* 給食・駐車場の当日記録。GAS Web AppのURLをKP_ENDPOINTに設定すると、
    実際に記録・取得されるようになる（空文字のままだと見た目だけの動作） */
 let KP_STATE = { meal:false, park:false };
+/* 給食・駐車場の履歴（見るだけ）。{ "YYYY-MM-DD": {meal:0/1, park:0/1} }。GASの action=history から取得 */
+let KP_HIST = {};
 const KP_ENDPOINT = "https://script.google.com/macros/s/AKfycbxov7LyccCioWBxq64G0XdgcI-IRscXzQYghWXl3Xc8hD-tK25l7o3Bfn7Fb636v8Bzeg/exec";
 /* 給食・駐車場ボタンの記録日は、シフトデータの基準日(today)ではなく、
    実際に押した瞬間の実際の日付を使う（タイムゾーンずれを避けローカル日付で組み立てる） */
@@ -763,6 +769,33 @@ function _kpLocalDateStr(d){
 }
 function kpToday(){ return _kpLocalDateStr(new Date()); }
 function kpFacilityId(){return (DATA.domeKey||DATA.facility||"").toString();}
+function loadKPHistory(){
+  if(!KP_ENDPOINT||current===null||!dates.length)return;
+  const who=current;
+  const url=KP_ENDPOINT+"?action=history&facility="+encodeURIComponent(kpFacilityId())
+    +"&name="+encodeURIComponent(staff[current].name)
+    +"&start="+encodeURIComponent(dates[0].iso)+"&end="+encodeURIComponent(dates[dates.length-1].iso)
+    +"&_="+Date.now();
+  fetch(url).then(r=>r.json()).then(d=>{
+    if(who!==current||!d||d.error)return;
+    const td=kpToday();const keep=KP_HIST[td];  // 読み込み中に押した今日の分は画面の状態を優先
+    KP_HIST=d; if(keep)KP_HIST[td]=keep;
+    if(curScreen==="shift")renderShift();
+  }).catch(()=>{});
+}
+/* その日のしるし（🍚🚗）。記録がない日・どちらも0の日は何も出さない */
+function kpMarks(iso){
+  const r=KP_HIST[iso];if(!r)return "";
+  const m=(r.meal?'<span class="kpm" title="給食">🍚</span>':'')+(r.park?'<span class="kpm" title="駐車場">🚗</span>':'');
+  return m?'<span class="kpmarks">'+m+'</span>':'';
+}
+/* 期間の合計（給食・駐車場の回数） */
+function kpTotalHTML(){
+  if(!KP_ENDPOINT)return "";
+  let meal=0,park=0;
+  dates.forEach(d=>{const r=KP_HIST[d.iso];if(r){meal+=r.meal?1:0;park+=r.park?1:0;}});
+  return '<div class="kp-total">この期間（'+DATA.period.start+'〜'+DATA.period.end+'）<b>🍚 給食 '+meal+'回</b><b>🚗 駐車場 '+park+'回</b></div>';
+}
 function loadKPToday(){
   if(!KP_ENDPOINT||current===null)return;
   const url=KP_ENDPOINT+"?action=today&facility="+encodeURIComponent(kpFacilityId())
@@ -834,7 +867,7 @@ function renderShiftLogin(){
       '<div class="namelist">'+names+'</div>'+
     '</div></div>';
 }
-function pickShift(i){current=i;loadKPToday();goShift();}
+function pickShift(i){current=i;KP_HIST={};loadKPToday();loadKPHistory();goShift();}
 /* router */
 function show(name){
   curScreen=name;
@@ -1441,6 +1474,7 @@ function _kpPing(url){
 }
 function toggleKP(topic){
   KP_STATE[topic]=!KP_STATE[topic];
+  KP_HIST[kpToday()]={meal:KP_STATE.meal?1:0,park:KP_STATE.park?1:0};  // 履歴表示にもすぐ反映
   renderShift();
   const note=document.getElementById('kp-note');
   const label=topic==='meal'?'給食':'駐車場';
@@ -1498,7 +1532,7 @@ function meHTML(){
     else if(sh&&sh.state==="leave")b=pill("--leave-bg","--leave-ink","有休");
     else b=pill("--off-bg","--off-ink","お休み");
     const el=de.event?`<div class="ev2">📌 ${de.event}</div>`:"";
-    rows+=`<div class="day ${now?'now':''}"><div class="dcol"><div class="d round">${dd.getDate()}</div><div class="w ${wc}">${wn}</div></div><div style="flex:1;min-width:0"><div class="badge">${b}</div>${el}</div></div>`;}
+    rows+=`<div class="day ${now?'now':''}"><div class="dcol"><div class="d round">${dd.getDate()}</div><div class="w ${wc}">${wn}</div></div><div style="flex:1;min-width:0"><div class="badge">${b}${kpMarks(iso)}</div>${el}</div></div>`;}
   let full="";
   if(showAllPeriod){full=`<div class="sh-label">この期間ぜんぶ（${DATA.period.start}〜${DATA.period.end}）</div><div class="week">`;
     dates.forEach(d=>{const sh=map[d.iso],ct=sh?stateCat(sh):"公休",cc=CAT[ct],now=d.iso===today;let b;
@@ -1506,10 +1540,10 @@ function meHTML(){
       else if(sh&&sh.state==="leave")b=pill("--leave-bg","--leave-ink","有休");else b=pill("--off-bg","--off-ink","お休み");
       const wc=d.dow==="土"?"sat":d.dow==="日"?"sun":"";
       b+=d.event?`<span class="ev2" style="margin-left:6px">📌 ${d.event}</span>`:"";
-      full+=`<div class="day ${now?'now':''}"><div class="dcol"><div class="d round">${d.d}</div><div class="w ${wc}">${d.dow}</div></div><div class="badge">${b}</div></div>`;});
+      full+=`<div class="day ${now?'now':''}"><div class="dcol"><div class="d round">${d.d}</div><div class="w ${wc}">${d.dow}</div></div><div class="badge">${b}${kpMarks(d.iso)}</div></div>`;});
     full+=`</div>`;}
   const mb=`<button class="more" onclick="showAllPeriod=!showAllPeriod;renderShift()">${showAllPeriod?'今週だけに戻す':'期間ぜんたい（'+DATA.period.start+'〜'+DATA.period.end+'）を見る'}</button>`;
-  return hero+`<div class="sh-label">今週のシフト</div><div class="week">${rows}</div>`+mb+full;
+  return hero+`<div class="sh-label">今週のシフト</div><div class="week">${rows}</div>`+kpTotalHTML()+mb+full;
 }
 function allHTML(){
   const legend=`<div class="legend">
