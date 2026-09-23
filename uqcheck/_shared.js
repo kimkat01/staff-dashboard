@@ -2,7 +2,7 @@
 // ============================================================
 // GAS（Google Apps Script）バックエンド接続
 // ============================================================
-const GAS_URL = 'https://script.google.com/macros/s/AKfycbyLt4nDzttOHvJlPtgOuQix3Gcq30S5x2KNvdD6ujCcw8Q92l4QhNWqpqgPGu-0DFVi1A/exec';
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbwoVzAB2ZHhhX6O7vHBJstEU4KEN5lGFwSfrCIRXBj7RahQ046-nyR9zlmd5qseECGgCg/exec';
 
 const API = {
   // ------------------------------------------------------------
