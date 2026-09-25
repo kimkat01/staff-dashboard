@@ -362,11 +362,13 @@ tbody tr.me .namecol{color:var(--brand)}
 #screen-news .nshidden{display:none;}
 /* ===== 規約・マニュアル（gd） ===== */
 #screen-manual .gdwrap{max-width:440px;margin:0 auto;padding:16px 12px 28px;}
-#screen-manual .gdintro{display:flex;gap:11px;align-items:flex-start;padding:14px;border:1px solid var(--line);border-radius:16px;background:var(--card);box-shadow:var(--shadow);}
-#screen-manual .gdintro .gdic{flex:0 0 auto;width:40px;height:40px;border-radius:12px;display:grid;place-items:center;background:var(--train-bg);color:var(--train);}
-#screen-manual .gdintro .gdic svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
-#screen-manual .gdintro h2{margin:0 0 3px;font-size:16px;font-weight:800;color:var(--ink);}
-#screen-manual .gdintro p{margin:0;font-size:12.5px;line-height:1.5;color:var(--ink-soft);}
+#screen-manual .gdsearch{display:flex;align-items:center;gap:8px;padding:8px 8px 8px 14px;border:1px solid var(--line);border-radius:16px;background:var(--card);box-shadow:var(--shadow);margin:0;}
+#screen-manual .gdsearch svg{flex:0 0 auto;width:18px;height:18px;fill:none;stroke:var(--ink-soft);stroke-width:2;stroke-linecap:round;}
+#screen-manual .gdsearch input{flex:1;min-width:0;border:0;outline:none;background:transparent;font-size:16px;font-family:inherit;color:var(--ink);padding:6px 0;}
+#screen-manual .gdsearch input::placeholder{color:var(--ink-soft);opacity:.75;font-size:14px;}
+#screen-manual .gdsearch button{flex:0 0 auto;border:0;border-radius:11px;background:var(--train);color:#fff;font-size:13.5px;font-weight:800;padding:9px 16px;cursor:pointer;font-family:inherit;}
+#screen-manual .gdshint{font-size:11.5px;color:var(--ink-soft);padding:7px 6px 0;line-height:1.5;}
+#screen-manual .gdempty{font-size:13px;color:var(--ink-soft);padding:18px 6px;text-align:center;line-height:1.7;}
 #screen-manual .gdgroup{margin-top:18px;}
 #screen-manual .gdglabel{font-size:12px;font-weight:800;color:var(--train);letter-spacing:.04em;padding:0 4px 9px;display:flex;align-items:center;gap:7px;}
 #screen-manual .gdglabel::before{content:"";width:4px;height:14px;border-radius:2px;background:var(--train);}
@@ -719,13 +721,12 @@ tbody tr.me .namecol{color:var(--brand)}
     </section>
     <section id="screen-manual" hidden>
       <div class="gdwrap">
-        <div class="gdintro">
-          <div class="gdic" id="gdIcon"></div>
-          <div>
-            <h2 class="round">規約・マニュアル</h2>
-            <p>就業規則・各種規程・マニュアルをまとめています。文書を選ぶとPDFが開きます。</p>
-          </div>
-        </div>
+        <form class="gdsearch" onsubmit="gdSearchSubmit(event)">
+          <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+          <input id="gdQ" type="search" enterkeyhint="search" placeholder="キーワードを入力" autocomplete="off" oninput="gdFilter()">
+          <button type="submit">検索</button>
+        </form>
+        <div class="gdshint" id="gdHint">文書名で絞り込みます。「検索」を押すとPDFの本文から探します。</div>
         <div id="gdList"></div>
         <div class="gdfoot">
           <div class="gdnote">最新版に随時更新します。内容についてのご質問は本部までお問い合わせください。</div>
@@ -735,6 +736,7 @@ tbody tr.me .namecol{color:var(--brand)}
   </main>
 </div>
 
+<script src="docs/manuals.js"></script>
 <script>
 const DATA = {
  "facility": "しおどめ保育園つくば",
@@ -6738,7 +6740,6 @@ const UQ_BASE="https://kimkat01.github.io/staff-dashboard/uqcheck/staff_standalo
 const DOME_BASE="https://kimkat01.github.io/dome-chat/";                            // ?en=園キー を付ける
 
 /* 園マスタ：園名 → 法人（s=学校法人柴学園／y=社会福祉法人雄雅会）とドメボットの園キー（en）。
-   folder＝規約・マニュアルのPDFを置く docs/ 内のフォルダ名（シフトデータ data/○○.json と同じキーにそろえる）。
    園を増やす・稼働を始めるときはここに1行足すだけでよい（17園ぶんを見込んだ形）。 */
 const FACILITIES={
   "認定こども園しおどめの森":     {law:"s", domeKey:"shiodome_no_mori"},
@@ -6749,8 +6750,8 @@ const FACILITIES={
   "しおどめ保育園春日部":         {law:"s", domeKey:"kasukabe"},
   "しおどめ保育園越谷":           {law:"s", domeKey:""},
   "しおどめ保育園八潮茜町":       {law:"s", domeKey:"yashio_akanemachi"},
-  "ふれあいしおどめ保育園":       {law:"s", domeKey:"moriya_shiodome", folder:"fureai_shiodome"},
-  "しおどめ保育園つくば":         {law:"s", domeKey:"tsukuba", folder:"tsukuba"},
+  "ふれあいしおどめ保育園":       {law:"s", domeKey:"moriya_shiodome"},
+  "しおどめ保育園つくば":         {law:"s", domeKey:"tsukuba"},
   "しおどめ保育園稲城":           {law:"s", domeKey:""},
   "しおどめ保育園久喜":           {law:"s", domeKey:""},
   "しおどめ保育園三郷中央":       {law:"s", domeKey:"misato_chuo"},
@@ -7199,65 +7200,66 @@ function nsBack(){
 }
 
 /* ===== 規約・マニュアル（接頭辞 gd） ===== */
-/* (A) PDFの置き場所：このリポジトリ（staff-dashboard）の docs フォルダ。
-     docs/common/   … 全園共通の資料
-     docs/○○/      … 園ごとの資料（○○＝園マスタ FACILITIES の folder。例：tsukuba）
-   園ごとのフォルダ内のファイル名は全園でそろえる（例：part-shugyo-kisoku.pdf）。 */
+/* (A) PDFの置き場所と文書一覧は docs/manuals.js で管理（PDF内検索 docs/viewer.html と共通）。
+   一覧を直すときは docs/manuals.js だけ直せばよい。 */
 const GD_DOCS_BASE="docs/";
+/* PDF内をキーワードで検索するビューア。?garden=園名 を付けて、その園の資料だけを検索する。 */
+const GD_VIEWER="docs/viewer.html";
 /* コーポレートブック（完成済みのHTMLフリップブック）。タイルから新タブで開くだけ。 */
 const CORP_URL="https://kimkat01.github.io/shiodome-knowledge/corporate-book-flipbook.html";
 const CORP_PW="shiodome8000";
-/* (B) 文書一覧。キー＝フォルダ名。common は全園に表示され、園のフォルダの一覧の後ろに付く。
-   園を追加するとき：①FACILITIES にその園の folder を書く ②docs/その名前/ にPDFを置く ③ここに一覧を足す。
-   title=表示名／file=PDFファイル名（半角英数字）。 */
-const MANUALS={
-  common:[
-    {label:"参考資料", docs:[
-      {title:"こども性暴力防止法の施行について", file:"kodomo-seibouryoku-hou.pdf"}
-    ]}
-  ],
-  tsukuba:[
-    {label:"規約・マニュアル", docs:[
-      {title:"就業規則（正規職員）",   file:"seiki-shugyo-kisoku.pdf"},
-      {title:"就業規則（パート職員）", file:"part-shugyo-kisoku.pdf"},
-      {title:"給与規程（正規職員）",   file:"seiki-kyuyo-kitei.pdf"}
-    ]},
-    {label:"BCP・防災", docs:[
-      {title:"防災・防犯マニュアル", file:"bousai-bouhan-manual.pdf"}
-    ]}
-  ]
-};
-function gdFolder(){return facilityInfo().folder||"";}
 var GD_EXT_ICON='<svg viewBox="0 0 24 24"><path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></svg>';
 function gdEsc(s){return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 function gdOpenDoc(path){window.open(GD_DOCS_BASE+path,'_blank','noopener');}
-function gdRender(){
-  var folder=gdFolder();
-  var sets=[];
-  if(folder&&MANUALS[folder])sets.push({dir:folder,groups:MANUALS[folder]});
-  sets.push({dir:"common",groups:MANUALS.common||[]});
-  var html='';
-  for(var k=0;k<sets.length;k++){
-    for(var g=0;g<sets[k].groups.length;g++){
-      var grp=sets[k].groups[g];
-      html+='<div class="gdgroup"><div class="gdglabel">'+gdEsc(grp.label)+'</div>';
-      for(var d=0;d<grp.docs.length;d++){
-        var doc=grp.docs[d];
-        var path=sets[k].dir+'/'+doc.file;
-        html+='<button class="gddoc" onclick="gdOpenDoc(\''+path+'\')">'
-            +'<span class="gdfic">'+IC.doc+'</span>'
-            +'<span class="gdmeta"><span class="gdt">'+gdEsc(doc.title)+'</span><span class="gdpill">PDF</span></span>'
-            +'<span class="gdchev">'+GD_EXT_ICON+'</span>'
-            +'</button>';
-      }
-      html+='</div>';
+function gdOpenViewer(q){window.open(GD_VIEWER+'?garden='+encodeURIComponent(gardenName())+(q?'&q='+encodeURIComponent(q):''),'_blank','noopener');}
+/* 検索窓：入力中は文書名で絞り込み、「検索」でPDF本文を検索（その園の資料だけ） */
+function gdFilter(){
+  var q=(document.getElementById('gdQ').value||'').trim().toLowerCase();
+  var groups=document.querySelectorAll('#gdList .gdgroup'),shown=0;
+  for(var g=0;g<groups.length;g++){
+    var btns=groups[g].querySelectorAll('.gddoc'),any=false;
+    for(var d=0;d<btns.length;d++){
+      var t=btns[d].querySelector('.gdt').textContent.toLowerCase();
+      var hit=!q||t.indexOf(q)!==-1;
+      btns[d].style.display=hit?'':'none';
+      if(hit){any=true;shown++;}
     }
+    groups[g].style.display=any?'':'none';
   }
+  var em=document.getElementById('gdEmpty');
+  if(!shown&&q){
+    if(!em){em=document.createElement('div');em.id='gdEmpty';em.className='gdempty';document.getElementById('gdList').appendChild(em);}
+    em.innerHTML='文書名に「'+gdEsc(document.getElementById('gdQ').value.trim())+'」はありません。<br>「検索」を押すとPDFの本文から探します。';
+    em.style.display='';
+  }else if(em){em.style.display='none';}
+}
+function gdSearchSubmit(e){
+  e.preventDefault();
+  var q=(document.getElementById('gdQ').value||'').trim();
+  gdOpenViewer(q);
+}
+function gdRender(){
+  var groups=(typeof manualGroupsFor==='function')?manualGroupsFor(gardenName()):[];
+  var html='';
+  for(var g=0;g<groups.length;g++){
+    var grp=groups[g];
+    html+='<div class="gdgroup"><div class="gdglabel">'+gdEsc(grp.label)+'</div>';
+    for(var d=0;d<grp.docs.length;d++){
+      var doc=grp.docs[d];
+      html+='<button class="gddoc" onclick="gdOpenDoc(\''+doc.file+'\')">'
+          +'<span class="gdfic">'+IC.doc+'</span>'
+          +'<span class="gdmeta"><span class="gdt">'+gdEsc(doc.title)+'</span><span class="gdpill">PDF</span></span>'
+          +'<span class="gdchev">'+GD_EXT_ICON+'</span>'
+          +'</button>';
+    }
+    html+='</div>';
+  }
+  if(!groups.length)html='<div class="gdnote">文書一覧を読み込めませんでした。電波の良い場所でもう一度開いてください。</div>';
   document.getElementById('gdList').innerHTML=html;
 }
 function goManual(){
   document.getElementById('brandtxt').textContent='規約・マニュアル';
-  document.getElementById('gdIcon').innerHTML=IC.doc;
+  var q=document.getElementById('gdQ');if(q)q.value='';
   gdRender();
   show("manual");
 }
