@@ -1,0 +1,360 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>つくば メンタルヘルスサポート</title>
+<link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@500;700;800&display=swap" rel="stylesheet">
+<style>
+/* ===== 職員ダッシュボード v2 と同じ変数（index.html からそのまま流用） ===== */
+:root{
+  --ink:#2b2a28; --ink-soft:#6f6a62; --line:#e7e2d9; --paper:#f4f1ec; --card:#ffffff;
+  --brand:#1f7a6b; --brand-blue:#4169e2; --brand-blue-d:#3355c6;
+  --gold:#c69a3e; --gold-bg:#f4ead0; --gold-ink:#856019;
+  --red:#d0574f; --red-bg:#f7ddd8;
+  --shadow:0 2px 4px rgba(0,0,0,.10),0 8px 22px rgba(0,0,0,.15);
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{font-family:"Hiragino Kaku Gothic ProN","Hiragino Sans","Yu Gothic",YuGothic,"Noto Sans JP",sans-serif;
+  color:var(--ink);background:var(--paper);-webkit-font-smoothing:antialiased;line-height:1.55;}
+.round{font-family:"M PLUS Rounded 1c",sans-serif;}
+.wrap{max-width:440px;margin:0 auto;min-height:100vh;background:var(--paper);}
+header.topbar{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:#4169e1;color:#fff;display:flex;align-items:center;gap:10px;
+  padding:15px 16px;}
+.tb-title{flex:1;min-width:0;font-size:19px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.tb-home{display:inline-flex;align-items:center;gap:5px;border:1.5px solid rgba(255,255,255,.8);background:transparent;color:#fff;
+  font-size:12.5px;font-weight:800;padding:6px 12px 6px 9px;border-radius:999px;cursor:pointer;font-family:inherit;}
+.tb-home svg{width:16px;height:16px}
+
+/* ===== メンタルヘルスサポート（接頭辞 mh ／ 規約・マニュアル gd と同じ骨格。アクセント=ホームのタイル色 gold） ===== */
+#screen-mental .mhwrap{max-width:440px;margin:0 auto;padding:16px 12px 28px;}
+#screen-mental .mhintro{display:flex;gap:11px;align-items:flex-start;padding:14px;border:1px solid var(--line);border-radius:16px;background:var(--card);box-shadow:var(--shadow);}
+#screen-mental .mhic{flex:0 0 auto;width:40px;height:40px;border-radius:12px;display:grid;place-items:center;background:var(--gold-bg);color:var(--gold-ink);}
+#screen-mental svg.i{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+#screen-mental .mhintro h2{margin:0 0 3px;font-size:16px;font-weight:800;}
+#screen-mental .mhintro p{margin:0;font-size:12.5px;line-height:1.6;color:var(--ink-soft);}
+#screen-mental .mhsafe{margin-top:10px;padding:10px 12px;border-radius:12px;background:#f1f8f6;border:1px solid #cfe6e1;font-size:12px;line-height:1.65;color:#1b5c53;}
+#screen-mental .mhsafe b{color:var(--brand)}
+#screen-mental .mhgroup{margin-top:18px;}
+#screen-mental .mhglabel{font-size:12px;font-weight:800;color:var(--gold-ink);letter-spacing:.04em;padding:0 4px 9px;display:flex;align-items:center;gap:7px;}
+#screen-mental .mhglabel::before{content:"";width:4px;height:14px;border-radius:2px;background:var(--gold);}
+#screen-mental .mhrow{display:flex;align-items:center;gap:12px;width:100%;padding:13px 14px;margin-bottom:10px;border:1px solid var(--line);border-radius:14px;background:var(--card);box-shadow:var(--shadow);cursor:pointer;text-align:left;font-family:inherit;color:var(--ink);}
+#screen-mental .mhrow:active{background:#faf9f7;}
+#screen-mental .mhfic{flex:0 0 auto;width:38px;height:38px;border-radius:10px;display:grid;place-items:center;background:var(--gold-bg);color:var(--gold-ink);}
+#screen-mental .mhmeta{flex:1;min-width:0;}
+#screen-mental .mht{display:block;font-size:14.5px;font-weight:700;line-height:1.35;}
+#screen-mental .mhd{display:block;font-size:11.5px;color:var(--ink-soft);margin-top:2px;line-height:1.45;}
+#screen-mental .mhpill{display:inline-block;margin-top:5px;font-size:10.5px;font-weight:800;padding:1px 8px;border-radius:999px;background:var(--gold-bg);color:var(--gold-ink);}
+#screen-mental .mhpill.to-hq{background:#e3e5fb;color:#3c4590;}
+#screen-mental .mhpill.to-ext{background:#d9efe9;color:#1b5c53;}
+#screen-mental .mhpill.warn{background:var(--red-bg);color:#8f322c;}
+#screen-mental .mhchev{flex:0 0 auto;color:var(--ink-soft);}
+#screen-mental .mhfoot{margin-top:22px;font-size:11px;color:var(--ink-soft);line-height:1.6;text-align:center;}
+
+/* フォーム（職員紹介制度 r* と同じ見た目） */
+#screen-mental .mhcard{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:14px;box-shadow:var(--shadow);}
+#screen-mental .mhback{background:transparent;border:0;color:var(--brand-blue);font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;padding:4px 2px 12px;}
+#screen-mental .mhhead{font-size:15px;font-weight:800;color:var(--gold-ink);margin-bottom:6px;}
+#screen-mental .mhbody{font-size:13px;line-height:1.8;}
+#screen-mental .mhident{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:13px;color:var(--ink-soft);background:#f6f8ff;border:1px solid #dfe6f5;border-radius:10px;padding:10px 12px;margin-bottom:14px;}
+#screen-mental .mhident b{color:var(--ink)}
+#screen-mental label.lb{display:block;font-size:13px;font-weight:700;margin:0 0 6px;}
+#screen-mental input[type=text],#screen-mental input[type=date],#screen-mental textarea,#screen-mental select{width:100%;padding:12px;border:1px solid var(--line);border-radius:10px;font-size:15px;font-family:inherit;background:#fff;color:var(--ink);}
+#screen-mental textarea{min-height:80px;resize:vertical;line-height:1.6;}
+#screen-mental .fld{margin-bottom:14px;}
+#screen-mental .req{color:#c0392b;font-size:12px;font-weight:700;margin-left:4px;}
+#screen-mental .hint{font-size:12px;color:var(--ink-soft);margin-top:4px;line-height:1.5;}
+#screen-mental .seg{display:flex;gap:6px;flex-wrap:wrap;}
+#screen-mental .seg button{flex:1 1 0;min-width:84px;padding:10px 6px;border:1.5px solid var(--line);border-radius:10px;background:#fff;font-size:13.5px;font-weight:700;font-family:inherit;color:var(--ink);cursor:pointer;}
+#screen-mental .seg button.on{border-color:var(--gold);background:var(--gold-bg);color:var(--gold-ink);}
+#screen-mental .dt{display:flex;gap:6px;margin-bottom:6px;align-items:center;}
+#screen-mental .dt span{flex:0 0 46px;font-size:12px;font-weight:700;color:var(--ink-soft);}
+#screen-mental .dt input{flex:1.3}
+#screen-mental .dt select{flex:1}
+#screen-mental .chk{display:flex;gap:8px;align-items:flex-start;font-size:13px;line-height:1.6;margin-bottom:14px;}
+#screen-mental .chk input{margin-top:4px;flex:0 0 auto;}
+#screen-mental .btn{width:100%;padding:14px;border:none;border-radius:12px;background:var(--brand-blue);color:#fff;font-size:16px;font-weight:800;cursor:pointer;font-family:inherit;}
+#screen-mental .btn:active{background:var(--brand-blue-d);}
+#screen-mental .btn.sub{background:#fff;color:var(--brand-blue);border:1.5px solid var(--brand-blue);margin-top:8px;}
+#screen-mental .msg{font-size:13px;margin-top:10px;min-height:18px;line-height:1.6;}
+#screen-mental .msg.err{color:#c0392b}
+#screen-mental .status{display:flex;align-items:center;gap:10px;padding:12px;border-radius:12px;background:#fbf6e8;border:1px solid #eadcb4;margin-bottom:12px;}
+#screen-mental .status .big{font-size:15px;font-weight:800;}
+#screen-mental .status .sm{font-size:12px;color:var(--ink-soft);}
+#screen-mental .done{text-align:center;border:1px solid #cfe6e1;background:#f1f8f6;}
+#screen-mental .done h3{margin:0 0 8px;color:var(--brand);font-size:16px;}
+#screen-mental .done p{font-size:13px;color:var(--ink-soft);line-height:1.7;margin:0 0 12px;}
+#screen-mental a.mhrow{text-decoration:none;}
+#screen-mental .hidden{display:none}
+.demo-ribbon{background:#fff4d6;color:#7a5a00;font-size:11.5px;font-weight:700;text-align:center;padding:6px 10px;border-bottom:1px solid #eadcb4;}
+</style>
+</head>
+<body>
+
+
+<div class="wrap">
+  <header class="topbar">
+    <div class="tb-title">メンタルヘルスサポート</div>
+    <button class="tb-home" onclick="mhShow('top')" aria-label="ホームに戻る">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11L12 4L20 11"/><path d="M6 10V19a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1V10"/><path d="M10 20v-5h4v5"/></svg>Home
+    </button>
+  </header>
+
+  <section id="screen-mental">
+    <div class="mhwrap">
+
+      <!-- ========== トップ（規約・マニュアルと同じ並び） ========== -->
+      <div id="mh-top">
+        <div class="mhintro">
+          <div class="mhic"><svg class="i" viewBox="0 0 24 24"><path d="M12 21s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 11c0 5.6-7 10-7 10z"/></svg></div>
+          <div>
+            <h2 class="round">メンタルヘルスサポート</h2>
+            <p>法人が契約している<b class="svc"></b>を使って、ストレスチェックの受検や、専門カウンセラーへの相談ができます。費用は法人負担です。</p>
+          </div>
+        </div>
+        <div class="mhsafe">🔒 <b>相談内容や診断結果が、園長・本部に伝わることはありません。</b>本部が受け取るのは、あなたが「本部経由」を選んだ申込みの日程調整に必要な情報だけです。</div>
+
+        <div class="mhgroup">
+          <div class="mhglabel">ストレスチェック</div>
+          <button class="mhrow" onclick="mhShow('sc')">
+            <span class="mhfic"><svg class="i" viewBox="0 0 24 24"><path d="M9 11l3 3 8-8"/><path d="M20 12v7a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1h11"/></svg></span>
+            <span class="mhmeta"><span class="mht">2026年度 ストレスチェックを受ける</span><span class="mhd">受検期間 10/1〜10/31 ・ 所要 約10分</span><span class="mhpill warn">未受検</span></span>
+            <span class="mhchev">›</span>
+          </button>
+        </div>
+
+        <div class="mhgroup">
+          <div class="mhglabel">カウンセリング</div>
+          <button class="mhrow" onclick="mhShow('cs')">
+            <span class="mhfic"><svg class="i" viewBox="0 0 24 24"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/></svg></span>
+            <span class="mhmeta"><span class="mht">カウンセリングを予約する</span><span class="mhd">対面・オンライン・電話から選べます</span><span class="mhpill to-hq">本部経由</span> <span class="mhpill to-ext">直接予約も可</span></span>
+            <span class="mhchev">›</span>
+          </button>
+          <button class="mhrow" onclick="mhShow('mine')">
+            <span class="mhfic"><svg class="i" viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M8 3v4M16 3v4M4 10h16"/></svg></span>
+            <span class="mhmeta"><span class="mht">わたしの申込み状況</span><span class="mhd">日程が確定すると、ここに表示されます</span></span>
+            <span class="mhchev">›</span>
+          </button>
+        </div>
+
+        <div class="mhgroup">
+          <div class="mhglabel">医師による面接指導</div>
+          <button class="mhrow" onclick="mhShow('md')">
+            <span class="mhfic"><svg class="i" viewBox="0 0 24 24"><path d="M6 3v6a4 4 0 0 0 8 0V3"/><path d="M10 13v3a4 4 0 0 0 8 0v-2"/><circle cx="18" cy="12" r="2"/></svg></span>
+            <span class="mhmeta"><span class="mht">面接指導を申し出る</span><span class="mhd">ストレスチェックで「高ストレス」と判定された方</span><span class="mhpill to-hq">本部あて</span></span>
+            <span class="mhchev">›</span>
+          </button>
+        </div>
+
+        <div class="mhgroup">
+          <div class="mhglabel">すぐに話したいとき</div>
+          <a class="mhrow tel" href="#" onclick="return false;">
+            <span class="mhfic"><svg class="i" viewBox="0 0 24 24"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2z"/></svg></span>
+            <span class="mhmeta"><span class="mht">電話相談窓口（24時間）</span><span class="mhd">0120-XXX-XXX ・ 予約不要・匿名OK</span><span class="mhpill to-ext">直接つながります</span></span>
+            <span class="mhchev">›</span>
+          </a>
+          <a class="mhrow tel" href="#" onclick="return false;">
+            <span class="mhfic"><svg class="i" viewBox="0 0 24 24"><path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></svg></span>
+            <span class="mhmeta"><span class="mht"><span class="svc"></span> 職員用サイトを開く</span><span class="mhd">WEB・メール相談、セルフケア記事など</span><span class="mhpill to-ext">外部サイト</span></span>
+            <span class="mhchev">›</span>
+          </a>
+        </div>
+
+        <div class="mhfoot">ご不明な点は本部 人事担当までお問い合わせください。<br>体調がすぐれないときは、無理をせず園長・本部に一言お知らせください。</div>
+      </div>
+
+      <!-- ========== ストレスチェック ========== -->
+      <div id="mh-sc" class="hidden">
+        <button class="mhback" onclick="mhShow('top')">‹ メンタルヘルスサポートに戻る</button>
+        <div class="mhcard">
+          <div class="mhhead">📝 ストレスチェックについて</div>
+          <div class="mhbody">年1回、全職員を対象に行う57問のアンケートです。ご自身のストレス状態に気づき、早めのセルフケアにつなげることが目的です。<br>回答は<span class="svc"></span>のサイトで行います。<b>個人の結果は、ご本人の同意なく法人に提供されることはありません。</b></div>
+        </div>
+        <div class="mhcard">
+          <div class="status">
+            <div style="font-size:26px">⏳</div>
+            <div><div class="big">未受検</div><div class="sm">受検期間：2026年10月1日（木）〜10月31日（土）</div></div>
+          </div>
+          <div class="mhident"><span>受検ID：<b>SD-0000-0000</b></span><span>初期パスワード：<b>本部から配布済み</b></span></div>
+          <button class="btn" onclick="mhDummy('ストレスチェックの受検サイト')">受検サイトを開く（外部）</button>
+          <button class="btn sub" onclick="mhDummy('結果確認ページ')">結果を見る（受検後）</button>
+          <div class="hint" style="margin-top:10px">勤務時間内に受検できます。スマホでもパソコンでも回答できます。</div>
+          <div class="msg" id="mhScMsg"></div>
+        </div>
+      </div>
+
+      <!-- ========== カウンセリング予約 ========== -->
+      <div id="mh-cs" class="hidden">
+        <button class="mhback" onclick="mhShow('top')">‹ メンタルヘルスサポートに戻る</button>
+        <div class="mhcard">
+          <div class="mhhead">💬 カウンセリング予約</div>
+          <div class="mhbody">仕事・人間関係・子育て・家族のことなど、どんなことでも相談できます（<b>年5回まで無料</b>・1回50分）。<br>予約の方法を選んでください。</div>
+        </div>
+
+        <div class="fld">
+          <label class="lb">予約の方法<span class="req">必須</span></label>
+          <div class="seg" id="csRoute">
+            <button class="on" data-v="hq" onclick="mhSeg(this)">本部に日程調整を頼む</button>
+            <button data-v="ext" onclick="mhSeg(this)">自分で直接予約する</button>
+          </div>
+          <div class="hint" id="csRouteHint">本部が契約先と日程を調整し、確定したらこの画面とメールでお知らせします。本部が知るのは「予約したこと・日時」だけです。</div>
+        </div>
+
+        <div id="csExt" class="mhcard hidden">
+          <div class="mhbody">本部・園を通さず、<span class="svc"></span>に直接予約できます。<b>法人にはだれが利用したかも伝わりません。</b></div>
+          <div class="mhident" style="margin-top:10px"><span>法人コード：<b>SHIODOME-XXXX</b></span><span>予約ダイヤル：<b>0120-XXX-XXX</b></span></div>
+          <button class="btn" onclick="mhDummy('契約先の予約ページ')">予約ページを開く（外部）</button>
+          <div class="msg" id="csExtMsg"></div>
+        </div>
+
+        <div id="csForm">
+          <div class="mhident"><span>申込者：<b>しおどめ 花子（しおどめ保育園つくば）</b></span></div>
+          <div class="mhcard">
+            <div class="fld">
+              <label class="lb">相談のしかた<span class="req">必須</span></label>
+              <div class="seg" id="csHow">
+                <button data-v="対面" onclick="mhSeg(this)">対面</button>
+                <button class="on" data-v="オンライン" onclick="mhSeg(this)">オンライン</button>
+                <button data-v="電話" onclick="mhSeg(this)">電話</button>
+              </div>
+              <div class="hint">対面は契約先の相談室（都内・○○駅）で行います。</div>
+            </div>
+            <div class="fld">
+              <label class="lb">希望日時（第3希望まで）<span class="req">必須</span></label>
+              <div class="dt"><span>第1</span><input type="date" id="csD1"><select><option>午前</option><option selected>午後</option><option>18時以降</option></select></div>
+              <div class="dt"><span>第2</span><input type="date"><select><option>午前</option><option>午後</option><option>18時以降</option></select></div>
+              <div class="dt"><span>第3</span><input type="date"><select><option>午前</option><option>午後</option><option>18時以降</option></select></div>
+              <div class="hint">勤務時間外・休日の予約もできます。シフトを見ながら選んでください。</div>
+            </div>
+            <div class="fld">
+              <label class="lb">カウンセラーの希望</label>
+              <select><option>指定なし</option><option>女性カウンセラー</option><option>男性カウンセラー</option><option>前回と同じ方</option></select>
+            </div>
+            <div class="fld">
+              <label class="lb">相談したいこと（任意）</label>
+              <select><option>選ばない</option><option>仕事の悩み</option><option>職場の人間関係</option><option>体調・睡眠</option><option>家庭・子育て</option><option>その他</option></select>
+              <div class="hint">🔒 この項目は本部には届かず、カウンセラーにのみ伝わります。</div>
+            </div>
+            <div class="fld">
+              <label class="lb">日程確定の連絡先<span class="req">必須</span></label>
+              <input type="text" id="csContact" placeholder="例：090-1234-5678／hanako@example.com">
+              <div class="hint">園の電話ではなく、ご自身の連絡先をおすすめします。</div>
+            </div>
+            <label class="chk"><input type="checkbox" id="csOk"><span>本部が日程調整のため、氏名・所属・希望日時・連絡先を契約先に伝えることに同意します。</span></label>
+            <button class="btn" onclick="mhSubmit('cs')">本部に予約を申し込む</button>
+            <div class="msg" id="csMsg"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ========== 医師面接指導 ========== -->
+      <div id="mh-md" class="hidden">
+        <button class="mhback" onclick="mhShow('top')">‹ メンタルヘルスサポートに戻る</button>
+        <div class="mhcard">
+          <div class="mhhead">🩺 医師による面接指導の申出</div>
+          <div class="mhbody">ストレスチェックで「高ストレス」と判定され、医師との面接を希望する方はこちらから申し出てください（法律に基づく制度・費用は法人負担）。<br><b>申し出たことを理由に不利益な扱いを受けることはありません。</b>医師の意見をもとに、必要に応じて勤務の配慮を本部と一緒に考えます。</div>
+        </div>
+        <div class="mhident"><span>申出者：<b>しおどめ 花子（しおどめ保育園つくば）</b></span></div>
+        <div class="mhcard">
+          <div class="fld">
+            <label class="lb">面接の方法<span class="req">必須</span></label>
+            <div class="seg" id="mdHow">
+              <button class="on" data-v="オンライン" onclick="mhSeg(this)">オンライン</button>
+              <button data-v="対面" onclick="mhSeg(this)">対面</button>
+            </div>
+          </div>
+          <div class="fld">
+            <label class="lb">希望日（第1希望）<span class="req">必須</span></label>
+            <div class="dt"><span>第1</span><input type="date" id="mdD1"><select><option>午前</option><option>午後</option></select></div>
+            <div class="dt"><span>第2</span><input type="date"><select><option>午前</option><option>午後</option></select></div>
+          </div>
+          <div class="fld">
+            <label class="lb">連絡先<span class="req">必須</span></label>
+            <input type="text" id="mdContact" placeholder="例：090-1234-5678">
+          </div>
+          <label class="chk"><input type="checkbox" id="mdOk"><span>面接指導の実施のため、ストレスチェックの結果を法人（本部）に提供することに同意します。</span></label>
+          <button class="btn" onclick="mhSubmit('md')">本部に申し出る</button>
+          <div class="msg" id="mdMsg"></div>
+        </div>
+      </div>
+
+      <!-- ========== わたしの申込み状況 ========== -->
+      <div id="mh-mine" class="hidden">
+        <button class="mhback" onclick="mhShow('top')">‹ メンタルヘルスサポートに戻る</button>
+        <div class="mhcard">
+          <div class="status" style="background:#f1f8f6;border-color:#cfe6e1">
+            <div style="font-size:26px">✅</div>
+            <div><div class="big">カウンセリング（オンライン）</div><div class="sm">10月14日（水）18:30〜19:20 ・ 確定済み</div></div>
+          </div>
+          <div class="hint">当日のURLは、契約先からメールで届きます。</div>
+        </div>
+        <div class="mhcard">
+          <div class="status">
+            <div style="font-size:26px">🕒</div>
+            <div><div class="big">カウンセリング（対面）</div><div class="sm">申込日 9月24日 ・ 本部で日程調整中</div></div>
+          </div>
+          <button class="btn sub" onclick="mhDummy('キャンセル')">この申込みを取り消す</button>
+        </div>
+      </div>
+
+      <!-- ========== 完了 ========== -->
+      <div id="mh-done" class="hidden">
+        <div class="mhcard done">
+          <h3 id="doneTitle">申込みを受け付けました</h3>
+          <p id="doneBody">本部で日程を調整し、確定したらこの画面とご連絡先にお知らせします（通常2〜3営業日）。</p>
+          <button class="btn" onclick="mhShow('mine')">申込み状況を見る</button>
+          <button class="btn sub" onclick="mhShow('top')">メンタルヘルスサポートに戻る</button>
+        </div>
+      </div>
+
+    </div>
+  </section>
+</div>
+
+<div id="mhToast" hidden style="position:fixed;left:16px;right:16px;bottom:calc(env(safe-area-inset-bottom,0px) + 16px);max-width:408px;margin:0 auto;background:#2b2a28;color:#fff;font-size:13px;line-height:1.6;padding:12px 14px;border-radius:12px;z-index:50;"></div>
+<script>
+/* ===== メンタルヘルスサポート（ダミー） =====
+   契約先の名前はここ1か所だけ差し替えれば、画面内すべてに反映されます。 */
+var MH_SERVICE_NAME = "リモート産業保健";
+/* 本番化のときは、本部あての申込み（カウンセリング本部経由・面接指導）の送信先GASをここに設定。空のうちは送信しない。 */
+var MH_SUBMIT_URL = "";
+
+document.querySelectorAll('#screen-mental .svc').forEach(function(el){el.textContent=MH_SERVICE_NAME;});
+
+var MH_VIEWS=['top','sc','cs','md','mine','done'];
+function mhShow(v){
+  MH_VIEWS.forEach(function(x){document.getElementById('mh-'+x).classList.toggle('hidden',x!==v);});
+  window.scrollTo(0,0);
+}
+function mhSeg(btn){
+  var box=btn.parentNode;
+  box.querySelectorAll('button').forEach(function(b){b.classList.toggle('on',b===btn);});
+  if(box.id==='csRoute'){
+    var ext=btn.dataset.v==='ext';
+    document.getElementById('csExt').classList.toggle('hidden',!ext);
+    document.getElementById('csForm').classList.toggle('hidden',ext);
+    document.getElementById('csRouteHint').textContent=ext
+      ?'契約先に直接予約します。本部・園には一切伝わりません。'
+      :'本部が契約先と日程を調整し、確定したらこの画面とメールでお知らせします。本部が知るのは「予約したこと・日時」だけです。';
+  }
+}
+function mhDummy(what){var n=document.getElementById('mhToast');n.textContent='「'+what+'」は本番ではリモート産業保健のページが開きます。';n.hidden=false;clearTimeout(window._mt);window._mt=setTimeout(function(){n.hidden=true;},3500);}
+function mhSubmit(kind){
+  var m=document.getElementById(kind+'Msg');m.className='msg';m.textContent='';
+  var d1=document.getElementById(kind==='cs'?'csD1':'mdD1').value;
+  var ct=document.getElementById(kind==='cs'?'csContact':'mdContact').value.trim();
+  var ok=document.getElementById(kind==='cs'?'csOk':'mdOk').checked;
+  if(!d1){m.className='msg err';m.textContent='第1希望日を選択してください。';return;}
+  if(!ct){m.className='msg err';m.textContent='連絡先を入力してください。';return;}
+  if(!ok){m.className='msg err';m.textContent='同意のチェックを入れてください。';return;}
+  document.getElementById('doneTitle').textContent= kind==='cs'?'カウンセリングの申込みを受け付けました':'面接指導の申出を受け付けました';
+  document.getElementById('doneBody').textContent= kind==='cs'
+    ?'本部で日程を調整し、確定したらこの画面とご連絡先にお知らせします（通常2〜3営業日）。'
+    :'本部から産業医との日程について、ご連絡先にご連絡します（通常1週間以内）。';
+  mhShow('done');
+}
+</script>
+
+</body>
+</html>
