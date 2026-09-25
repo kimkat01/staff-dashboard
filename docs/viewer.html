@@ -158,7 +158,8 @@ var GARDEN = new URLSearchParams(location.search).get("garden") || "";
 var GROUPS = manualGroupsFor(GARDEN);
 document.getElementById("brandGarden").textContent = GARDEN || "職員ダッシュボード";
 document.title = "規約・マニュアル" + (GARDEN ? "｜" + GARDEN : "");
-document.getElementById("homeLink").href = "../" + (GARDEN ? "?garden=" + encodeURIComponent(GARDEN) : "");
+document.getElementById("homeLink").href =
+  ((typeof GARDEN_HOMES!=="undefined" && GARDEN_HOMES[GARDEN]) || "../") + (GARDEN ? "?garden=" + encodeURIComponent(GARDEN) : "");
 
 var PDFJS_WORKER = "./pdf.worker.min.js";
 /* 日本語(CIDフォント)のテキスト抽出・検索に必須。無いと getTextContent が空になる。 */

@@ -21,12 +21,23 @@ var GARDEN_FOLDERS = {
   "ふれあいしおどめ保育園": "fureai_shiodome"
 };
 
+/* 園のダッシュボードが別のリポジトリにある園だけ、PDF内検索の「Home」の戻り先を書く。
+   書いていない園は staff-dashboard（?garden=園名）に戻る。 */
+var GARDEN_HOMES = {
+  "ふれあいしおどめ保育園": "https://kimkat01.github.io/fureai-moriya-staff-dashboard/"
+};
+
 /* 文書一覧。common は全園に表示され、園の一覧の後ろに付く。
    title=表示名／file=PDFファイル名（半角英数字） */
 var MANUALS = {
   common: [
     { label:"参考資料", docs:[
       { title:"こども性暴力防止法の施行について", file:"kodomo-seibouryoku-hou.pdf" }
+    ]}
+  ],
+  fureai_shiodome: [
+    { label:"規約・マニュアル", docs:[
+      { title:"就業規則（パート職員）", file:"part-shugyo-kisoku.pdf" }
     ]}
   ],
   tsukuba: [
