@@ -728,7 +728,6 @@ tbody tr.me .namecol{color:var(--brand)}
         </div>
         <div id="gdList"></div>
         <div class="gdfoot">
-          <button onclick="gdOpenViewer()">PDF内をキーワードで検索する（規約ビューア）</button>
           <div class="gdnote">最新版に随時更新します。内容についてのご質問は本部までお問い合わせください。</div>
         </div>
       </div>
@@ -7205,8 +7204,6 @@ function nsBack(){
      docs/○○/      … 園ごとの資料（○○＝園マスタ FACILITIES の folder。例：tsukuba）
    園ごとのフォルダ内のファイル名は全園でそろえる（例：part-shugyo-kisoku.pdf）。 */
 const GD_DOCS_BASE="docs/";
-/* 全文キーワード検索できる既存の規約ビューア（manual.html・三郷中央の資料）。フッターのリンク先。 */
-const GD_VIEWER="https://kimkat01.github.io/shiodome-knowledge/manual.html";
 /* コーポレートブック（完成済みのHTMLフリップブック）。タイルから新タブで開くだけ。 */
 const CORP_URL="https://kimkat01.github.io/shiodome-knowledge/corporate-book-flipbook.html";
 const CORP_PW="shiodome8000";
@@ -7234,7 +7231,6 @@ function gdFolder(){return facilityInfo().folder||"";}
 var GD_EXT_ICON='<svg viewBox="0 0 24 24"><path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></svg>';
 function gdEsc(s){return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 function gdOpenDoc(path){window.open(GD_DOCS_BASE+path,'_blank','noopener');}
-function gdOpenViewer(){window.open(GD_VIEWER,'_blank','noopener');}
 function gdRender(){
   var folder=gdFolder();
   var sets=[];
