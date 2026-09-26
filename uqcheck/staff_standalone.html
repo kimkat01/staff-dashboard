@@ -399,6 +399,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Hiragino Sans','Yu Gothic UI'
 </div>
 <div class="toast" id="toast"></div>
 
+<script src="../docs/manuals.js"></script>
 <script>
 const GAS_URL = 'https://script.google.com/macros/s/AKfycbwoVzAB2ZHhhX6O7vHBJstEU4KEN5lGFwSfrCIRXBj7RahQ046-nyR9zlmd5qseECGgCg/exec';
 
@@ -533,8 +534,14 @@ const FACILITIES = {
 const DEFAULT_GARDEN = 'しおどめ保育園つくば';
 const _urlGarden = new URLSearchParams(location.search).get('garden');
 (function(){
+  // Homeの戻り先：園のダッシュボードが別リポジトリにある園（ふれあい等）は docs/manuals.js の
+  // GARDEN_HOMES に書かれたURLへ戻す。書いていない園は staff-dashboard（../）へ戻す。
+  // ※戻り先の一覧は docs/manuals.js の GARDEN_HOMES だけで管理する（PDF内検索と共通）
   var hb = document.getElementById('hdHomeBtn');
-  if(hb){ hb.href = '../' + (_urlGarden ? ('?garden=' + encodeURIComponent(_urlGarden)) : ''); }
+  if(!hb) return;
+  var homes = (typeof GARDEN_HOMES !== 'undefined' && GARDEN_HOMES) || {};
+  var base = (_urlGarden && homes[_urlGarden]) || '../';
+  hb.href = base + (_urlGarden ? ('?garden=' + encodeURIComponent(_urlGarden)) : '');
 })();
 const MY_GARDEN = (_urlGarden && FACILITIES[_urlGarden]) ? _urlGarden : DEFAULT_GARDEN;
 const CUR_FACILITY = FACILITIES[MY_GARDEN];
