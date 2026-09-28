@@ -7042,8 +7042,38 @@ const IC={
 };
 
 /* シフト管理ログイン（園→名前） */
+/* ===== ログイン名の自動引き継ぎ（2026-09-28） =====
+   トップのログイン（ログインID＋パスワード）で保存された名前を使い、
+   シフト管理・ご意見箱で名前を選び直さなくて済むようにする。
+   名前の照合は「空白の有無」「髙/高・﨑/崎などの異体字」の違いを無視する。
+   一致する職員がいないとき（ログインマスタとシフト表で表記が違う等）は、従来どおり名前を選ぶ画面を出す。 */
+function normStaffName(t){
+  return String(t||'').replace(/[\s　]/g,'')
+    .replace(/髙/g,'高').replace(/﨑/g,'崎').replace(/[邉邊]/g,'辺').replace(/德/g,'徳').replace(/濵/g,'浜');
+}
+function getPinSession(){
+  var urlGarden=(new URLSearchParams(location.search).get('garden')||'').trim();
+  try{
+    var s=JSON.parse(localStorage.getItem('sd_pin_login__'+(urlGarden||'default'))||'null');
+    if(s&&s.name) return s;
+  }catch(e){}
+  return null;
+}
+function findStaffIndexByName(name){
+  var n=normStaffName(name);
+  if(!n) return -1;
+  for(var i=0;i<staff.length;i++){ if(normStaffName(staff[i].name)===n) return i; }
+  return -1;
+}
 function goShiftLogin(){
   document.getElementById('brandtxt').textContent='シフト管理';
+  if(current==null){
+    var pin=getPinSession();
+    var idx=pin?findStaffIndexByName(pin.name):-1;
+    if(idx>=0){ pickShift(idx); return; }   // ログイン中の本人のシフトを直接開く
+  }else{
+    goShift(); return;
+  }
   renderShiftLogin();
   show('shiftlogin');
 }
@@ -7171,7 +7201,7 @@ function getOmeyasuIdentity(){
   if(!n){
     /* シフト画面で名前を選んでいなくても、PINログイン時の情報を身元として使う */
     try{
-      var pin=JSON.parse(localStorage.getItem('sd_pin_login__'+g)||'null');
+      var pin=getPinSession();
       if(pin&&pin.name){
         n=pin.name;
         if(!g)g=pin.garden||g;
