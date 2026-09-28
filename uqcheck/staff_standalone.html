@@ -456,7 +456,7 @@ const API = {
 
 // ★ アプリ名: UQ checker（変更する場合は各HTMLの<title>とhd-titleを修正）
 // ★ 複数園対応: URLの ?garden=園名 で園を切り替える（staff-dashboard側の getUqUrl() から
-//   ?garden=... 付きで開かれる）。未指定・未登録の園名のときは DEFAULT_GARDEN にフォールバックする。
+//   ?garden=... 付きで開かれる）。未指定のときはエラー表示（つくば等の他園にはフォールバックしない）。
 //   各園ごとに localStorage のキーを分けているのは、同じ kimkat01.github.io 配下の別リポジトリ
 //   （fureai-moriya-staff-dashboard 等）と localStorage が共有される（オリジン単位のため）ことによる
 //   データ混線を防ぐため。
@@ -531,8 +531,20 @@ const FACILITIES = {
     ],
   },
 };
-const DEFAULT_GARDEN = 'しおどめ保育園つくば';
-const _urlGarden = new URLSearchParams(location.search).get('garden');
+// ★ 園の決め方（2026-09 改修）：URLの ?garden=園名 をそのまま使う。
+//   ・職員マスタ（スプレッドシート）のQ列「園名」と一致する職員だけを表示する。
+//   ・新しい園を増やすときは、スプレッドシートに行を追加するだけでよい（このファイルの修正は不要）。
+//   ・?garden が無いURLではログイン画面を出さずエラー表示にする（他園の名簿を出さないため）。
+//   ・上の FACILITIES は「シートが読み込めなかったとき用の予備名簿」だけ。登録していない園でも動く。
+const _urlGarden = (new URLSearchParams(location.search).get('garden') || '').trim();
+// ブラウザ保存用の園キー。既存の2園は従来のキーを維持し、それ以外は園名から自動で作る。
+function gardenKeyOf(name){
+  const KNOWN = {'しおどめ保育園つくば':'tsukuba','ふれあいしおどめ保育園':'fureai_shiodome'};
+  if(KNOWN[name]) return KNOWN[name];
+  let h = 0;
+  for(const c of name){ h = (h*31 + c.codePointAt(0)) >>> 0; }
+  return 'g' + h.toString(36);
+}
 (function(){
   // Homeの戻り先：園のダッシュボードが別リポジトリにある園（ふれあい等）は docs/manuals.js の
   // GARDEN_HOMES に書かれたURLへ戻す。書いていない園は staff-dashboard（../）へ戻す。
@@ -543,8 +555,10 @@ const _urlGarden = new URLSearchParams(location.search).get('garden');
   var base = (_urlGarden && homes[_urlGarden]) || '../';
   hb.href = base + (_urlGarden ? ('?garden=' + encodeURIComponent(_urlGarden)) : '');
 })();
-const MY_GARDEN = (_urlGarden && FACILITIES[_urlGarden]) ? _urlGarden : DEFAULT_GARDEN;
-const CUR_FACILITY = FACILITIES[MY_GARDEN];
+const MY_GARDEN = _urlGarden;
+const CUR_FACILITY = FACILITIES[MY_GARDEN] || { key: gardenKeyOf(MY_GARDEN || 'none'), defaultStaff: [] };
+// この園の職員・申請だけに絞る
+function onlyMyGarden(list){ return (list||[]).filter(x => x && x.garden === MY_GARDEN); }
 
 // 共有データストア (localStorage)
 const DB = {
@@ -771,8 +785,13 @@ DB.ensureDemoData();
 // ============================================================
 async function syncProd(){
   let staff = null, reqs = null;
+  if(!MY_GARDEN) return;
   try{ staff = await API.getStaff(MY_GARDEN); }catch(e){ staff = null; }
-  if(staff && staff.length) DB.saveStaff(staff);
+  if(staff && staff.length){
+    staff = onlyMyGarden(staff);           // 全園分が返ってきても、この園の職員だけ残す
+    DB.saveStaff(staff);
+    _staffLoaded = true;
+  }
   if(me){
     try{ reqs = await API.getRequests(me.id); }catch(e){ reqs = null; }
     if(reqs) DB.saveRequests(reqs);
@@ -809,14 +828,24 @@ function renderStaffOptions(staffList){
   }
 }
 // 本番の職員マスタから取得した職員一覧を表示する
+let _staffLoaded = false;
 function buildLoginList(){
   document.getElementById('gardenLabel').textContent = MY_GARDEN;
-  const list = DB.getStaff().filter(s => s.garden === MY_GARDEN);
-  renderStaffOptions(list.length ? list : DB.defaultStaff);
+  const list = onlyMyGarden(DB.getStaff());
+  const fallback = onlyMyGarden(DB.defaultStaff);
+  if(list.length) return renderStaffOptions(list);
+  if(fallback.length) return renderStaffOptions(fallback);
+  // シートにもこの園の職員がいない（または読み込み中）
+  document.getElementById('staffSelect').innerHTML =
+    `<option value="">${_staffLoaded ? 'この園の職員が登録されていません' : '読み込み中...'}</option>`;
 }
-buildLoginList();
-syncProd();
-setInterval(syncProd, 5000); // 5秒ごとに園長側の承認結果・最新申請を取り込む
+if(!MY_GARDEN){
+  showLoginError();                        // 園の指定がないURLは使えない
+} else {
+  buildLoginList();
+  syncProd();
+  setInterval(syncProd, 5000); // 5秒ごとに園長側の承認結果・最新申請を取り込む
+}
 
 function doLogin(){
   const id = document.getElementById('staffSelect').value;

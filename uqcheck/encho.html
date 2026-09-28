@@ -194,19 +194,35 @@ tbody td{padding:11px 12px;font-size:13px;vertical-align:middle}
 
 <script src="_shared.js?v=3"></script>
 <script>
-// ★ 複数園対応: URLの ?garden=園名 で園を切り替える（staff-dashboard側の getUqUrl() から
-//   ?garden=... 付きで開かれる）。未指定・未対応の値は DEFAULT_GARDEN にフォールバックする。
+// ★ 園の決め方（2026-09 改修）：URLの ?garden=園名 をそのまま使う。
+//   ・職員マスタ（スプレッドシート）のQ列「園名」、申請ログのD列「園名」が一致するものだけを表示する
+//     （GASが全園分を返しても、ここで自分の園だけに絞る）。
+//   ・新しい園を増やすときは、スプレッドシートに行を追加するだけでよい（このファイルの修正は不要）。
+//   ・?garden が無いURLでは「このURLからはアクセスできません」を表示する（他園にはフォールバックしない）。
 //   KEY_STAFF/KEY_REQUESTS は園ごとに分ける（kimkat01.github.io 配下の別リポジトリと
 //   localStorage が共有される＝オリジン単位のため、混線を防ぐ目的）。表示される実データは
 //   このあと syncDemo() がデモ専用GASから園名付きで取得して上書きするので、ここでのローカル
 //   既定値は通信できないときだけのフォールバック。
-const SUPPORTED_GARDENS = ['しおどめ保育園つくば', 'ふれあいしおどめ保育園'];
-const DEFAULT_GARDEN = 'しおどめ保育園つくば';
-const _urlGarden = new URLSearchParams(location.search).get('garden');
-const MY_GARDEN = (_urlGarden && SUPPORTED_GARDENS.includes(_urlGarden)) ? _urlGarden : DEFAULT_GARDEN;
-const GARDEN_KEY = MY_GARDEN === 'ふれあいしおどめ保育園' ? 'fureai_shiodome' : 'tsukuba';
+const MY_GARDEN = (new URLSearchParams(location.search).get('garden') || '').trim();
+// ブラウザ保存用の園キー。既存の2園は従来のキーを維持し、それ以外は園名から自動で作る。
+function gardenKeyOf(name){
+  const KNOWN = {'しおどめ保育園つくば':'tsukuba','ふれあいしおどめ保育園':'fureai_shiodome'};
+  if(KNOWN[name]) return KNOWN[name];
+  let h = 0;
+  for(const c of name){ h = (h*31 + c.codePointAt(0)) >>> 0; }
+  return 'g' + h.toString(36);
+}
+const GARDEN_KEY = gardenKeyOf(MY_GARDEN || 'none');
 DB.KEY_STAFF = 'ym_staff_' + GARDEN_KEY;
 DB.KEY_REQUESTS = 'ym_requests_' + GARDEN_KEY;
+// 画面に出す職員・申請は、必ずこの園のものだけにする
+function onlyMyGarden(list){ return (list||[]).filter(x => x && x.garden === MY_GARDEN); }
+{
+  const _getStaff = DB.getStaff.bind(DB), _getRequests = DB.getRequests.bind(DB);
+  DB.getStaff = () => onlyMyGarden(_getStaff());
+  DB.getRequests = () => onlyMyGarden(_getRequests());
+}
+let _staffLoaded = false; // シートから職員一覧を1回でも受け取れたか
 
 // ページを開くたびに、過去の本番同期などで残っているローカルデータを初回だけ一掃し、
 // 以降は園長用・職員用で共有するデモデータとして扱う（=職員の申請が園長画面にも反映される）
@@ -257,8 +273,8 @@ const DEMO_API = {
 // URL未設定・通信失敗のときは何もせず、既存のlocalStorageデータのまま表示する。
 async function syncDemo(){
   const [staff, reqs] = await Promise.all([DEMO_API.getStaff(MY_GARDEN), DEMO_API.getRequests(MY_GARDEN)]);
-  if(staff && staff.length) DB.saveStaff(staff);
-  if(reqs) DB.saveRequests(reqs);
+  if(staff && staff.length){ DB.saveStaff(onlyMyGarden(staff)); _staffLoaded = true; }
+  if(reqs) DB.saveRequests(onlyMyGarden(reqs));
   if(staff || reqs) refreshAll();
 }
 
@@ -344,6 +360,10 @@ function renderAll(){
 function renderStaff(){
   const staff=DB.getStaff();
   const tbody=document.getElementById('staffBody');
+  if(!staff.length){
+    tbody.innerHTML=`<tr><td colspan="10" class="empty">${_staffLoaded?'この園の職員が登録されていません（職員マスタの園名をご確認ください）':'読み込み中...'}</td></tr>`;
+    return;
+  }
   tbody.innerHTML=staff.map(s=>{
     const remain=DB.getRemain(s);
     const done=DB.getObligDone(s);
@@ -423,7 +443,12 @@ function refreshAll(){
 }
 
 try {
-  initialLoad();
+  if(!MY_GARDEN){
+    // 園の指定がないURL：どの園のデータも表示しない
+    document.getElementById('gardenErrorView').style.display = 'flex';
+  } else {
+    initialLoad();
+  }
 } catch(e) {
   console.error('初期化に失敗しました:', e);
   // 何が起きても白画面のままにはせず、エラー内容を画面上に表示する
