@@ -400,6 +400,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Hiragino Sans','Yu Gothic UI'
 <div class="toast" id="toast"></div>
 
 <script src="../docs/manuals.js"></script>
+<script src="../gardens.js"></script>
 <script>
 const GAS_URL = 'https://script.google.com/macros/s/AKfycbwoVzAB2ZHhhX6O7vHBJstEU4KEN5lGFwSfrCIRXBj7RahQ046-nyR9zlmd5qseECGgCg/exec';
 
@@ -536,9 +537,14 @@ const FACILITIES = {
 //   ・新しい園を増やすときは、スプレッドシートに行を追加するだけでよい（このファイルの修正は不要）。
 //   ・?garden が無いURLではログイン画面を出さずエラー表示にする（他園の名簿を出さないため）。
 //   ・上の FACILITIES は「シートが読み込めなかったとき用の予備名簿」だけ。登録していない園でも動く。
-const _urlGarden = (new URLSearchParams(location.search).get('garden') || '').trim();
+// ?garden= には園キー（例：tsukuba）と日本語の園名のどちらも使える。園マスタ（../gardens.js）で日本語の園名に直す。
+const _gardenRaw = (new URLSearchParams(location.search).get('garden') || '').trim();
+const _gardenM = (typeof findGarden === 'function') ? findGarden(_gardenRaw) : null;
+const _urlGarden = _gardenM ? _gardenM.name : _gardenRaw;
 // ブラウザ保存用の園キー。既存の2園は従来のキーを維持し、それ以外は園名から自動で作る。
 function gardenKeyOf(name){
+  const m = (typeof findGarden === 'function') ? findGarden(name) : null;
+  if(m) return m.key;                      // 園マスタ（../gardens.js）の園キーを使う
   const KNOWN = {'しおどめ保育園つくば':'tsukuba','ふれあいしおどめ保育園':'fureai_shiodome'};
   if(KNOWN[name]) return KNOWN[name];
   let h = 0;

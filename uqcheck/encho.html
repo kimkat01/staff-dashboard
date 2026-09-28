@@ -192,6 +192,7 @@ tbody td{padding:11px 12px;font-size:13px;vertical-align:middle}
   </div>
 </div>
 
+<script src="../gardens.js"></script>
 <script src="_shared.js?v=3"></script>
 <script>
 // ★ 園の決め方（2026-09 改修）：URLの ?garden=園名 をそのまま使う。
@@ -203,9 +204,14 @@ tbody td{padding:11px 12px;font-size:13px;vertical-align:middle}
 //   localStorage が共有される＝オリジン単位のため、混線を防ぐ目的）。表示される実データは
 //   このあと syncDemo() がデモ専用GASから園名付きで取得して上書きするので、ここでのローカル
 //   既定値は通信できないときだけのフォールバック。
-const MY_GARDEN = (new URLSearchParams(location.search).get('garden') || '').trim();
+// ?garden= には園キー（例：tsukuba）と日本語の園名のどちらも使える。園マスタ（../gardens.js）で日本語の園名に直す。
+const _gardenRaw = (new URLSearchParams(location.search).get('garden') || '').trim();
+const _gardenM = (typeof findGarden === 'function') ? findGarden(_gardenRaw) : null;
+const MY_GARDEN = _gardenM ? _gardenM.name : _gardenRaw;
 // ブラウザ保存用の園キー。既存の2園は従来のキーを維持し、それ以外は園名から自動で作る。
 function gardenKeyOf(name){
+  const m = (typeof findGarden === 'function') ? findGarden(name) : null;
+  if(m) return m.key;                      // 園マスタ（../gardens.js）の園キーを使う
   const KNOWN = {'しおどめ保育園つくば':'tsukuba','ふれあいしおどめ保育園':'fureai_shiodome'};
   if(KNOWN[name]) return KNOWN[name];
   let h = 0;
