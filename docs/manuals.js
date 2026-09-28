@@ -18,7 +18,8 @@
    フォルダ名はシフトデータ（data/○○.json）と同じキーにそろえる。 */
 var GARDEN_FOLDERS = {
   "しおどめ保育園つくば":   "tsukuba",
-  "ふれあいしおどめ保育園": "fureai_shiodome"
+  "ふれあいしおどめ保育園": "fureai_shiodome",
+  "しおどめ保育園三郷中央": "misato_chuo"
 };
 
 /* 園のダッシュボードが別のリポジトリにある園だけ、PDF内検索の「Home」の戻り先を書く。
@@ -30,7 +31,13 @@ var GARDEN_HOMES = {
 /* 文書一覧。common は全園に表示され、園の一覧の後ろに付く。
    title=表示名／file=PDFファイル名（半角英数字） */
 var MANUALS = {
+  /* enchoOnly:true のグループは、園長ダッシュボード（ナレッジボード）の「規約・マニュアル」にだけ出る。
+     職員ダッシュボードには出ない。 */
   common: [
+    { label:"法人規程", enchoOnly:true, docs:[
+      { title:"管理規程（法人）", file:"kanri-kitei.pdf" },
+      { title:"経理規程（法人）", file:"keiri-kitei.pdf" }
+    ]},
     { label:"参考資料", docs:[
       { title:"こども性暴力防止法の施行について", file:"kodomo-seibouryoku-hou.pdf" }
     ]}
@@ -38,6 +45,16 @@ var MANUALS = {
   fureai_shiodome: [
     { label:"規約・マニュアル", docs:[
       { title:"就業規則（パート職員）", file:"part-shugyo-kisoku.pdf" }
+    ]}
+  ],
+  misato_chuo: [
+    { label:"規約・マニュアル", docs:[
+      { title:"就業規則（正規職員）",   file:"seiki-shugyo-kisoku.pdf" },
+      { title:"就業規則（パート職員）", file:"part-shugyo-kisoku.pdf" },
+      { title:"給与規定（正規職員）",   file:"seiki-kyuyo-kitei.pdf" }
+    ]},
+    { label:"BCP・防災", docs:[
+      { title:"業務継続計画（BCP）", file:"bcp.pdf" }
     ]}
   ],
   tsukuba: [
@@ -52,15 +69,22 @@ var MANUALS = {
   ]
 };
 
-/* 園名から、表示するグループ一覧を作る（file は docs/ からの相対パスに変換済み） */
-function manualGroupsFor(garden){
-  var folder = GARDEN_FOLDERS[garden] || "";
+/* 園名（または園キー）から、表示するグループ一覧を作る（file は docs/ からの相対パスに変換済み）
+   opts.encho=true のときは園長向け（enchoOnly のグループも含める）。 */
+function manualGroupsFor(garden, opts){
+  opts = opts || {};
+  var folder = GARDEN_FOLDERS[garden] || (MANUALS[garden] && garden !== "common" ? garden : "");
+  if(!folder && typeof findGarden === "function"){       // 園マスタ（gardens.js）があれば、そちらでも探す
+    var m = findGarden(garden);
+    if(m && MANUALS[m.key]) folder = m.key;
+  }
   var sets = [];
   if(folder && MANUALS[folder]) sets.push({ dir:folder, groups:MANUALS[folder] });
   sets.push({ dir:"common", groups:MANUALS.common || [] });
   var out = [];
   sets.forEach(function(s){
     s.groups.forEach(function(g){
+      if(g.enchoOnly && !opts.encho) return;             // 園長専用は職員には出さない
       out.push({ label:g.label, docs:g.docs.map(function(d){
         return { title:d.title, file:s.dir + "/" + d.file };
       })});
