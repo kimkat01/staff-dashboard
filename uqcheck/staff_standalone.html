@@ -808,7 +808,7 @@ async function syncProd(){
     if(document.getElementById('page-history').style.display!=='none') renderHistory();
     updateRemainPreview();
   } else {
-    buildLoginList();
+    if(!tryPinAutoLogin()) buildLoginList();   // 最新の職員一覧でログイン名の自動引き継ぎを再試行
   }
 }
 
@@ -852,6 +852,60 @@ if(!MY_GARDEN){
   setInterval(syncProd, 5000); // 5秒ごとに園長側の承認結果・最新申請を取り込む
 }
 
+// ============================================================
+// ログイン名の自動引き継ぎ（2026-09-28）
+// 職員ダッシュボードのトップでログイン（ログインID＋パスワード）した本人の名前を
+// localStorage（sd_pin_login__○○）から読み取り、職員選択を飛ばして自動でログインする。
+// ・同じ kimkat01.github.io 配下なので、ダッシュボードの保存内容をそのまま読める。
+// ・この園（MY_GARDEN）のログイン情報だけを使う（他園・他リポジトリの保存分は無視）。
+// ・名前は空白や髙/高・﨑/崎の違いを無視して照合。一致しなければ従来どおり選択画面を出す。
+// ============================================================
+let _pinAuto = false;
+function normStaffName(t){
+  return String(t||'').replace(/[\s　]/g,'')
+    .replace(/髙/g,'高').replace(/﨑/g,'崎').replace(/[邉邊]/g,'辺').replace(/德/g,'徳').replace(/濵/g,'浜');
+}
+function gardenNameOf(v){
+  const m = (typeof findGarden === 'function') ? findGarden(v) : null;
+  return m ? m.name : String(v||'').trim();
+}
+function getPinSessionForMyGarden(){
+  if(!MY_GARDEN) return null;
+  let found = null;
+  try{
+    for(let i=0;i<localStorage.length;i++){
+      const k = localStorage.key(i);
+      if(!k || k.indexOf('sd_pin_login__')!==0) continue;
+      let s = null;
+      try{ s = JSON.parse(localStorage.getItem(k)||'null'); }catch(e){ s = null; }
+      if(!s || !s.name) continue;
+      const g = gardenNameOf(s.garden || k.slice('sd_pin_login__'.length));
+      if(g === MY_GARDEN){ found = s; break; }
+    }
+  }catch(e){}
+  return found;
+}
+function tryPinAutoLogin(){
+  const pin = getPinSessionForMyGarden();
+  if(!pin) return false;
+  const n = normStaffName(pin.name);
+  let list = onlyMyGarden(DB.getStaff());
+  if(!list.length) list = onlyMyGarden(DB.defaultStaff);
+  const hit = list.find(s => normStaffName(s.name) === n);
+  if(!hit) return false;
+  // 既に本人でログイン済みなら何もしない。別人が選ばれていたら本人に切り替える。
+  if(me && me.id === hit.id){
+    _pinAuto = true;
+    const lb = document.getElementById('logoutBtn'); if(lb) lb.style.display = 'none';
+    return true;
+  }
+  me = DB.getStaffById(hit.id) || hit;
+  _pinAuto = true;
+  try{ localStorage.setItem('ym_login', me.id); }catch(e){}
+  showMain();
+  return true;
+}
+
 function doLogin(){
   const id = document.getElementById('staffSelect').value;
   me = DB.getStaffById(id);
@@ -864,7 +918,8 @@ function showMain(){
   document.getElementById('loginView').style.display='none';
   document.getElementById('mainView').style.display='block';
   document.getElementById('bnav').style.display='flex';
-  document.getElementById('logoutBtn').style.display='block';
+  // ダッシュボードのログインで本人が確定しているときは「ログアウト（別の人を選ぶ）」を出さない
+  document.getElementById('logoutBtn').style.display = _pinAuto ? 'none' : 'block';
   document.getElementById('hdSub').textContent = '';
   renderHome();
   updateRemainPreview();
@@ -897,6 +952,8 @@ try{
     localStorage.removeItem('ym_login');
   }
 }catch(e){}
+// ダッシュボードでログイン済みなら、その本人で自動ログイン（前回選んだ別の人より優先）
+try{ tryPinAutoLogin(); }catch(e){}
 
 function getLatestMe(){ if(!me) return null; return DB.getStaffById(me.id)||null; }
 
