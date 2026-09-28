@@ -162,7 +162,7 @@ tbody td{padding:11px 12px;font-size:13px;vertical-align:middle}
       <div class="page-title">職員の残日数一覧</div>
       <div class="tbl-wrap">
         <table>
-          <thead><tr><th>氏名</th><th>雇用形態</th><th>有給付与</th><th>繰越</th><th>取得済</th><th>有給残</th><th>基準日</th><th>失効まで</th><th>夏期休暇</th><th>5日義務</th></tr></thead>
+          <thead><tr><th>氏名</th><th>雇用形態</th><th>有給付与</th><th>繰越</th><th>取得済</th><th>有給残</th><th>基準日</th><th>失効まで</th><th>夏期休暇</th><th>時間休</th><th>5日義務</th></tr></thead>
           <tbody id="staffBody"></tbody>
         </table>
       </div>
@@ -193,7 +193,7 @@ tbody td{padding:11px 12px;font-size:13px;vertical-align:middle}
 </div>
 
 <script src="../gardens.js"></script>
-<script src="_shared.js?v=3"></script>
+<script src="_shared.js?v=4"></script>
 <script>
 // ★ 園の決め方（2026-09 改修）：URLの ?garden=園名 をそのまま使う。
 //   ・職員マスタ（スプレッドシート）のQ列「園名」、申請ログのD列「園名」が一致するものだけを表示する
@@ -359,7 +359,7 @@ function renderAll(){
   if(!reqs.length){ tbody.innerHTML=`<tr><td colspan="6" class="empty">該当する申請がありません</td></tr>`; return; }
   tbody.innerHTML=reqs.map(r=>{
     const cls=r.status==='承認済'?'s-ok':r.status==='却下'?'s-ng':'s-pend';
-    const catB2 = r.category==='夏期'?'<span class="sbadge" style="background:#fff0f7;color:#ff69b4;font-size:10px">☀️</span> ':''; return `<tr><td style="font-weight:500">${r.name}</td><td>${r.date}</td><td>${catB2}${r.type}（${r.days}日）</td><td style="font-size:12px;color:var(--tm)">${r.createdAt}</td><td style="font-size:12px">${r.approver||'—'}</td><td><span class="sbadge ${cls}">${r.status}</span></td></tr>`;
+    const catB2 = r.category==='夏期'?'<span class="sbadge" style="background:#fff0f7;color:#ff69b4;font-size:10px">☀️</span> ':r.category==='時間単位'?'<span class="sbadge" style="background:#eef3ff;color:#4169e1;font-size:10px">⏰ 時間休</span> ':''; return `<tr><td style="font-weight:500">${r.name}</td><td>${r.date}</td><td>${catB2}${r.type}（${r.days}日）</td><td style="font-size:12px;color:var(--tm)">${r.createdAt}</td><td style="font-size:12px">${r.approver||'—'}</td><td><span class="sbadge ${cls}">${r.status}</span></td></tr>`;
   }).join('');
 }
 
@@ -367,7 +367,7 @@ function renderStaff(){
   const staff=DB.getStaff();
   const tbody=document.getElementById('staffBody');
   if(!staff.length){
-    tbody.innerHTML=`<tr><td colspan="10" class="empty">${_staffLoaded?'この園の職員が登録されていません（職員マスタの園名をご確認ください）':'読み込み中...'}</td></tr>`;
+    tbody.innerHTML=`<tr><td colspan="11" class="empty">${_staffLoaded?'この園の職員が登録されていません（職員マスタの園名をご確認ください）':'読み込み中...'}</td></tr>`;
     return;
   }
   tbody.innerHTML=staff.map(s=>{
@@ -375,20 +375,28 @@ function renderStaff(){
     const done=DB.getObligDone(s);
     const rc=remain<=3?'color:var(--red)':remain<=7?'color:var(--warn)':'';
     const sr=DB.getSummerRemain(s);
-    const summerBadge=s.summerTotal>0?(sr===0?'<span class="sbadge s-ok">✓ 取得完了</span>':`<span class="sbadge" style="background:#fff0f7;color:#ff69b4">${sr}日残</span>`):'<span style="font-size:11px;color:var(--tm)">対象外</span>';
+    const isPart = s.type==='パート';
+    const isIku = String(s.status||'').indexOf('育休')>=0;
+    const hg = (s.hourLeaveGrant===undefined||s.hourLeaveGrant===null||s.hourLeaveGrant==='') ? 5 : Number(s.hourLeaveGrant)||0;
+    const hr = Math.max(0, Math.round((hg-(Number(s.hourLeaveUsed)||0))*1000)/1000);
+    const hourCell = isPart ? '<span style="font-size:11px;color:var(--tm)">対象外</span>' : `${hr}日残`;
+    const ikuBadge = isIku ? ' <span class="sbadge" style="background:#fce4ec;color:#c2185b">育休中</span>' : '';
+    const yet = !s.grantDate && s.nextGrantDate;   // 名簿の黄色：これから付与する方
+    const summerBadge=(isIku && !(s.summerTotal>0))?'<span class="sbadge" style="background:#fce4ec;color:#c2185b">育休中</span>':s.summerTotal>0?(sr===0?'<span class="sbadge s-ok">✓ 取得完了</span>':`<span class="sbadge" style="background:#fff0f7;color:#ff69b4">${sr}日残</span>`):'<span style="font-size:11px;color:var(--tm)">対象外</span>';
     const expDays=DB.getExpireDays(s);
     const expCell = expDays===null ? '<span style="font-size:11px;color:var(--tm)">未設定</span>'
       : `<span style="${expDays<=30?'color:var(--red);font-weight:600':expDays<=90?'color:var(--warn);font-weight:600':''}">${expDays>=0?expDays+'日':'失効済'}</span>`;
     return `<tr>
-      <td style="font-weight:500">${s.name}</td>
+      <td style="font-weight:500">${s.name}${ikuBadge}</td>
       <td><span class="sbadge s-gray">${s.type}</span></td>
       <td>${s.grant}日</td>
       <td>${s.carry}日</td>
       <td>${s.used}日</td>
       <td style="font-weight:600;${rc}">${remain}日</td>
-      <td style="font-size:12px">${s.grantDate||'—'}</td>
-      <td>${expCell}</td>
+      <td style="font-size:12px">${yet ? `<span style="background:#fff59d;border-radius:4px;padding:1px 5px">次回 ${s.nextGrantDate}${s.nextGrant?`（${s.nextGrant}日）`:''}</span>` : (s.grantDate||'—')}</td>
+      <td>${yet ? '<span style="font-size:11px;color:var(--tm)">付与前</span>' : expCell}</td>
       <td>${summerBadge}</td>
+      <td>${hourCell}</td>
       <td><span class="sbadge ${done?'s-ok':'s-pend'}">${done?'✓ 達成':'未達成'}</span></td>
     </tr>`;
   }).join('');
