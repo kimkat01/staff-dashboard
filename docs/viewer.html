@@ -101,6 +101,21 @@
     .search input{width:120px;}
   }
 </style>
+<script src="../gardens.js"></script>
+<script>
+/* 社会福祉法人雄雅会の園（園コードがYで始まる園）は緑にする（ユウガボットと同じ #43a047） */
+try{ var _lg=(typeof gardenFromUrl==='function')?gardenFromUrl():null;
+  if(_lg && /^Y/.test(_lg.code)) document.documentElement.classList.add('law-y'); }catch(e){}
+</script>
+<style>
+html.law-y{--bg1:#eaf5eb; --bg2:#eef6ee; --line:#e2ede3;
+  --grad:linear-gradient(135deg,#43a047 0%,#66bb6a 100%);
+  --grad-soft:linear-gradient(135deg,#eef7ee 0%,#e6f3e7 100%);}
+html.law-y body{background:linear-gradient(180deg,#eaf5eb 0%,#eef6ee 55%,#f0f7f0 100%);}
+html.law-y .back,html.law-y .lres-doc,html.law-y .nav-btn,html.law-y .loading{color:#2e7d32;}
+html.law-y .grp-label{color:#43a047;}
+html.law-y .lres-item{background:#f7fbf7;}
+</style>
 </head>
 <body>
 
@@ -155,6 +170,7 @@
    URLの ?garden=園名 に合わせて、その園の資料＋全園共通の資料だけを表示・検索する。
    =========================================================== */
 var GARDEN = new URLSearchParams(location.search).get("garden") || "";
+if(typeof findGarden === "function"){ var _gm = findGarden(GARDEN); if(_gm) GARDEN = _gm.name; }  // 英字の園キーも日本語の園名に直す
 var GROUPS = manualGroupsFor(GARDEN);
 document.getElementById("brandGarden").textContent = GARDEN || "職員ダッシュボード";
 document.title = "規約・マニュアル" + (GARDEN ? "｜" + GARDEN : "");
