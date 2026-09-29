@@ -453,6 +453,16 @@ tbody tr.me .namecol{color:var(--brand)}
 </style>
 <!-- 園マスタ（園キー⇔日本語の園名）。ログインより先に読み込み、?garden=tsukuba のような英字の園キーでもログインできるようにする -->
 <script src="gardens.js"></script>
+<script>
+/* 社会福祉法人雄雅会の園（園コードがYで始まる園）は、最初のログイン画面から緑にする（ユウガボットと同じ #43a047） */
+try{ var _lg=(typeof gardenFromUrl==='function')?gardenFromUrl():null;
+  if(_lg && /^Y/.test(_lg.code)) document.documentElement.classList.add('law-y'); }catch(e){}
+</script>
+<style>
+html.law-y{--brand-blue:#43a047;--brand-blue-d:#3c8f40;--law:#43a047;--law-hover:#3c8f40;--law-bg:#dff3e2;}
+html.law-y .pin-btn,html.law-y #pinGate .namelist .av{background:#43a047;}
+html.law-y .pin-box:focus,html.law-y .pg-text:focus{border-color:#43a047;box-shadow:0 0 0 2px rgba(67,160,71,.25);}
+</style>
 </head>
 <body>
 <!-- ============================================================
