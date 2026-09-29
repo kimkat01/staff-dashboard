@@ -32,10 +32,12 @@ var GARDEN_HOMES = {
 /* 文書一覧。common は全園に表示され、園の一覧の後ろに付く。
    title=表示名／file=PDFファイル名（半角英数字） */
 var MANUALS = {
+  /* law:"s" のグループは学校法人柴学園の園だけに出す（社会福祉法人雄雅会＝園コードがYの園には出さない）。
+     law を書かないグループは全園に出る。 */
   /* enchoOnly:true のグループは、園長ダッシュボード（ナレッジボード）の「規約・マニュアル」にだけ出る。
      職員ダッシュボードには出ない。 */
   common: [
-    { label:"法人規程", enchoOnly:true, docs:[
+    { label:"法人規程", enchoOnly:true, law:"s", docs:[
       { title:"管理規程（法人）", file:"kanri-kitei.pdf" },
       { title:"経理規程（法人）", file:"keiri-kitei.pdf" }
     ]},
@@ -87,6 +89,9 @@ function manualGroupsFor(garden, opts){
     var m = findGarden(garden);
     if(m && MANUALS[m.key]) folder = m.key;
   }
+  // 園の法人（園マスタ gardens.js の園コードの頭文字：S＝柴学園／Y＝雄雅会）
+  var gm = (typeof findGarden === "function") ? findGarden(garden) : null;
+  var law = gm && gm.code ? gm.code.charAt(0).toLowerCase() : "";
   var sets = [];
   if(folder && MANUALS[folder]) sets.push({ dir:folder, groups:MANUALS[folder] });
   sets.push({ dir:"common", groups:MANUALS.common || [] });
@@ -94,6 +99,7 @@ function manualGroupsFor(garden, opts){
   sets.forEach(function(s){
     s.groups.forEach(function(g){
       if(g.enchoOnly && !opts.encho) return;             // 園長専用は職員には出さない
+      if(g.law && law && g.law !== law) return;          // 別法人の規程は出さない
       out.push({ label:g.label, docs:g.docs.map(function(d){
         return { title:d.title, file:s.dir + "/" + d.file };
       })});
