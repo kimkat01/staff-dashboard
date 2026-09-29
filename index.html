@@ -1094,6 +1094,23 @@ tbody tr.me .namecol{color:var(--brand)}
   </main>
 </div>
 
+<script src="gardens.js"></script>
+<script>
+/* ===== 園ごとのシフトデータ（2026-09-29） =====
+   下の DATA はつくばのシフト（従来どおり）。data/園キー.js がある園だけ、そのファイルを読み込んで中身を差し替える。
+   ・ファイルがある園：SHIFT_FILES に園キーを書く（例：moriya_shiodome → data/moriya_shiodome.js）
+   ・ファイルの中身は window.SHIFT_OVERRIDE = { facility, period, today, dates, staff, uqGarden, domeKey }
+   ・?garden が無い／一覧にない園は、今までと同じ（つくばのデータ）で何も変わらない */
+var SHIFT_FILES = ['moriya_shiodome'];
+(function(){
+  try{
+    var g = (typeof gardenFromUrl==='function') ? gardenFromUrl() : null;
+    if(g && SHIFT_FILES.indexOf(g.key) >= 0){
+      document.write('<script src="data/' + g.key + '.js?v=20260929"><\/script>');
+    }
+  }catch(e){}
+})();
+</script>
 <script src="docs/manuals.js"></script>
 <script>
 const DATA = {
@@ -6971,6 +6988,10 @@ const DATA = {
  "uqGarden": "しおどめ保育園つくば",
  "domeKey": "tsukuba"
 };
+/* 園ごとのシフトファイル（data/園キー.js）が読み込まれていれば、その園のシフトに差し替える */
+if(window.SHIFT_OVERRIDE && typeof window.SHIFT_OVERRIDE==='object' && Array.isArray(window.SHIFT_OVERRIDE.staff)){
+  Object.assign(DATA, window.SHIFT_OVERRIDE);
+}
 function _todayLocalStr(d){
   const y=d.getFullYear(), m=String(d.getMonth()+1).padStart(2,'0'), day=String(d.getDate()).padStart(2,'0');
   return y+'-'+m+'-'+day;
