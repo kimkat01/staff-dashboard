@@ -218,6 +218,9 @@ const DB = {
     if(s){
       if(req.category==='夏期'){
         s.summerUsed = parseFloat((s.summerUsed + req.days).toFixed(1));
+      } else if(req.category==='時間単位'){
+        // 時間休（単位：日）は年休の取得済みには足さない
+        s.hourLeaveUsed = parseFloat(((Number(s.hourLeaveUsed)||0) + req.days).toFixed(3));
       } else {
         s.used = parseFloat((s.used + req.days).toFixed(1));
       }
@@ -253,7 +256,7 @@ const DB = {
     }
   },
 
-  getRemain(s){ return parseFloat((s.grant + s.carry - s.used).toFixed(1)); },
+  getRemain(s){ return parseFloat((s.grant + s.carry - s.used).toFixed(3)); },
   getSummerRemain(s){ return Math.max(0, (s.summerTotal||0) - (s.summerUsed||0)); },
   getObligDone(s){ return s.used >= 5; },
 
