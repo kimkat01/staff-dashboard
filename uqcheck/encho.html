@@ -96,6 +96,10 @@ tbody td{padding:11px 12px;font-size:13px;vertical-align:middle}
 .empty{padding:40px;text-align:center;font-size:13px;color:var(--tm)}
 .page-title{font-size:15px;font-weight:600;color:var(--t);margin-bottom:16px}
 </style>
+<style>
+/* ★ 社会福祉法人雄雅会（園コード Y〜）は緑テーマ（2026-09） */
+html.law-y{ --blue:#43a047; --bl:#e8f5e9; --bld:#2e7d32; --blm:#66bb6a; }
+</style>
 </head>
 <body>
 <div id="gardenErrorView" style="display:none;min-height:100vh;display:none;align-items:center;justify-content:center;background:var(--bg,#f5f6fa);padding:24px">
@@ -193,6 +197,11 @@ tbody td{padding:11px 12px;font-size:13px;vertical-align:middle}
 </div>
 
 <script src="../gardens.js"></script>
+<script>
+// 社会福祉法人雄雅会（園コード Y〜）から開かれたときは緑テーマ（html.law-y）。?garden が無いときは今までどおりの色
+(function(){ try{ var g=(typeof gardenFromUrl==='function')?gardenFromUrl():null;
+  if(g && /^Y/.test(g.code||'')) document.documentElement.classList.add('law-y'); }catch(e){} })();
+</script>
 <script src="_shared.js?v=4"></script>
 <script>
 // ★ 園の決め方（2026-09 改修）：URLの ?garden=園名 をそのまま使う。
