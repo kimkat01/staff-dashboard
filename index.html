@@ -8,6 +8,22 @@
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
 <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
+<script src="gardens.js"></script>
+<script>
+/* 社会福祉法人雄雅会の園（園コード Y〜）で開いたときは、ホーム画面アイコンを緑版（icons/yuga/）にする（2026-09-30）
+   ・柴学園の園や ?garden 無しのときは、今までどおり青（icons/）
+   ・ホーム画面に追加する瞬間のアイコンが使われるので、<head> の中で早めに差し替える */
+(function(){
+  try{
+    var g=(typeof gardenFromUrl==='function')?gardenFromUrl():null;
+    if(!g || !/^Y/.test(g.code||'')) return;
+    var links=document.querySelectorAll('link[rel="apple-touch-icon"], link[rel="icon"]');
+    for(var i=0;i<links.length;i++){
+      links[i].setAttribute('href', links[i].getAttribute('href').replace('icons/','icons/yuga/'));
+    }
+  }catch(e){}
+})();
+</script>
 <meta name="apple-mobile-web-app-title" content="しおどめ">
 <meta name="application-name" content="しおどめ">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -1108,7 +1124,6 @@ html.law-y .pin-box:focus,html.law-y .pg-text:focus{border-color:#43a047;box-sha
   </main>
 </div>
 
-<script src="gardens.js"></script>
 <script>
 /* ===== 園ごとのシフトデータ（2026-09-29） =====
    下の DATA はつくばのシフト（従来どおり）。data/園キー.js がある園だけ、そのファイルを読み込んで中身を差し替える。
