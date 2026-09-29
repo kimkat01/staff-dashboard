@@ -451,6 +451,8 @@ tbody tr.me .namecol{color:var(--brand)}
 #screen-mental a.mhrow{text-decoration:none;}
 #screen-mental .hidden{display:none}
 </style>
+<!-- 園マスタ（園キー⇔日本語の園名）。ログインより先に読み込み、?garden=tsukuba のような英字の園キーでもログインできるようにする -->
+<script src="gardens.js"></script>
 </head>
 <body>
 <!-- ============================================================
@@ -529,6 +531,8 @@ tbody tr.me .namecol{color:var(--brand)}
 
   var params = new URLSearchParams(location.search);
   var GARDEN = (params.get('garden') || '').trim();
+  // 英字の園キー（例：tsukuba、moriya_shiodome）は、ログインマスタA列と同じ日本語の園名に直してから使う
+  if(typeof findGarden === 'function'){ var _gm = findGarden(GARDEN); if(_gm) GARDEN = _gm.name; }
   var SESSION_KEY = 'sd_pin_login__' + (GARDEN || 'default');
   var PASSWORD_PATTERN = /^(?=.*[a-z])(?=.*[0-9])[a-z0-9]{8}$/;
   var pgLoginId = '';
@@ -7080,6 +7084,7 @@ function normStaffName(t){
 }
 function getPinSession(){
   var urlGarden=(new URLSearchParams(location.search).get('garden')||'').trim();
+  if(typeof findGarden==='function'){var _gm=findGarden(urlGarden);if(_gm)urlGarden=_gm.name;}
   try{
     var s=JSON.parse(localStorage.getItem('sd_pin_login__'+(urlGarden||'default'))||'null');
     if(s&&s.name) return s;
