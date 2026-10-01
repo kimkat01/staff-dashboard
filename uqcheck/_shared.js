@@ -221,6 +221,7 @@ const DB = {
       } else if(req.category==='時間単位'){
         // 時間休（単位：日）は年休の取得済みには足さない
         s.hourLeaveUsed = parseFloat(((Number(s.hourLeaveUsed)||0) + req.days).toFixed(3));
+        s.used = parseFloat(((Number(s.used)||0) + req.days).toFixed(3));   // 時間休は年休の一部
       } else {
         s.used = parseFloat((s.used + req.days).toFixed(1));
       }

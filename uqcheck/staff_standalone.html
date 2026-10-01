@@ -162,19 +162,6 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Hiragino Sans','Yu Gothic UI'
 .cat-tab{flex:1;padding:9px 6px;text-align:center;font-size:13px;color:#888;cursor:pointer;border-radius:8px;font-weight:500}
 .cat-tab.active{background:#fff;color:#222;font-weight:700;box-shadow:0 1px 3px rgba(0,0,0,0.1)}
 </style>
-<script src="../gardens.js"></script>
-<script>
-/* 社会福祉法人雄雅会の園（園コードがYで始まる園）は緑にする（ユウガボットと同じ #43a047） */
-try{ var _lg=(typeof gardenFromUrl==='function')?gardenFromUrl():null;
-  if(_lg && /^Y/.test(_lg.code)) document.documentElement.classList.add('law-y'); }catch(e){}
-</script>
-<style>
-html.law-y .hd,html.law-y .login-btn,html.law-y .avatar,html.law-y .prog-fill,html.law-y .cal-day.sel{background:#43a047}
-html.law-y .calc-link,html.law-y .cal-nav,html.law-y .remain-preview,html.law-y #gardenLabel{color:#43a047 !important}
-html.law-y .f-input:focus{border-color:#43a047}
-html.law-y .cal-day.today{box-shadow:inset 0 0 0 1.5px #43a047}
-html.law-y .cal-day.sel{box-shadow:none}
-</style>
 </head>
 <body>
 
@@ -490,7 +477,7 @@ const FACILITIES = {
       {"id": "EMP083", "name": "神谷 彰男", "type": "パート", "hire": "2025-02-18", "grantDate": "", "grant": 0, "carry": 7, "used": 0, "summerUsed": 3, "summerTotal": 3, "hourLeaveGrant": 0, "hourLeaveUsed": 0, "basicPay": 0, "allowance": 0, "avgMonthlyHours": 160, "hourlyWage": 0, "email": "", "garden": "しおどめ保育園つくば", "nextGrantDate": "2027-08-18", "nextGrant": 9, "status": ""},
       {"id": "EMP084", "name": "吉沼 めぐみ", "type": "正規", "hire": "2024-04-01", "grantDate": "2026-10-01", "grant": 12, "carry": 7.625, "used": 0, "summerUsed": 4, "summerTotal": 5, "hourLeaveGrant": 5, "hourLeaveUsed": 0, "basicPay": 0, "allowance": 0, "avgMonthlyHours": 160, "hourlyWage": 0, "email": "", "garden": "しおどめ保育園つくば", "nextGrantDate": "", "nextGrant": 0, "status": ""},
       {"id": "EMP085", "name": "田﨑 未愛", "type": "正規", "hire": "2024-04-01", "grantDate": "2026-10-01", "grant": 12, "carry": 6.375, "used": 0, "summerUsed": 0, "summerTotal": 5, "hourLeaveGrant": 5, "hourLeaveUsed": 0, "basicPay": 0, "allowance": 0, "avgMonthlyHours": 160, "hourlyWage": 0, "email": "", "garden": "しおどめ保育園つくば", "nextGrantDate": "", "nextGrant": 0, "status": ""},
-      {"id": "EMP086", "name": "津久井 沙織", "type": "正規", "hire": "2023-08-01", "grantDate": "", "grant": 0, "carry": 14, "used": 0, "summerUsed": 4, "summerTotal": 5, "hourLeaveGrant": 5, "hourLeaveUsed": 1.25, "basicPay": 0, "allowance": 0, "avgMonthlyHours": 160, "hourlyWage": 0, "email": "", "garden": "しおどめ保育園つくば", "nextGrantDate": "2027-02-01", "nextGrant": 14, "status": ""},
+      {"id": "EMP086", "name": "津久井 沙織", "type": "正規", "hire": "2023-08-01", "grantDate": "", "grant": 0, "carry": 14, "used": 0, "summerUsed": 3, "summerTotal": 5, "hourLeaveGrant": 5, "hourLeaveUsed": 1.25, "basicPay": 0, "allowance": 0, "avgMonthlyHours": 160, "hourlyWage": 0, "email": "", "garden": "しおどめ保育園つくば", "nextGrantDate": "2027-02-01", "nextGrant": 14, "status": ""},
       {"id": "EMP087", "name": "塚田 夏海", "type": "パート", "hire": "2023-04-01", "grantDate": "2026-10-01", "grant": 14, "carry": 0, "used": 0, "summerUsed": 4, "summerTotal": 4, "hourLeaveGrant": 0, "hourLeaveUsed": 0, "basicPay": 0, "allowance": 0, "avgMonthlyHours": 160, "hourlyWage": 0, "email": "", "garden": "しおどめ保育園つくば", "nextGrantDate": "", "nextGrant": 0, "status": ""},
       {"id": "EMP088", "name": "山越 栄美", "type": "パート", "hire": "2022-11-01", "grantDate": "", "grant": 0, "carry": 13, "used": 0, "summerUsed": 4, "summerTotal": 4, "hourLeaveGrant": 0, "hourLeaveUsed": 0, "basicPay": 0, "allowance": 0, "avgMonthlyHours": 160, "hourlyWage": 0, "email": "", "garden": "しおどめ保育園つくば", "nextGrantDate": "2027-05-01", "nextGrant": 16, "status": ""},
       {"id": "EMP089", "name": "久松 悦子", "type": "正規", "hire": "2022-04-01", "grantDate": "2026-10-01", "grant": 16, "carry": 12.75, "used": 0, "summerUsed": 1, "summerTotal": 5, "hourLeaveGrant": 5, "hourLeaveUsed": 0, "basicPay": 0, "allowance": 0, "avgMonthlyHours": 160, "hourlyWage": 0, "email": "", "garden": "しおどめ保育園つくば", "nextGrantDate": "", "nextGrant": 0, "status": ""},
@@ -498,13 +485,13 @@ const FACILITIES = {
       {"id": "EMP091", "name": "荒井 美香子", "type": "正規", "hire": "2022-04-01", "grantDate": "2026-10-01", "grant": 16, "carry": 13.375, "used": 0, "summerUsed": 3, "summerTotal": 5, "hourLeaveGrant": 5, "hourLeaveUsed": 0, "basicPay": 0, "allowance": 0, "avgMonthlyHours": 160, "hourlyWage": 0, "email": "", "garden": "しおどめ保育園つくば", "nextGrantDate": "", "nextGrant": 0, "status": ""},
       {"id": "EMP092", "name": "髙波 郁子", "type": "正規", "hire": "2021-04-01", "grantDate": "2026-10-01", "grant": 18, "carry": 12.625, "used": 0, "summerUsed": 4, "summerTotal": 5, "hourLeaveGrant": 5, "hourLeaveUsed": 0, "basicPay": 0, "allowance": 0, "avgMonthlyHours": 160, "hourlyWage": 0, "email": "", "garden": "しおどめ保育園つくば", "nextGrantDate": "", "nextGrant": 0, "status": ""},
       {"id": "EMP093", "name": "斉藤 由紀子", "type": "正規", "hire": "2021-04-01", "grantDate": "2026-10-01", "grant": 18, "carry": 12.25, "used": 0, "summerUsed": 2, "summerTotal": 5, "hourLeaveGrant": 5, "hourLeaveUsed": 0, "basicPay": 0, "allowance": 0, "avgMonthlyHours": 160, "hourlyWage": 0, "email": "", "garden": "しおどめ保育園つくば", "nextGrantDate": "", "nextGrant": 0, "status": ""},
-      {"id": "EMP094", "name": "小﨑 奏子", "type": "正規", "hire": "2021-03-16", "grantDate": "2026-09-16", "grant": 18, "carry": 3.5, "used": 0, "summerUsed": 5, "summerTotal": 5, "hourLeaveGrant": 5, "hourLeaveUsed": 0, "basicPay": 0, "allowance": 0, "avgMonthlyHours": 160, "hourlyWage": 0, "email": "", "garden": "しおどめ保育園つくば", "nextGrantDate": "", "nextGrant": 0, "status": ""},
-      {"id": "EMP095", "name": "山下 明日香", "type": "正規", "hire": "2021-04-01", "grantDate": "2026-10-01", "grant": 18, "carry": 15.875, "used": 0, "summerUsed": 2, "summerTotal": 5, "hourLeaveGrant": 5, "hourLeaveUsed": 0, "basicPay": 0, "allowance": 0, "avgMonthlyHours": 160, "hourlyWage": 0, "email": "", "garden": "しおどめ保育園つくば", "nextGrantDate": "", "nextGrant": 0, "status": ""},
+      {"id": "EMP094", "name": "小﨑 奏子", "type": "正規", "hire": "2021-03-16", "grantDate": "2026-09-16", "grant": 18, "carry": 3.5, "used": 0, "summerUsed": 5, "summerTotal": 5, "hourLeaveGrant": 5, "hourLeaveUsed": 0, "basicPay": 0, "allowance": 0, "avgMonthlyHours": 160, "hourlyWage": 0, "email": "", "garden": "しおどめ保育園つくば", "nextGrantDate": "2027-09-16", "nextGrant": 20, "status": ""},
+      {"id": "EMP095", "name": "山下 明日香", "type": "正規", "hire": "2021-04-01", "grantDate": "2026-10-01", "grant": 18, "carry": 14.875, "used": 0, "summerUsed": 2, "summerTotal": 5, "hourLeaveGrant": 5, "hourLeaveUsed": 0, "basicPay": 0, "allowance": 0, "avgMonthlyHours": 160, "hourlyWage": 0, "email": "", "garden": "しおどめ保育園つくば", "nextGrantDate": "", "nextGrant": 0, "status": ""},
       {"id": "EMP096", "name": "近藤 美貴", "type": "正規", "hire": "2021-04-01", "grantDate": "2026-10-01", "grant": 18, "carry": 13.5, "used": 0, "summerUsed": 0, "summerTotal": 0, "hourLeaveGrant": 5, "hourLeaveUsed": 0, "basicPay": 0, "allowance": 0, "avgMonthlyHours": 160, "hourlyWage": 0, "email": "", "garden": "しおどめ保育園つくば", "nextGrantDate": "", "nextGrant": 0, "status": "育休中"},
       {"id": "EMP097", "name": "大澤 茉希", "type": "正規", "hire": "2021-04-01", "grantDate": "2026-10-01", "grant": 18, "carry": 16, "used": 0, "summerUsed": 3, "summerTotal": 5, "hourLeaveGrant": 5, "hourLeaveUsed": 0, "basicPay": 0, "allowance": 0, "avgMonthlyHours": 160, "hourlyWage": 0, "email": "", "garden": "しおどめ保育園つくば", "nextGrantDate": "", "nextGrant": 0, "status": ""},
       {"id": "EMP098", "name": "山﨑 美枝子", "type": "正規", "hire": "2021-04-01", "grantDate": "2026-10-01", "grant": 18, "carry": 11, "used": 0, "summerUsed": 4, "summerTotal": 5, "hourLeaveGrant": 5, "hourLeaveUsed": 0, "basicPay": 0, "allowance": 0, "avgMonthlyHours": 160, "hourlyWage": 0, "email": "", "garden": "しおどめ保育園つくば", "nextGrantDate": "", "nextGrant": 0, "status": ""},
       {"id": "EMP099", "name": "野口 しのぶ", "type": "正規", "hire": "2021-04-01", "grantDate": "2026-10-01", "grant": 18, "carry": 15.75, "used": 0, "summerUsed": 0, "summerTotal": 5, "hourLeaveGrant": 5, "hourLeaveUsed": 0, "basicPay": 0, "allowance": 0, "avgMonthlyHours": 160, "hourlyWage": 0, "email": "", "garden": "しおどめ保育園つくば", "nextGrantDate": "", "nextGrant": 0, "status": ""},
-      {"id": "EMP100", "name": "飯田 裕子", "type": "正規", "hire": "2021-03-16", "grantDate": "2026-09-16", "grant": 18, "carry": 11.5, "used": 0, "summerUsed": 3, "summerTotal": 5, "hourLeaveGrant": 5, "hourLeaveUsed": 0, "basicPay": 0, "allowance": 0, "avgMonthlyHours": 160, "hourlyWage": 0, "email": "", "garden": "しおどめ保育園つくば", "nextGrantDate": "", "nextGrant": 0, "status": ""},
+      {"id": "EMP100", "name": "飯田 裕子", "type": "正規", "hire": "2021-03-16", "grantDate": "2026-09-16", "grant": 18, "carry": 11.5, "used": 0, "summerUsed": 3, "summerTotal": 5, "hourLeaveGrant": 5, "hourLeaveUsed": 0, "basicPay": 0, "allowance": 0, "avgMonthlyHours": 160, "hourlyWage": 0, "email": "", "garden": "しおどめ保育園つくば", "nextGrantDate": "2027-09-16", "nextGrant": 20, "status": ""},
     ],
   },
   'ふれあいしおどめ保育園': {
@@ -642,6 +629,7 @@ const DB = {
         s.summerUsed = parseFloat((s.summerUsed + req.days).toFixed(1));
       } else if(req.category==='時間単位'){
         s.hourLeaveUsed = parseFloat(((Number(s.hourLeaveUsed)||0) + req.days).toFixed(3));
+        s.used = parseFloat(((Number(s.used)||0) + req.days).toFixed(3));   // 時間休は年休の一部
       } else {
         s.used = parseFloat((s.used + req.days).toFixed(1));
       }
@@ -686,7 +674,9 @@ const DB = {
   getHourLeaveRemain(s){
     if(this.isPart(s)) return 0;
     const g = (s.hourLeaveGrant===undefined||s.hourLeaveGrant===null||s.hourLeaveGrant==='') ? 5 : Number(s.hourLeaveGrant)||0;
-    return Math.max(0, Math.round((g - (Number(s.hourLeaveUsed)||0))*1000)/1000);
+    // 時間休は年休の一部なので、有休の残日数より多くは取れない（少ない方を残りとする）
+    const h = Math.max(0, Math.round((g - (Number(s.hourLeaveUsed)||0))*1000)/1000);
+    return Math.max(0, Math.min(h, this.getRemain(s)));
   },
 
   // 基準日（直近の有給付与日）と、そこから法定2年で失効するまでの日数
@@ -993,7 +983,7 @@ function renderHome(){
   document.getElementById('utype').innerHTML = s.type+'／採用 '+s.hire.replace(/-/g,'/')
     + (DB.isIkukyu(s) ? ' <span style="display:inline-block;background:#fce4ec;color:#c2185b;font-weight:700;border-radius:10px;padding:1px 8px;font-size:11px">育休中</span>' : '');
   const expDays = DB.getExpireDays(s);
-  const expColor = expDays===null ? '#aaa' : expDays<=30 ? '#e94b4b' : expDays<=90 ? '#e8a23d' : (document.documentElement.classList.contains('law-y')?'#43a047':'#4169e1');
+  const expColor = expDays===null ? '#aaa' : expDays<=30 ? '#e94b4b' : expDays<=90 ? '#e8a23d' : '#4169e1';
   const expText = expDays===null ? '基準日未設定' : (expDays>=0 ? `失効まで${expDays}日` : '失効済');
   document.getElementById('expireBadge').innerHTML = (!s.grantDate && s.nextGrantDate)
     // これから付与する方（名簿の黄色）：次回付与日を出す
@@ -1030,7 +1020,9 @@ function renderHome(){
   document.getElementById('hGrant').textContent = part ? '—' : (s.hourLeaveGrant===undefined||s.hourLeaveGrant===''?5:s.hourLeaveGrant);
   document.getElementById('hUsed').textContent = part ? '—' : (s.hourLeaveUsed||0);
   const hn = document.getElementById('hourNote');
-  if(hn) hn.innerHTML = part ? `<div style="background:#f2f2f2;border-radius:8px;padding:7px 10px;font-size:12px;color:#888;text-align:center">パートのため対象外</div>` : '';
+  const hRaw = Math.max(0, Math.round(((s.hourLeaveGrant===undefined||s.hourLeaveGrant===''?5:Number(s.hourLeaveGrant)||0) - (Number(s.hourLeaveUsed)||0))*1000)/1000);
+  if(hn) hn.innerHTML = part ? `<div style="background:#f2f2f2;border-radius:8px;padding:7px 10px;font-size:12px;color:#888;text-align:center">パートのため対象外</div>`
+    : (hr < hRaw ? `<div style="background:#fff8e1;border-radius:8px;padding:7px 10px;font-size:12px;color:#b8860b;text-align:center">有休の残りが${hr}日のため、時間休も${hr}日まで</div>` : '');
   const ht = document.getElementById('catTabHour');
   if(ht) ht.style.display = part ? 'none' : '';
 }
@@ -1100,7 +1092,7 @@ function renderMypage(){
     <div class="my-row"><span class="my-key">勤続年数</span><span class="my-val">${diff}年</span></div>
     <div class="my-row"><span class="my-key">有給付与</span><span class="my-val">${s.grant}日</span></div>
     <div class="my-row"><span class="my-key">繰越</span><span class="my-val">${s.carry}日</span></div>
-    <div class="my-row"><span class="my-key">有給残日数</span><span class="my-val" style="color:${document.documentElement.classList.contains('law-y')?'#43a047':'#4169e1'};font-size:18px">${DB.getRemain(s)}日</span></div>
+    <div class="my-row"><span class="my-key">有給残日数</span><span class="my-val" style="color:#4169e1;font-size:18px">${DB.getRemain(s)}日</span></div>
     <div class="my-row"><span class="my-key">基準日（付与日）</span><span class="my-val">${s.grantDate||'未設定'}</span></div>
     <div class="my-row"><span class="my-key">失効まで</span><span class="my-val"${expireStyle}>${expireLabel}</span></div>
     <div class="my-row"><span class="my-key">夏季休暇残</span><span class="my-val">${DB.isIkukyu(s)&&!(s.summerTotal>0)?'対象外（育休中）':DB.getSummerRemain(s)+'日'}</span></div>
@@ -1141,7 +1133,7 @@ function setCat(cat,el){
   document.getElementById('applyNote').textContent = cat==='夏期'
     ? '※ 夏季休暇は有給休暇とは別枠です（就業規則第24条）'
     : cat==='時間単位'
-    ? '※ 時間休は1時間単位で取得できます（年5日分まで）'
+    ? '※ 時間休は1時間単位で取得できます（年5日分まで・有休の残日数からも引かれます）'
     : '※ 選択した日それぞれが1件の申請として登録されます（第29条：1週間前までに申請）';
   updateRemainPreview();
 }

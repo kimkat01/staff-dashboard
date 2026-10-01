@@ -96,10 +96,6 @@ tbody td{padding:11px 12px;font-size:13px;vertical-align:middle}
 .empty{padding:40px;text-align:center;font-size:13px;color:var(--tm)}
 .page-title{font-size:15px;font-weight:600;color:var(--t);margin-bottom:16px}
 </style>
-<style>
-/* ★ 社会福祉法人雄雅会（園コード Y〜）は緑テーマ（2026-09） */
-html.law-y{ --blue:#43a047; --bl:#e8f5e9; --bld:#2e7d32; --blm:#66bb6a; }
-</style>
 </head>
 <body>
 <div id="gardenErrorView" style="display:none;min-height:100vh;display:none;align-items:center;justify-content:center;background:var(--bg,#f5f6fa);padding:24px">
@@ -197,12 +193,7 @@ html.law-y{ --blue:#43a047; --bl:#e8f5e9; --bld:#2e7d32; --blm:#66bb6a; }
 </div>
 
 <script src="../gardens.js"></script>
-<script>
-// 社会福祉法人雄雅会（園コード Y〜）から開かれたときは緑テーマ（html.law-y）。?garden が無いときは今までどおりの色
-(function(){ try{ var g=(typeof gardenFromUrl==='function')?gardenFromUrl():null;
-  if(g && /^Y/.test(g.code||'')) document.documentElement.classList.add('law-y'); }catch(e){} })();
-</script>
-<script src="_shared.js?v=4"></script>
+<script src="_shared.js?v=5"></script>
 <script>
 // ★ 園の決め方（2026-09 改修）：URLの ?garden=園名 をそのまま使う。
 //   ・職員マスタ（スプレッドシート）のQ列「園名」、申請ログのD列「園名」が一致するものだけを表示する
@@ -387,7 +378,8 @@ function renderStaff(){
     const isPart = s.type==='パート';
     const isIku = String(s.status||'').indexOf('育休')>=0;
     const hg = (s.hourLeaveGrant===undefined||s.hourLeaveGrant===null||s.hourLeaveGrant==='') ? 5 : Number(s.hourLeaveGrant)||0;
-    const hr = Math.max(0, Math.round((hg-(Number(s.hourLeaveUsed)||0))*1000)/1000);
+    // 時間休は年休の一部なので、有休の残日数を超えない
+    const hr = Math.max(0, Math.min(Math.round((hg-(Number(s.hourLeaveUsed)||0))*1000)/1000, DB.getRemain(s)));
     const hourCell = isPart ? '<span style="font-size:11px;color:var(--tm)">対象外</span>' : `${hr}日残`;
     const ikuBadge = isIku ? ' <span class="sbadge" style="background:#fce4ec;color:#c2185b">育休中</span>' : '';
     const yet = !s.grantDate && s.nextGrantDate;   // 名簿の黄色：これから付与する方
