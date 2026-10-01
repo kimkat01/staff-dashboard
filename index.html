@@ -508,6 +508,13 @@ html.law-y .pin-box:focus,html.law-y .pg-text:focus{border-color:#43a047;box-sha
   .pg-text:focus{outline:none;border-color:#005FFF;box-shadow:0 0 0 2px rgba(0,95,255,.2);}
   .pg-show{display:flex;align-items:center;gap:6px;margin:8px 10px 0;font-size:13px;color:var(--ink-soft);}
   .pg-show input{width:18px;height:18px;margin:0;}
+  .pg-rules{list-style:none;margin:10px 10px 0;padding:10px 12px;background:#f7f7f5;border-radius:10px;font-size:14px;line-height:1.9;}
+  .pg-rules li{color:#8a857c;}
+  .pg-rules li::before{content:"○ ";font-weight:800;}
+  .pg-rules li.ok{color:#1e7e34;font-weight:700;}
+  .pg-rules li.ok::before{content:"✓ ";}
+  .pg-fixnote{color:#9a6a00;font-size:13px;margin:6px 10px 0;min-height:0;}
+  .pin-btn:disabled{background:#b9b9b9 !important;opacity:1;}
   .pg-ok{color:#1e7e34;font-size:13px;margin:8px 10px 0;min-height:18px;font-weight:700;}
 </style>
 
@@ -533,12 +540,20 @@ html.law-y .pin-box:focus,html.law-y .pg-text:focus{border-color:#43a047;box-sha
     </div>
 
     <div id="pgChangeStep" style="display:none;padding:0 10px;">
-      <p class="login-hint">初回ログインです。新しいパスワードを設定してください（半角の小文字英字と数字を両方含む8文字）。</p>
-      <input class="pg-text" id="pgNewPassword" type="password" maxlength="12" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="新しいパスワード（8文字）">
-      <input class="pg-text" id="pgNewPassword2" type="password" maxlength="12" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="確認のため、もう一度入力" style="margin-top:10px;">
-      <label class="pg-show"><input type="checkbox" onchange="pgToggleShow(this,'pgNewPassword');pgToggleShow(this,'pgNewPassword2')">パスワードを表示する</label>
+      <p class="login-hint">初回ログインです。ご自分用のパスワードを決めてください。<br><b>英字（a〜z）と数字（0〜9）をまぜて、ちょうど8文字</b>です。</p>
+      <input class="pg-text" id="pgNewPassword" type="text" maxlength="20" inputmode="url" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="例：hana2024" oninput="pgCheckNew()">
+      <input class="pg-text" id="pgNewPassword2" type="text" maxlength="20" inputmode="url" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="確認のため、もう一度入力" style="margin-top:10px;" oninput="pgCheckNew()">
+      <label class="pg-show"><input type="checkbox" checked onchange="pgToggleShow(this,'pgNewPassword');pgToggleShow(this,'pgNewPassword2')">パスワードを表示する</label>
+      <div class="pg-fixnote" id="pgFixNote"></div>
+      <ul class="pg-rules">
+        <li id="pgR1">ちょうど8文字（いま <span id="pgLen">0</span> 文字）</li>
+        <li id="pgR2">英字（a〜z）が入っている</li>
+        <li id="pgR3">数字（0〜9）が入っている</li>
+        <li id="pgR4">2回の入力が同じ</li>
+        <li id="pgR5">仮パスワードとは違う</li>
+      </ul>
       <div class="pin-err" id="pgErr2"></div>
-      <button class="pin-btn" id="pgChangeBtn" onclick="pgSubmitChange()">このパスワードに変更する</button>
+      <button class="pin-btn" id="pgChangeBtn" onclick="pgSubmitChange()" disabled>このパスワードに変更する</button>
       <button class="pin-back" onclick="pgSkipChange()">あとで変更する（このまま進む）</button>
     </div>
 
@@ -598,11 +613,12 @@ html.law-y .pin-box:focus,html.law-y .pg-text:focus{border-color:#43a047;box-sha
   };
 
   // ★ GAS呼び出し：通信失敗・GASの一時エラー（HTMLが返る）時は自動で再試行する
-  function postGas(payload){
-    var MAX_TRY = 3;
+  function postGas(payload, maxTry, timeoutMs){
+    var MAX_TRY = maxTry || 3;
+    var TIMEOUT = timeoutMs || 25000;
     function once(n){
       var ctrl = (typeof AbortController !== 'undefined') ? new AbortController() : null;
-      var timer = ctrl ? setTimeout(function(){ ctrl.abort(); }, 25000) : null;
+      var timer = ctrl ? setTimeout(function(){ ctrl.abort(); }, TIMEOUT) : null;
       var opt = { method:'POST', body: JSON.stringify(payload), redirect:'follow' };
       if(ctrl){ opt.signal = ctrl.signal; }
       return fetch(GAS_URL, opt)
@@ -689,6 +705,7 @@ html.law-y .pin-box:focus,html.law-y .pg-text:focus{border-color:#43a047;box-sha
             document.getElementById('pgChangeStep').style.display = 'block';
             document.getElementById('pgNewPassword').value = '';
             document.getElementById('pgNewPassword2').value = '';
+            if(window.pgCheckNew) window.pgCheckNew();
             document.getElementById('pgNewPassword').focus();
           } else {
             hideGate();
@@ -703,30 +720,83 @@ html.law-y .pin-box:focus,html.law-y .pg-text:focus{border-color:#43a047;box-sha
       });
   };
 
+  /* ★ 新しいパスワードの入力チェック（入力するたびに実行）
+     ・全角→半角、大文字→小文字、空白の除去は自動で直す
+     ・使えない文字（記号など）は自動で取り除き、そのことを表示する
+     ・条件を全部満たすまで「変更する」ボタンは押せない */
+  function pgCleanBox(el){
+    var raw = el.value;
+    var v = normPw(raw);
+    var cleaned = v.replace(/[^a-z0-9]/g, '');
+    var removed = cleaned !== v;
+    if(cleaned.length > 8){ cleaned = cleaned.slice(0, 8); }
+    if(cleaned !== raw){ el.value = cleaned; }
+    return removed;
+  }
+  function pgSciLike(v){ return /^[0-9]*e[0-9]+$/.test(v); }   // 例：2024e123（表計算で数値に化けるため使わない）
+  window.pgCheckNew = function(){
+    var e1 = document.getElementById('pgNewPassword'), e2 = document.getElementById('pgNewPassword2');
+    var rm = pgCleanBox(e1); rm = pgCleanBox(e2) || rm;
+    var v1 = e1.value, v2 = e2.value;
+    if(rm){ document.getElementById('pgFixNote').textContent = '使えない文字（記号など）は取り除きました。英字と数字だけで入力してください。'; }
+    var r = [
+      v1.length === 8,
+      /[a-z]/.test(v1),
+      /[0-9]/.test(v1),
+      v1.length > 0 && v1 === v2,
+      v1.length > 0 && v1 !== pgOldPassword
+    ];
+    document.getElementById('pgLen').textContent = v1.length;
+    for(var i = 0; i < r.length; i++){ document.getElementById('pgR' + (i + 1)).classList.toggle('ok', r[i]); }
+    var allOk = r.every(Boolean) && PASSWORD_PATTERN.test(v1) && !pgSciLike(v1);
+    if(allOk){ document.getElementById('pgFixNote').textContent = ''; }
+    document.getElementById('pgErr2').textContent = (r.slice(0,3).every(Boolean) && pgSciLike(v1)) ? 'この組み合わせは使えません。英字を「e」以外にするか、2文字以上入れてください' : '';
+    var btn = document.getElementById('pgChangeBtn');
+    if(btn.textContent.indexOf('変更中') === -1){ btn.disabled = !allOk; }
+    return allOk;
+  };
+
+  /* 変更が本当に済んだかを、新しいパスワードでログインして確かめる */
+  function pgVerify(newPassword){
+    return postGas({ action:'login', garden:GARDEN, loginId:pgLoginId, password:newPassword }, 3, 30000)
+      .then(function(d){ return !!(d && d.ok); }, function(){ return null; });   // null＝確認できなかった
+  }
+  function pgChangeDone(newPassword){
+    pgOldPassword = newPassword;
+    document.getElementById('pgChangeStep').style.display = 'none';
+    document.getElementById('pgDoneStep').style.display = 'block';
+  }
+
   window.pgSubmitChange = function(){
-    var newPassword = normPw(document.getElementById('pgNewPassword').value);
-    var newPassword2 = normPw(document.getElementById('pgNewPassword2').value);
+    if(!pgCheckNew()) return;
+    var newPassword = document.getElementById('pgNewPassword').value;
     var err = document.getElementById('pgErr2');
     err.textContent = '';
-    if(!PASSWORD_PATTERN.test(newPassword)){ err.textContent = '新しいパスワードは半角小文字英字と数字を組み合わせた8文字で入力してください'; return; }
-    if(newPassword !== newPassword2){ err.textContent = '確認用のパスワードが一致しません。もう一度入力してください'; return; }
-    if(newPassword === pgOldPassword){ err.textContent = '今の仮パスワードとは違うパスワードにしてください'; return; }
     var btn = document.getElementById('pgChangeBtn');
-    btn.disabled = true; btn.textContent = '変更中…';
-    postGas({ action:'changePassword', garden:GARDEN, loginId:pgLoginId, oldPassword:pgOldPassword, newPassword:newPassword })
+    btn.disabled = true; btn.textContent = '変更中…（そのままお待ちください）';
+    function reset(){ btn.textContent = 'このパスワードに変更する'; pgCheckNew(); }
+    // 変更の送信は1回だけ（自動の送り直しで「現在のパスワードが正しくありません」になるのを防ぐ）
+    postGas({ action:'changePassword', garden:GARDEN, loginId:pgLoginId, oldPassword:pgOldPassword, newPassword:newPassword }, 1, 45000)
       .then(function(data){
-        btn.disabled = false; btn.textContent = 'このパスワードに変更する';
-        if(data && data.ok){
-          pgOldPassword = newPassword;
-          document.getElementById('pgChangeStep').style.display = 'none';
-          document.getElementById('pgDoneStep').style.display = 'block';
-        } else {
-          err.textContent = ((data && data.message) || '変更に失敗しました') + '（パスワードはまだ変更されていません）';
-        }
-      })
-      .catch(function(e){
-        btn.disabled = false; btn.textContent = 'このパスワードに変更する';
-        err.textContent = netErrText(e) + '（パスワードはまだ変更されていません）';
+        if(data && data.ok){ reset(); pgChangeDone(newPassword); return; }
+        // 失敗と返ってきても、実は変更済みのことがあるので確かめる
+        return pgVerify(newPassword).then(function(ok){
+          reset();
+          if(ok){ pgChangeDone(newPassword); return; }
+          err.textContent = ((data && data.message) || '変更できませんでした') + '。パスワードはまだ変わっていません（仮パスワードのままです）。';
+        });
+      }, function(e){
+        // 通信エラー・時間切れ：変更が届いたかどうか分からないので、新しいパスワードで確かめる
+        btn.textContent = '確認中…（そのままお待ちください）';
+        return pgVerify(newPassword).then(function(ok){
+          reset();
+          if(ok){ pgChangeDone(newPassword); return; }
+          if(ok === false){
+            err.textContent = '通信がうまくいかず、パスワードはまだ変わっていません（仮パスワードのままです）。電波の良い場所で、もう一度「変更する」を押してください。';
+          } else {
+            err.textContent = netErrText(e) + ' 変更できたか確認できませんでした。次回は、まず新しいパスワードで、だめなら仮パスワードでログインしてください。';
+          }
+        });
       });
   };
 
