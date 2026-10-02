@@ -1200,7 +1200,7 @@ html.law-y .pin-box:focus,html.law-y .pg-text:focus{border-color:#43a047;box-sha
    ・ファイルがある園：SHIFT_FILES に園キーを書く（例：moriya_shiodome → data/moriya_shiodome.js）
    ・ファイルの中身は window.SHIFT_OVERRIDE = { facility, period, today, dates, staff, uqGarden, domeKey }
    ・?garden が無い／一覧にない園は、今までと同じ（つくばのデータ）で何も変わらない */
-var SHIFT_FILES = ['moriya_shiodome'];
+var SHIFT_FILES = ['moriya_shiodome','kasukabe'];
 (function(){
   try{
     var g = (typeof gardenFromUrl==='function') ? gardenFromUrl() : null;
