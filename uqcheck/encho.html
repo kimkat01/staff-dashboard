@@ -96,6 +96,10 @@ tbody td{padding:11px 12px;font-size:13px;vertical-align:middle}
 .empty{padding:40px;text-align:center;font-size:13px;color:var(--tm)}
 .page-title{font-size:15px;font-weight:600;color:var(--t);margin-bottom:16px}
 </style>
+<style>
+/* ★ 社会福祉法人雄雅会（園コード Y〜）は緑テーマ（2026-09） */
+html.law-y{ --blue:#43a047; --bl:#e8f5e9; --bld:#2e7d32; --blm:#66bb6a; }
+</style>
 </head>
 <body>
 <div id="gardenErrorView" style="display:none;min-height:100vh;display:none;align-items:center;justify-content:center;background:var(--bg,#f5f6fa);padding:24px">
@@ -193,6 +197,11 @@ tbody td{padding:11px 12px;font-size:13px;vertical-align:middle}
 </div>
 
 <script src="../gardens.js"></script>
+<script>
+/* 社会福祉法人雄雅会の園（園コードがYで始まる園）は緑にする（ユウガボットと同じ #43a047） */
+try{ var _lg=(typeof gardenFromUrl==='function')?gardenFromUrl():null;
+  if(_lg && /^Y/.test(_lg.code||'')) document.documentElement.classList.add('law-y'); }catch(e){}
+</script>
 <script src="_shared.js?v=5"></script>
 <script>
 // ★ 園の決め方（2026-09 改修）：URLの ?garden=園名 をそのまま使う。
@@ -286,7 +295,7 @@ async function syncDemo(){
 
 function initialLoad(){
   document.getElementById('appRoot').style.display = '';
-  document.getElementById('hdSub').textContent = `柴学園 有給管理システム｜${MY_GARDEN}`;
+  document.getElementById('hdSub').textContent = `${(document.documentElement.classList.contains('law-y')?'雄雅会':'柴学園')} 有給管理システム｜${MY_GARDEN}`;
   renderPending();
   renderAll();
   renderStaff();
@@ -474,6 +483,12 @@ try {
     if (sub) sub.textContent = '読み込みエラーが発生しました（' + (e && e.message || e) + '）。画面を再読み込みしてください。';
   }
 }
+</script>
+<script>
+/* 社会福祉法人雄雅会の園では、法人名を「雄雅会」と表示する */
+(function(){ if(!document.documentElement.classList.contains('law-y')) return;
+  var el=document.getElementById('hdSub'); if(el) el.textContent=el.textContent.replace('柴学園','雄雅会');
+})();
 </script>
 </body>
 </html>
