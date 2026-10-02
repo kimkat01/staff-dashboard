@@ -20,7 +20,8 @@ var GARDEN_FOLDERS = {
   "しおどめ保育園つくば":   "tsukuba",
   "ふれあいしおどめ保育園": "fureai_shiodome",
   "しおどめ保育園三郷中央": "misato_chuo",
-  "守谷しおどめ保育園":     "moriya_shiodome"
+  "守谷しおどめ保育園":     "moriya_shiodome",
+  "しおどめ保育園春日部":   "kasukabe"
 };
 
 /* 園のダッシュボードが別のリポジトリにある園だけ、PDF内検索の「Home」の戻り先を書く。
@@ -66,6 +67,13 @@ var MANUALS = {
     ]},
     { label:"BCP・防災", docs:[
       { title:"業務継続計画（BCP）", file:"bcp.pdf" }
+    ]}
+  ],
+  kasukabe: [
+    { label:"規約・マニュアル", docs:[
+      { title:"就業規則（正規職員）",   file:"seiki-shugyo-kisoku.pdf" },
+      { title:"就業規則（パート職員）", file:"part-shugyo-kisoku.pdf" },
+      { title:"給与規程（正規職員）",   file:"seiki-kyuyo-kitei.pdf" }
     ]}
   ],
   tsukuba: [
