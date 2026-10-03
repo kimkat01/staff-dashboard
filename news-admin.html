@@ -1,0 +1,579 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>お知らせ作成｜職員ダッシュボード</title>
+<!-- ============================================================
+     職員ダッシュボード「お知らせ」記事作成ダッシュボード
+     置き場所：kimkat01/staff-dashboard リポジトリの一番上（news-admin.html）
+     公開URL ：https://kimkat01.github.io/staff-dashboard/news-admin.html
+     ・投稿・編集・削除はスプレッドシート「お知らせ」のGASに保存されます。
+     ・NA_GAS_URL に、お知らせGASのウェブアプリURL（…/exec）を入れてください。
+       （職員ダッシュボード index.html の NS_GAS_URL と同じURL）
+     ============================================================ -->
+<script src="gardens.js"></script>
+<style>
+:root{
+  --ink:#2b2a28; --ink-soft:#6f6a62; --line:#e7e2d9; --paper:#f4f1ec; --card:#ffffff;
+  --law:#4b57d1; --law-d:#3d48b8; --law-bg:#e3e5fb;
+  --brand:#1f7a6b; --brand-soft:#e2f0ec;
+  --late:#6a73c2; --late-bg:#e3e4f6; --late-ink:#3c4590;
+  --gold-bg:#f4ead0; --gold-ink:#856019;
+  --red:#d0574f; --red-bg:#f7ddd8; --red-ink:#8f322c;
+  --off-bg:#efece5; --off-ink:#8c8477;
+  --shadow:0 1px 3px rgba(0,0,0,.08),0 6px 18px rgba(0,0,0,.08);
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{font-family:"Hiragino Kaku Gothic ProN","Hiragino Sans","Yu Gothic UI","Yu Gothic",YuGothic,Meiryo,"Noto Sans JP",sans-serif;
+  color:var(--ink);background:var(--paper);-webkit-font-smoothing:antialiased;line-height:1.55;font-size:15px;}
+button,input,select,textarea{font-family:inherit;font-size:inherit;color:inherit}
+.hidden{display:none !important}
+
+header.top{position:sticky;top:0;z-index:20;background:var(--law);color:#fff;display:flex;align-items:center;gap:14px;padding:12px 20px;}
+header.top h1{margin:0;font-size:18px;font-weight:800;flex:1;}
+header.top .who{font-size:12.5px;opacity:.9}
+header.top button{border:1.5px solid rgba(255,255,255,.8);background:transparent;color:#fff;font-weight:700;font-size:13px;padding:6px 12px;border-radius:999px;cursor:pointer;}
+header.top button:hover{background:rgba(255,255,255,.14)}
+
+/* ---------- ログイン ---------- */
+.login{max-width:400px;margin:12vh auto 0;background:var(--card);border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow);padding:26px 24px;}
+.login h2{margin:0 0 4px;font-size:21px}
+.login p{margin:0 0 16px;color:var(--ink-soft);font-size:13.5px}
+.inp{display:block;width:100%;padding:11px 12px;border:1.5px solid var(--line);border-radius:10px;background:#fff;}
+.inp:focus{outline:none;border-color:var(--law);box-shadow:0 0 0 3px rgba(75,87,209,.15)}
+textarea.inp{resize:vertical;line-height:1.75;min-height:200px}
+.btn{border:0;border-radius:10px;padding:11px 18px;font-weight:800;cursor:pointer;background:var(--law);color:#fff;}
+.btn:hover{background:var(--law-d)}
+.btn:disabled{opacity:.5;cursor:default}
+.btn.sub{background:#fff;color:var(--ink);border:1.5px solid var(--line)}
+.btn.sub:hover{background:#faf8f4}
+.btn.danger{background:#fff;color:var(--red-ink);border:1.5px solid #ecc7c2}
+.btn.danger:hover{background:var(--red-bg)}
+.btn.wide{width:100%;margin-top:14px}
+.err{color:#c0392b;font-size:13px;min-height:18px;margin-top:8px}
+.setup-warn{max-width:640px;margin:40px auto;background:#fff8e6;border:1px solid #f0d58c;border-radius:14px;padding:18px 20px;font-size:14px;line-height:1.8}
+.setup-warn code{background:#fff;border:1px solid #eadfbf;border-radius:5px;padding:1px 6px}
+
+/* ---------- レイアウト ---------- */
+.layout{display:grid;grid-template-columns:320px minmax(0,1fr) 400px;gap:18px;padding:18px 20px 40px;max-width:1500px;margin:0 auto;align-items:start}
+@media (max-width:1180px){.layout{grid-template-columns:300px minmax(0,1fr)}.pv-col{grid-column:1 / -1}}
+@media (max-width:760px){.layout{grid-template-columns:1fr;padding:12px}}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);}
+.panel-h{display:flex;align-items:center;gap:8px;padding:14px 16px;border-bottom:1px solid var(--line);}
+.panel-h h2{margin:0;font-size:15.5px;font-weight:800;flex:1}
+
+/* 一覧 */
+.list-col{position:sticky;top:70px;max-height:calc(100vh - 90px);display:flex;flex-direction:column}
+@media (max-width:760px){.list-col{position:static;max-height:none}}
+.ltabs{display:flex;gap:4px;padding:10px 12px 0}
+.ltabs button{flex:1;border:0;background:var(--off-bg);color:var(--ink-soft);font-weight:700;font-size:13px;padding:7px 0;border-radius:8px;cursor:pointer}
+.ltabs button.on{background:var(--law);color:#fff}
+.litems{overflow-y:auto;padding:10px 10px 12px;flex:1}
+.litem{display:block;width:100%;text-align:left;border:1.5px solid transparent;background:#fff;border-radius:12px;padding:10px 12px;margin-bottom:6px;cursor:pointer;box-shadow:0 1px 2px rgba(0,0,0,.05)}
+.litem:hover{background:#faf8f4}
+.litem.sel{border-color:var(--law);background:#f6f7ff}
+.litem .lt{font-weight:800;font-size:14px;line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.litem .lm{display:flex;flex-wrap:wrap;gap:4px 6px;align-items:center;margin-top:5px;font-size:12px;color:var(--ink-soft)}
+.chip{font-size:11px;font-weight:800;padding:1px 8px;border-radius:999px;white-space:nowrap}
+.chip.hq{background:var(--late-bg);color:var(--late-ink)}
+.chip.garden{background:var(--brand-soft);color:var(--brand)}
+.chip.pin{background:var(--gold-bg);color:var(--gold-ink)}
+.chip.draft{background:var(--off-bg);color:var(--off-ink)}
+.lempty{color:var(--ink-soft);font-size:13px;text-align:center;padding:30px 8px}
+
+/* 編集 */
+.ed-body{padding:18px 20px 20px}
+.field{margin-bottom:18px}
+.field > label,.flabel{display:block;font-size:13.5px;font-weight:800;margin-bottom:7px}
+.req{color:#c0392b;font-size:11.5px;margin-left:6px;font-weight:700}
+.hint{font-size:12.5px;color:var(--ink-soft);margin-top:5px}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media (max-width:560px){.row2{grid-template-columns:1fr}}
+.seg{display:inline-flex;background:var(--off-bg);border-radius:10px;padding:3px;gap:3px}
+.seg button{border:0;background:transparent;padding:8px 18px;border-radius:8px;font-weight:700;color:var(--ink-soft);cursor:pointer}
+.seg button.on{background:#fff;color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.12)}
+.field > label.check,.check{display:flex;gap:10px;align-items:flex-start;cursor:pointer;padding:10px 12px;border:1.5px solid var(--line);border-radius:10px;background:#fff}
+.check input{width:18px;height:18px;margin-top:2px;flex:0 0 auto}
+.check b{display:block;font-size:14px}
+.check span{font-size:12.5px;color:var(--ink-soft)}
+.count{float:right;font-weight:600;color:var(--ink-soft);font-size:12px}
+.thumbs{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:10px}
+.thumb{position:relative;width:120px;height:90px;border-radius:10px;overflow:hidden;border:1px solid var(--line);background:var(--paper)}
+.thumb img{width:100%;height:100%;object-fit:cover;display:block}
+.thumb button{position:absolute;top:4px;right:4px;width:26px;height:26px;border-radius:50%;border:0;background:rgba(0,0,0,.6);color:#fff;font-size:15px;line-height:1;cursor:pointer}
+.thumb .up{position:absolute;inset:0;display:grid;place-items:center;background:rgba(255,255,255,.8);font-size:12px;font-weight:700}
+details.link{border:1.5px solid var(--line);border-radius:10px;background:#fff}
+details.link summary{cursor:pointer;padding:10px 12px;font-weight:800;font-size:13.5px}
+details.link .inner{padding:0 12px 12px;display:grid;gap:10px}
+.actions{display:flex;flex-wrap:wrap;gap:10px;align-items:center;padding-top:16px;border-top:1px solid var(--line)}
+.actions .sp{flex:1}
+.msg{font-size:13.5px;font-weight:700;min-height:20px}
+.msg.ok{color:var(--brand)}
+.msg.err{color:#c0392b}
+.status-line{font-size:12.5px;color:var(--ink-soft)}
+
+/* プレビュー（職員ダッシュボードと同じ見た目） */
+.pv-col{position:sticky;top:70px}
+@media (max-width:1180px){.pv-col{position:static}}
+.pv-seg{padding:10px 14px 0}
+.phone{margin:12px auto 16px;width:360px;max-width:calc(100% - 24px);border:8px solid #2b2a28;border-radius:30px;background:var(--paper);overflow:hidden}
+.phone .pbar{background:var(--law);color:#fff;font-weight:800;font-size:15px;padding:12px 14px}
+.phone .pscroll{max-height:560px;overflow-y:auto}
+.pv-note{font-size:12px;color:var(--ink-soft);text-align:center;padding:0 14px 14px}
+.nspost{display:flex;gap:11px;padding:14px;margin:12px;border:1px solid var(--line);border-radius:16px;background:var(--card);box-shadow:var(--shadow);text-align:left}
+.nsav{flex:0 0 auto;width:40px;height:40px;border-radius:50%;display:grid;place-items:center;color:#fff;font-weight:800;font-size:16px}
+.nsav svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.nsav.hq{background:var(--late)} .nsav.garden{background:var(--brand)}
+.nsbody-col{flex:1;min-width:0}
+.nspin{display:inline-flex;align-items:center;gap:4px;font-size:11.5px;color:var(--ink-soft);font-weight:700;margin-bottom:3px}
+.nspin svg{width:12px;height:12px;fill:currentColor;stroke:none}
+.nshead{display:flex;align-items:center;gap:5px;flex-wrap:wrap;font-size:13.5px;line-height:1.3}
+.nsname{font-weight:800}
+.nsbadge{font-size:10.5px;font-weight:800;padding:1px 7px;border-radius:999px}
+.nsbadge.hq{background:var(--late-bg);color:var(--late-ink)} .nsbadge.garden{background:var(--brand-soft);color:var(--brand)}
+.nsdot,.nstime{color:var(--ink-soft)} .nstime{font-size:12.5px}
+.nsunread-dot{width:8px;height:8px;border-radius:50%;background:var(--late);margin-left:auto;flex:0 0 auto}
+.nstitle{font-size:14.5px;font-weight:800;margin:5px 0 2px;line-height:1.5}
+.nstext{font-size:14px;line-height:1.7;white-space:pre-wrap;word-break:break-word}
+.nstext.clamp{display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden}
+.nsmore{color:var(--late-ink);font-size:13px;font-weight:700;margin-top:3px}
+.nsmedia{display:flex;flex-wrap:wrap;gap:4px;margin-top:10px;border-radius:14px;overflow:hidden}
+.nsmedia img{flex:1 1 46%;min-width:0;height:150px;object-fit:cover;background:var(--paper);display:block}
+.nsmedia.one img{flex:1 1 100%;height:190px}
+.nslink{display:block;margin-top:10px;border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.nslk-body{padding:11px 13px}
+.nslk-site{font-size:11.5px;color:var(--ink-soft);margin-bottom:3px}
+.nslk-title{font-size:13.5px;font-weight:800;line-height:1.5}
+.nslk-desc{font-size:12px;color:var(--ink-soft);line-height:1.6;margin-top:3px}
+.nsdetail{padding:15px 16px;background:var(--card)}
+.nsd-head{display:flex;gap:11px;align-items:center;margin-bottom:12px}
+.nsd-name{font-weight:800;font-size:15px}
+.nsd-sub{font-size:12.5px;color:var(--ink-soft);margin-top:2px;display:flex;align-items:center;gap:5px}
+.nsd-title{font-size:18px;font-weight:800;line-height:1.55;margin:2px 0 8px}
+.nsd-text{font-size:15px;line-height:1.9;white-space:pre-wrap;word-break:break-word}
+.nsd-date{font-size:12.5px;color:var(--ink-soft);margin-top:14px;padding-top:12px;border-top:1px solid var(--line)}
+
+.toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%);background:#2b2a28;color:#fff;font-weight:700;font-size:14px;padding:11px 20px;border-radius:999px;box-shadow:var(--shadow);z-index:100;opacity:0;transition:opacity .2s;pointer-events:none}
+.toast.on{opacity:1}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <h1>お知らせ作成ダッシュボード</h1>
+  <span class="who hidden" id="whoLbl">ログイン中</span>
+  <button class="hidden" id="logoutBtn" onclick="naLogout()">ログアウト</button>
+</header>
+
+<!-- GAS未設定 -->
+<div class="setup-warn hidden" id="setupWarn">
+  <b>まだ保存先（GAS）が設定されていません。</b><br>
+  このファイル（news-admin.html）の中の <code>var NA_GAS_URL = "";</code> に、
+  お知らせGASのウェブアプリURL（<code>https://script.google.com/macros/s/…/exec</code>）を入れてください。
+</div>
+
+<!-- ログイン -->
+<div class="login hidden" id="loginView">
+  <h2>ログイン</h2>
+  <p>お知らせ更新担当者用のパスワードを入力してください。</p>
+  <input class="inp" type="password" id="pwInp" autocomplete="current-password" onkeydown="if(event.key==='Enter')naLogin()">
+  <div class="err" id="loginErr"></div>
+  <button class="btn wide" id="loginBtn" onclick="naLogin()">ログイン</button>
+</div>
+
+<!-- 本体 -->
+<div class="layout hidden" id="mainView">
+
+  <!-- 一覧 -->
+  <section class="panel list-col">
+    <div class="panel-h">
+      <h2>記事一覧</h2>
+      <button class="btn" style="padding:8px 12px;font-size:13px" onclick="naNew()">＋ 新しいお知らせ</button>
+    </div>
+    <div class="ltabs">
+      <button id="lfAll" class="on" onclick="naListFilter('all')">すべて</button>
+      <button id="lfPub" onclick="naListFilter('公開')">公開中</button>
+      <button id="lfDraft" onclick="naListFilter('下書き')">下書き</button>
+    </div>
+    <div class="litems" id="listBox"><div class="lempty">読み込み中…</div></div>
+  </section>
+
+  <!-- 編集 -->
+  <section class="panel">
+    <div class="panel-h">
+      <h2 id="edHead">新しいお知らせ</h2>
+      <span class="status-line" id="edStatus"></span>
+    </div>
+    <div class="ed-body">
+
+      <div class="row2">
+        <div class="field">
+          <span class="flabel">発信元</span>
+          <div class="seg">
+            <button id="scHq" class="on" onclick="naScope('hq')">本部</button>
+            <button id="scGarden" onclick="naScope('garden')">園</button>
+          </div>
+        </div>
+        <div class="field">
+          <label for="fDate">日付<span class="req">必須</span></label>
+          <input class="inp" type="date" id="fDate" oninput="naDirty()">
+        </div>
+      </div>
+
+      <div class="field hidden" id="gardenField">
+        <label for="fGarden">園名<span class="req">必須</span></label>
+        <select class="inp" id="fGarden" onchange="naDirty()"></select>
+        <div class="hint">園から発信するお知らせも、現在は全園の職員に表示されます。</div>
+      </div>
+
+      <div class="field">
+        <label for="fTitle">タイトル<span class="req">必須</span><span class="count" id="titleCount"></span></label>
+        <input class="inp" type="text" id="fTitle" maxlength="80" placeholder="例：年末調整の書類配布について" oninput="naDirty()">
+      </div>
+
+      <div class="field">
+        <label for="fBody">本文<span class="count" id="bodyCount"></span></label>
+        <textarea class="inp" id="fBody" placeholder="改行はそのまま反映されます。&#10;・箇条書きは「・」で始めると読みやすくなります。" oninput="naDirty()"></textarea>
+        <div class="hint">4行または90文字を超えると、一覧では「続きを読む」に折りたたまれます。</div>
+      </div>
+
+      <div class="field">
+        <span class="flabel">写真（任意）</span>
+        <div class="thumbs" id="thumbs"></div>
+        <button class="btn sub" onclick="document.getElementById('fImg').click()">写真を追加</button>
+        <input type="file" id="fImg" accept="image/*" multiple class="hidden" onchange="naAddImages(this.files);this.value=''">
+        <div class="hint">スマホで見やすいサイズに自動で縮小してから保存します。4枚程度までがおすすめです。</div>
+      </div>
+
+      <div class="field">
+        <details class="link" id="linkBox">
+          <summary>リンクカードを付ける（任意）</summary>
+          <div class="inner">
+            <div><label class="flabel" for="fLurl">URL</label><input class="inp" type="url" id="fLurl" placeholder="https://" oninput="naDirty()"></div>
+            <div><label class="flabel" for="fLsite">サイト名</label><input class="inp" type="text" id="fLsite" placeholder="例：やしおん（八潮市オンライン）" oninput="naDirty()"></div>
+            <div><label class="flabel" for="fLtitle">記事タイトル</label><input class="inp" type="text" id="fLtitle" oninput="naDirty()"></div>
+            <div><label class="flabel" for="fLdesc">説明（1〜2行）</label><input class="inp" type="text" id="fLdesc" oninput="naDirty()"></div>
+          </div>
+        </details>
+      </div>
+
+      <div class="field">
+        <label class="check">
+          <input type="checkbox" id="fPin" onchange="naDirty()">
+          <div><b>一番上に固定する</b><span>災害対応・規程改定など、必ず読んでほしいお知らせに使います。</span></div>
+        </label>
+      </div>
+
+      <div class="actions">
+        <button class="btn danger hidden" id="delBtn" onclick="naDelete()">削除</button>
+        <span class="sp"></span>
+        <span class="msg" id="edMsg"></span>
+        <button class="btn sub" id="draftBtn" onclick="naSave('下書き')">下書き保存</button>
+        <button class="btn" id="pubBtn" onclick="naSave('公開')">公開する</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- プレビュー -->
+  <section class="panel pv-col">
+    <div class="panel-h"><h2>職員の見え方</h2></div>
+    <div class="pv-seg">
+      <div class="seg">
+        <button id="pvList" class="on" onclick="naPvMode('list')">一覧</button>
+        <button id="pvDetail" onclick="naPvMode('detail')">開いたとき</button>
+      </div>
+    </div>
+    <div class="phone">
+      <div class="pbar">お知らせ</div>
+      <div class="pscroll" id="pvBox"></div>
+    </div>
+    <div class="pv-note">いいね・閲覧数の表示は省略しています。</div>
+  </section>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ===== 設定 ===== */
+var NA_GAS_URL = "";   // ← お知らせGASのウェブアプリURL（…/exec）
+
+/* ===== 状態 ===== */
+var NA_PW_KEY = 'news_admin_pw';
+var naPw = '';
+var naPosts = [];
+var naCurId = '';        // 編集中の記事ID（新規は空）
+var naCurStatus = '';    // 編集中記事の保存済み状態
+var naScopeVal = 'hq';
+var naImages = [];       // 保存済み or アップロード済みURL
+var naUploading = 0;
+var naIsDirty = false;
+var naLF = 'all';
+var naPv = 'list';
+
+var NA_BELL = '<svg viewBox="0 0 24 24"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>';
+var NA_PIN = '<svg viewBox="0 0 24 24"><path d="M9 4h6l-1 6 4 3H6l4-3-1-6zM12 13v7"/></svg>';
+
+function $(id){return document.getElementById(id);}
+function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function todayIso(){var d=new Date();return d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2);}
+function fmtShort(iso){var m=(iso||'').match(/(\d{4})-(\d{2})-(\d{2})/);return m?((+m[2])+'月'+(+m[3])+'日'):'';}
+function fmtLong(iso){var m=(iso||'').match(/(\d{4})-(\d{2})-(\d{2})/);return m?(m[1]+'年'+(+m[2])+'月'+(+m[3])+'日'):'';}
+function toast(t){var el=$('toast');el.textContent=t;el.classList.add('on');clearTimeout(toast._t);toast._t=setTimeout(function(){el.classList.remove('on');},2200);}
+
+function api(body){
+  body.password = naPw;
+  return fetch(NA_GAS_URL,{method:'POST',body:JSON.stringify(body)}).then(function(r){return r.json();});
+}
+
+/* ===== 起動 ===== */
+(function init(){
+  // 園の選択肢
+  var sel=$('fGarden');
+  sel.innerHTML='<option value="">選択してください</option>'+
+    (window.GARDEN_MASTER||[]).map(function(g){return '<option>'+esc(g.name)+'</option>';}).join('');
+  if(!NA_GAS_URL){$('setupWarn').classList.remove('hidden');return;}
+  try{naPw=sessionStorage.getItem(NA_PW_KEY)||'';}catch(e){}
+  if(naPw){api({action:'login'}).then(function(d){if(d.ok)naEnter();else naShowLogin();}).catch(naShowLogin);}
+  else naShowLogin();
+})();
+
+function naShowLogin(){
+  naPw='';
+  $('mainView').classList.add('hidden');
+  $('whoLbl').classList.add('hidden');$('logoutBtn').classList.add('hidden');
+  $('loginView').classList.remove('hidden');
+  setTimeout(function(){$('pwInp').focus();},50);
+}
+function naLogin(){
+  var pw=$('pwInp').value;
+  if(!pw){$('loginErr').textContent='パスワードを入力してください';return;}
+  var b=$('loginBtn');b.disabled=true;b.textContent='確認中…';$('loginErr').textContent='';
+  naPw=pw;
+  api({action:'login'}).then(function(d){
+    b.disabled=false;b.textContent='ログイン';
+    if(d.ok){try{sessionStorage.setItem(NA_PW_KEY,pw);}catch(e){}$('pwInp').value='';naEnter();}
+    else{naPw='';$('loginErr').textContent=d.message||'パスワードが違います';}
+  }).catch(function(){b.disabled=false;b.textContent='ログイン';naPw='';$('loginErr').textContent='通信エラーです。もう一度お試しください。';});
+}
+function naLogout(){
+  if(naIsDirty&&!confirm('保存していない変更があります。ログアウトしますか？'))return;
+  try{sessionStorage.removeItem(NA_PW_KEY);}catch(e){}
+  naIsDirty=false;naShowLogin();
+}
+function naEnter(){
+  $('loginView').classList.add('hidden');
+  $('mainView').classList.remove('hidden');
+  $('whoLbl').classList.remove('hidden');$('logoutBtn').classList.remove('hidden');
+  naNew(true);
+  naLoad();
+}
+
+/* ===== 一覧 ===== */
+function naLoad(selectId){
+  return api({action:'list'}).then(function(d){
+    if(d.auth===false){naShowLogin();return;}
+    if(!d.ok){$('listBox').innerHTML='<div class="lempty">読み込めませんでした：'+esc(d.message)+'</div>';return;}
+    naPosts=d.news||[];
+    if(selectId)naCurId=selectId;
+    naRenderList();
+  }).catch(function(){$('listBox').innerHTML='<div class="lempty">通信エラーで読み込めませんでした。</div>';});
+}
+function naListFilter(f){
+  naLF=f;
+  $('lfAll').className=f==='all'?'on':'';$('lfPub').className=f==='公開'?'on':'';$('lfDraft').className=f==='下書き'?'on':'';
+  naRenderList();
+}
+function naRenderList(){
+  var list=naPosts.filter(function(p){return naLF==='all'||p.status===naLF;});
+  if(!list.length){$('listBox').innerHTML='<div class="lempty">'+(naPosts.length?'該当する記事はありません。':'まだ記事がありません。<br>「＋ 新しいお知らせ」から作成できます。')+'</div>';return;}
+  $('listBox').innerHTML=list.map(function(p){
+    var who=p.scope==='garden'?'<span class="chip garden">'+esc(p.garden)+'</span>':'<span class="chip hq">本部</span>';
+    return '<button class="litem'+(p.id===naCurId?' sel':'')+'" onclick="naEdit(\''+esc(p.id)+'\')">'+
+      '<div class="lt">'+esc(p.title)+'</div>'+
+      '<div class="lm"><span>'+fmtShort(p.date)+'</span>'+who+
+        (p.important?'<span class="chip pin">固定</span>':'')+
+        (p.status==='下書き'?'<span class="chip draft">下書き</span>':'')+
+      '</div></button>';
+  }).join('');
+}
+
+/* ===== 編集 ===== */
+function naConfirmLeave(){return !naIsDirty||confirm('保存していない変更があります。破棄してよろしいですか？');}
+function naNew(force){
+  if(!force&&!naConfirmLeave())return;
+  naFill({id:'',date:todayIso(),scope:'hq',garden:'',important:false,title:'',body:'',images:[],link:null,status:''});
+  $('fTitle').focus();
+}
+function naEdit(id){
+  if(id===naCurId)return;
+  if(!naConfirmLeave())return;
+  var p=naPosts.filter(function(x){return x.id===id;})[0];
+  if(p)naFill(p);
+}
+function naFill(p){
+  naCurId=p.id||'';naCurStatus=p.status||'';
+  naScope(p.scope||'hq',true);
+  $('fDate').value=p.date||todayIso();
+  $('fGarden').value=p.garden||'';
+  $('fTitle').value=p.title||'';
+  $('fBody').value=p.body||'';
+  $('fPin').checked=!!p.important;
+  naImages=(p.images||[]).slice();
+  var l=p.link||{};
+  $('fLurl').value=l.url||'';$('fLsite').value=l.site||'';$('fLtitle').value=l.title||'';$('fLdesc').value=l.desc||'';
+  $('linkBox').open=!!l.url;
+  $('edHead').textContent=naCurId?'お知らせを編集':'新しいお知らせ';
+  $('edStatus').textContent=naCurId?('現在：'+naCurStatus+(p.updated?'（最終更新 '+p.updated+'）':'')):'';
+  $('delBtn').classList.toggle('hidden',!naCurId);
+  $('pubBtn').textContent=(naCurStatus==='公開')?'更新して公開':'公開する';
+  $('draftBtn').textContent=(naCurStatus==='公開')?'下書きに戻す':'下書き保存';
+  $('edMsg').textContent='';$('edMsg').className='msg';
+  naRenderThumbs();
+  naIsDirty=false;
+  naRenderList();
+  naPreview();
+}
+function naScope(s,silent){
+  naScopeVal=s;
+  $('scHq').className=s==='hq'?'on':'';$('scGarden').className=s==='garden'?'on':'';
+  $('gardenField').classList.toggle('hidden',s!=='garden');
+  if(!silent)naDirty();
+}
+function naDirty(){naIsDirty=true;naPreview();}
+function naCollect(){
+  var post={
+    id:naCurId,
+    date:$('fDate').value,
+    scope:naScopeVal,
+    garden:naScopeVal==='garden'?$('fGarden').value:'',
+    important:$('fPin').checked,
+    title:$('fTitle').value.trim(),
+    body:$('fBody').value.replace(/\s+$/,''),
+    images:naImages.slice()
+  };
+  var url=$('fLurl').value.trim();
+  if(url)post.link={url:url,site:$('fLsite').value.trim(),title:$('fLtitle').value.trim(),desc:$('fLdesc').value.trim()};
+  return post;
+}
+function naSave(status){
+  var m=$('edMsg');m.className='msg';m.textContent='';
+  var post=naCollect();post.status=status;
+  if(!post.title){m.className='msg err';m.textContent='タイトルを入力してください';$('fTitle').focus();return;}
+  if(!post.date){m.className='msg err';m.textContent='日付を入力してください';return;}
+  if(post.scope==='garden'&&!post.garden){m.className='msg err';m.textContent='園を選んでください';return;}
+  if(post.link&&!/^https?:\/\//.test(post.link.url)){m.className='msg err';m.textContent='リンクのURLは https:// から入力してください';return;}
+  if(naUploading){m.className='msg err';m.textContent='写真のアップロード中です。少しお待ちください';return;}
+  if(status==='公開'&&naCurStatus!=='公開'&&!confirm('このお知らせを公開します。全職員のダッシュボードに表示されます。よろしいですか？'))return;
+  if(status==='下書き'&&naCurStatus==='公開'&&!confirm('このお知らせを下書きに戻します。職員のダッシュボードからは見えなくなります。よろしいですか？'))return;
+  var bs=[$('pubBtn'),$('draftBtn'),$('delBtn')];bs.forEach(function(b){b.disabled=true;});
+  m.textContent='保存中…';
+  api({action:'save',post:post}).then(function(d){
+    bs.forEach(function(b){b.disabled=false;});
+    if(d.auth===false){naShowLogin();return;}
+    if(!d.ok){m.className='msg err';m.textContent=d.message||'保存できませんでした';return;}
+    naIsDirty=false;
+    toast(status==='公開'?'公開しました':'下書きを保存しました');
+    naLoad(d.id).then(function(){
+      var p=naPosts.filter(function(x){return x.id===d.id;})[0];
+      if(p)naFill(p);
+    });
+  }).catch(function(){bs.forEach(function(b){b.disabled=false;});m.className='msg err';m.textContent='通信エラーです。もう一度お試しください。';});
+}
+function naDelete(){
+  if(!naCurId)return;
+  if(!confirm('「'+$('fTitle').value+'」を削除します。元に戻せません。よろしいですか？'))return;
+  var m=$('edMsg');m.className='msg';m.textContent='削除中…';
+  api({action:'delete',id:naCurId}).then(function(d){
+    if(d.auth===false){naShowLogin();return;}
+    if(!d.ok){m.className='msg err';m.textContent=d.message||'削除できませんでした';return;}
+    toast('削除しました');
+    naLoad().then(function(){naNew(true);});
+  }).catch(function(){m.className='msg err';m.textContent='通信エラーです。もう一度お試しください。';});
+}
+
+/* ===== 写真 ===== */
+function naRenderThumbs(pending){
+  var html=naImages.map(function(u,i){
+    return '<div class="thumb"><img src="'+esc(u)+'" alt=""><button title="外す" onclick="naRemoveImage('+i+')">×</button></div>';
+  }).join('');
+  for(var k=0;k<naUploading;k++)html+='<div class="thumb"><div class="up">アップロード中…</div></div>';
+  $('thumbs').innerHTML=html;
+}
+function naRemoveImage(i){naImages.splice(i,1);naRenderThumbs();naDirty();}
+function naResize(file){
+  return new Promise(function(resolve,reject){
+    var r=new FileReader();
+    r.onload=function(){
+      var img=new Image();
+      img.onload=function(){
+        var max=1600,w=img.width,h=img.height,s=Math.min(1,max/Math.max(w,h));
+        var c=document.createElement('canvas');c.width=Math.round(w*s);c.height=Math.round(h*s);
+        var ctx=c.getContext('2d');ctx.fillStyle='#fff';ctx.fillRect(0,0,c.width,c.height);ctx.drawImage(img,0,0,c.width,c.height);
+        resolve(c.toDataURL('image/jpeg',0.85));
+      };
+      img.onerror=function(){reject(new Error('画像を読み込めませんでした'));};
+      img.src=r.result;
+    };
+    r.onerror=function(){reject(new Error('ファイルを読み込めませんでした'));};
+    r.readAsDataURL(file);
+  });
+}
+function naAddImages(files){
+  Array.prototype.forEach.call(files,function(f){
+    if(!/^image\//.test(f.type))return;
+    naUploading++;naRenderThumbs();
+    naResize(f).then(function(dataUrl){
+      return api({action:'upload',name:f.name.replace(/\.[^.]+$/,'')+'.jpg',dataUrl:dataUrl});
+    }).then(function(d){
+      naUploading--;
+      if(d.auth===false){naShowLogin();return;}
+      if(d.ok){naImages.push(d.url);naDirty();}
+      else toast('写真を保存できませんでした：'+(d.message||''));
+      naRenderThumbs();
+    }).catch(function(e){naUploading--;naRenderThumbs();toast('写真を保存できませんでした');});
+  });
+}
+
+/* ===== プレビュー ===== */
+function naPvMode(m){naPv=m;$('pvList').className=m==='list'?'on':'';$('pvDetail').className=m==='detail'?'on':'';naPreview();}
+function naPreview(){
+  var p=naCollect();
+  $('titleCount').textContent=p.title.length+'文字';
+  $('bodyCount').textContent=p.body.length+'文字';
+  var garden=p.garden||'園名';
+  var name=p.scope==='garden'?esc(garden):'しおどめグループ 本部';
+  var badge=p.scope==='garden'?'<span class="nsbadge garden">園</span>':'<span class="nsbadge hq">本部</span>';
+  var av=p.scope==='garden'?'<div class="nsav garden">'+esc(garden.slice(0,1))+'</div>':'<div class="nsav hq">'+NA_BELL+'</div>';
+  var media='';
+  if(p.images.length){media='<div class="nsmedia'+(p.images.length===1?' one':'')+'">'+p.images.map(function(u){return '<img src="'+esc(u)+'" alt="">';}).join('')+'</div>';}
+  var link='';
+  if(p.link){link='<div class="nslink"><div class="nslk-body">'+(p.link.site?'<div class="nslk-site">'+esc(p.link.site)+'</div>':'')+
+    '<div class="nslk-title">'+esc(p.link.title||p.link.url)+'</div>'+(p.link.desc?'<div class="nslk-desc">'+esc(p.link.desc)+'</div>':'')+'</div></div>';}
+  var title=p.title?esc(p.title):'<span style="color:#b8b0a3">（タイトル）</span>';
+  var body=p.body?esc(p.body):'<span style="color:#b8b0a3">（本文）</span>';
+  var html;
+  if(naPv==='list'){
+    var long=p.body.length>90||p.body.split('\n').length>4;
+    html='<div class="nspost">'+av+'<div class="nsbody-col">'+
+      (p.important?'<div class="nspin">'+NA_PIN+'固定</div>':'')+
+      '<div class="nshead"><span class="nsname">'+name+'</span>'+badge+'<span class="nsdot">·</span><span class="nstime">'+fmtShort(p.date)+'</span><span class="nsunread-dot"></span></div>'+
+      '<div class="nstitle">'+title+'</div>'+
+      '<div class="nstext'+(long?' clamp':'')+'">'+body+'</div>'+(long?'<div class="nsmore">続きを読む</div>':'')+
+      media+link+'</div></div>';
+  }else{
+    html='<div class="nsdetail"><div class="nsd-head">'+av+'<div><div class="nsd-name">'+name+'</div>'+
+      '<div class="nsd-sub">'+badge+'<span>·</span><span>'+fmtShort(p.date)+'</span></div></div></div>'+
+      (p.important?'<div class="nspin">'+NA_PIN+'固定されたお知らせ</div>':'')+
+      '<div class="nsd-title">'+title+'</div><div class="nsd-text">'+body+'</div>'+media+link+
+      '<div class="nsd-date">'+fmtLong(p.date)+'</div></div>';
+  }
+  $('pvBox').innerHTML=html;
+}
+
+window.addEventListener('beforeunload',function(e){if(naIsDirty){e.preventDefault();e.returnValue='';}});
+</script>
+</body>
+</html>
