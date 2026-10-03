@@ -346,7 +346,8 @@ tbody tr.me .namecol{color:var(--brand)}
 #screen-news .nslike.on svg{fill:#e0245e;stroke:#e0245e;}
 #screen-news .nsav{flex:0 0 auto;width:40px;height:40px;border-radius:50%;display:grid;place-items:center;color:#fff;font-weight:800;font-size:16px;}
 #screen-news .nsav svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
-#screen-news .nsav.hq{background:var(--late);}
+#screen-news .nsav.hq{background:transparent;width:48px;border-radius:0;}
+#screen-news .nsav.hq img{width:48px;height:auto;display:block;}
 #screen-news .nsav.garden{background:var(--brand);}
 #screen-news .nsbody-col{flex:1;min-width:0;}
 #screen-news .nspin{display:inline-flex;align-items:center;gap:4px;font-size:11.5px;color:var(--ink-soft);font-weight:700;margin-bottom:3px;}
@@ -972,7 +973,7 @@ html.law-y .pin-box:focus,html.law-y .pg-text:focus{border-color:#43a047;box-sha
           <div id="nsList"></div>
         </div>
         <div id="nsDetailView" class="nshidden">
-          <button class="nsback" onclick="nsBack()"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>お知らせ</button>
+          <button class="nsback" onclick="nsBack()"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>News &amp; Topics</button>
           <div class="nsdetail" id="nsDetailCard"></div>
         </div>
       </div>
@@ -7642,7 +7643,7 @@ function nsSortedX(){return NEWS.slice().sort(function(a,b){
 });}
 function nsName(n){return (n.scope==='garden')?nsEsc(n.garden||'園'):'しおどめグループ 本部';}
 function nsBadge(n){return (n.scope==='garden')?'<span class="nsbadge garden">園</span>':'<span class="nsbadge hq">本部</span>';}
-function nsAvatar(n){return (n.scope==='garden')?'<div class="nsav garden">'+nsEsc((n.garden||'園').slice(0,1))+'</div>':'<div class="nsav hq">'+IC.news+'</div>';}
+function nsAvatar(n){return (n.scope==='garden')?'<div class="nsav garden">'+nsEsc((n.garden||'園').slice(0,1))+'</div>':'<div class="nsav hq"><img src="icons/news-hq.png" alt="本部"></div>';}
 function nsIsLong(b){b=b||'';return b.length>90||b.split('\n').length>4;}
 function nsMedia(n){
   if(!n.images||!n.images.length)return '';
@@ -7701,7 +7702,7 @@ function nsRenderDetail(n){
 }
 
 function goNews(){
-  document.getElementById('brandtxt').textContent='お知らせ';
+  document.getElementById('brandtxt').textContent='News & Topics';
   nsCurFilter='all';
   document.getElementById('nsDetailView').className='nshidden';
   document.getElementById('nsListView').className='';
@@ -7887,7 +7888,7 @@ function goManual(){
 const MENU=[
  {t:"シフト管理",d:"今週のシフトと園の予定",ic:"shift",tint:"i-mid",go:()=>{if(LINKS.shift){window.open(LINKS.shift,'_blank','noopener');}else{goShiftLogin();}},flag:"🔴NEW"},
  {t:"有給チェッカー",d:"有給の残り日数をチェック",ic:"uq",tint:"i-early",go:()=>goLink(uqUrl(),"有給チェッカー","uq","i-early")},
- {t:"お知らせ",d:"本部・園からのお知らせ",ic:"news",tint:"i-sky",go:()=>goNews()},
+ {t:"News & Topics",d:"本部・園からのお知らせ",ic:"news",tint:"i-sky",go:()=>goNews()},
  {t:"規約・マニュアル",d:"就業規則・各種マニュアル",ic:"doc",tint:"i-lav",go:()=>goManual()},
  {t:botName(),d:"チャットで質問・相談",ic:"bot",tint:"i-law",go:()=>goLink(domeUrl(),botName(),"bot","i-law")},
  {t:"メンタルヘルスサポート",d:"ストレスチェックやカウンセリング等の手続き",ic:"doctor",tint:"i-gold",go:()=>goMental()},
