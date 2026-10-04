@@ -128,6 +128,10 @@ details.link .inner{padding:0 12px 12px;display:grid;gap:10px}
 .phone{margin:12px auto 16px;width:360px;max-width:calc(100% - 24px);border:8px solid #2b2a28;border-radius:30px;background:var(--paper);overflow:hidden}
 .phone .pbar{background:var(--law);color:#fff;font-weight:800;font-size:15px;padding:12px 14px}
 .phone .pscroll{max-height:560px;overflow-y:auto}
+.nspost.cur{outline:2.5px solid var(--law);outline-offset:-1px}
+.nspost.other{cursor:pointer}
+.nspost.other:hover{background:#faf9f7}
+.nscur{display:inline-block;font-size:11px;font-weight:800;color:#fff;background:var(--law);border-radius:999px;padding:1px 9px;margin-bottom:4px}
 .pv-note{font-size:12px;color:var(--ink-soft);text-align:center;padding:0 14px 14px}
 .nspost{display:flex;gap:11px;padding:14px;margin:12px;border:1px solid var(--line);border-radius:16px;background:var(--card);box-shadow:var(--shadow);text-align:left}
 .nsav{flex:0 0 auto;width:40px;height:40px;border-radius:50%;display:grid;place-items:center;color:#fff;font-weight:800;font-size:16px}
@@ -299,7 +303,7 @@ details.link .inner{padding:0 12px 12px;display:grid;gap:10px}
       <div class="pbar">News &amp; Topics</div>
       <div class="pscroll" id="pvBox"></div>
     </div>
-    <div class="pv-note">いいね・閲覧数の表示は省略しています。</div>
+    <div class="pv-note">公開中の記事を職員と同じ順番で表示しています（記事をクリックすると編集できます）。<br>いいね・閲覧数の表示は省略しています。</div>
   </section>
 </div>
 
@@ -395,7 +399,7 @@ function naLoad(){
     naTrash=(t.ok&&t.news)||[];
     var n=new Date();
     $('lbarInfo').textContent=n.getHours()+':'+('0'+n.getMinutes()).slice(-2)+' 時点（'+naPosts.length+'件）';
-    naRenderList();
+    naRenderList();naPreview();
   }).catch(function(){naLoadErr('通信エラーで読み込めませんでした。');});
 }
 function naReload(){
@@ -580,37 +584,53 @@ function naAddImages(files){
 
 /* ===== プレビュー ===== */
 function naPvMode(m){naPv=m;$('pvList').className=m==='list'?'on':'';$('pvDetail').className=m==='detail'?'on':'';naPreview();}
-function naPreview(){
-  var p=naCollect();
-  $('titleCount').textContent=p.title.length+'文字';
-  $('bodyCount').textContent=p.body.length+'文字';
+/* 1件ぶんのカード（職員ダッシュボードと同じ見た目） */
+function naCard(p,mode,cur){
   var garden=p.garden||'園名';
   var name=p.scope==='garden'?esc(garden):'しおどめグループ 本部';
   var badge=p.scope==='garden'?'<span class="nsbadge garden">園</span>':'<span class="nsbadge hq">本部</span>';
   var av=p.scope==='garden'?'<div class="nsav garden">'+esc(garden.slice(0,1))+'</div>':'<div class="nsav hq"><img src="icons/news-hq.png" alt="本部"></div>';
-  var media='';
-  if(p.images.length){media='<div class="nsmedia'+(p.images.length===1?' one':'')+'">'+p.images.map(function(u){return '<img src="'+esc(u)+'" alt="">';}).join('')+'</div>';}
+  var imgs=p.images||[];
+  var media=imgs.length?'<div class="nsmedia'+(imgs.length===1?' one':'')+'">'+imgs.map(function(u){return '<img src="'+esc(u)+'" alt="">';}).join('')+'</div>':'';
   var link='';
-  if(p.link){link='<div class="nslink"><div class="nslk-body">'+(p.link.site?'<div class="nslk-site">'+esc(p.link.site)+'</div>':'')+
+  if(p.link&&p.link.url){link='<div class="nslink"><div class="nslk-body">'+(p.link.site?'<div class="nslk-site">'+esc(p.link.site)+'</div>':'')+
     '<div class="nslk-title">'+esc(p.link.title||p.link.url)+'</div>'+(p.link.desc?'<div class="nslk-desc">'+esc(p.link.desc)+'</div>':'')+'</div></div>';}
+  var bodyTxt=p.body||'';
   var title=p.title?esc(p.title):'<span style="color:#b8b0a3">（タイトル）</span>';
-  var body=p.body?esc(p.body):'<span style="color:#b8b0a3">（本文）</span>';
-  var html;
-  if(naPv==='list'){
-    var long=p.body.length>90||p.body.split('\n').length>4;
-    html='<div class="nspost">'+av+'<div class="nsbody-col">'+
-      (p.important?'<div class="nspin">'+NA_PIN+'固定</div>':'')+
-      '<div class="nshead"><span class="nsname">'+name+'</span>'+badge+'<span class="nsdot">·</span><span class="nstime">'+fmtShort(p.date)+'</span><span class="nsunread-dot"></span></div>'+
-      '<div class="nstitle">'+title+'</div>'+
-      '<div class="nstext'+(long?' clamp':'')+'">'+body+'</div>'+(long?'<div class="nsmore">続きを読む</div>':'')+
-      media+link+'</div></div>';
-  }else{
-    html='<div class="nsdetail"><div class="nsd-head">'+av+'<div><div class="nsd-name">'+name+'</div>'+
+  var body=bodyTxt?esc(bodyTxt):'<span style="color:#b8b0a3">（本文）</span>';
+  if(mode==='detail'){
+    return '<div class="nsdetail"><div class="nsd-head">'+av+'<div><div class="nsd-name">'+name+'</div>'+
       '<div class="nsd-sub">'+badge+'<span>·</span><span>'+fmtShort(p.date)+'</span></div></div></div>'+
       (p.important?'<div class="nspin">'+NA_PIN+'固定されたお知らせ</div>':'')+
       '<div class="nsd-title">'+title+'</div><div class="nsd-text">'+body+'</div>'+media+link+
       '<div class="nsd-date">'+fmtLong(p.date)+'</div></div>';
   }
+  var long=bodyTxt.length>90||bodyTxt.split('\n').length>4;
+  var click=(!cur&&p.id)?' onclick="naEdit(\''+esc(p.id)+'\')" title="クリックで編集"':'';
+  return '<div class="nspost'+(cur?' cur':' other')+'"'+click+'>'+av+'<div class="nsbody-col">'+
+    (cur?'<div class="nscur">'+(naCurId?'編集中':'作成中')+'</div>':'')+
+    (p.important?'<div class="nspin">'+NA_PIN+'固定</div>':'')+
+    '<div class="nshead"><span class="nsname">'+name+'</span>'+badge+'<span class="nsdot">·</span><span class="nstime">'+fmtShort(p.date)+'</span><span class="nsunread-dot"></span></div>'+
+    '<div class="nstitle">'+title+'</div>'+
+    '<div class="nstext'+(long?' clamp':'')+'">'+body+'</div>'+(long?'<div class="nsmore">続きを読む</div>':'')+
+    media+link+'</div></div>';
+}
+function naPreview(){
+  var p=naCollect();
+  $('titleCount').textContent=p.title.length+'文字';
+  $('bodyCount').textContent=p.body.length+'文字';
+  if(naPv==='detail'){$('pvBox').innerHTML=naCard(p,'detail',true);return;}
+  /* 一覧：公開中の記事を職員と同じ順で並べ、作成中・編集中の記事を差し込む */
+  var hasDraft=!!(p.title||p.body||p.images.length||naCurId);
+  var items=naPosts.filter(function(x){return x.status==='公開'&&x.id!==naCurId;}).map(function(x){return {p:x,cur:false};});
+  if(hasDraft)items.push({p:p,cur:true});
+  items.sort(function(a,b){
+    if(!!a.p.important!==!!b.p.important)return a.p.important?-1:1;
+    if(a.p.date!==b.p.date)return a.p.date<b.p.date?1:-1;
+    return a.cur?-1:(b.cur?1:0);
+  });
+  var html=items.map(function(it){return naCard(it.p,'list',it.cur);}).join('');
+  if(!html)html='<div class="lempty">公開中のお知らせはありません。<br>入力するとここに表示されます。</div>';
   $('pvBox').innerHTML=html;
 }
 
