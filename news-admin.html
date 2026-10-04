@@ -82,6 +82,12 @@ textarea.inp{resize:vertical;line-height:1.75;min-height:200px}
 .chip.garden{background:var(--brand-soft);color:var(--brand)}
 .chip.pin{background:var(--gold-bg);color:var(--gold-ink)}
 .chip.draft{background:var(--off-bg);color:var(--off-ink)}
+.lbar{display:flex;align-items:center;gap:8px;padding:8px 14px 0;font-size:12px;color:var(--ink-soft)}
+.lbar span{flex:1}
+.lbar button{border:0;background:transparent;color:var(--law);font-weight:700;font-size:12.5px;cursor:pointer;padding:2px 4px}
+.litem.trash{cursor:default}
+.litem .lrestore{margin-top:8px;border:1.5px solid var(--line);background:#fff;border-radius:8px;padding:5px 12px;font-size:12.5px;font-weight:800;color:var(--law);cursor:pointer}
+.litem .lrestore:hover{background:#f6f7ff}
 .lempty{color:var(--ink-soft);font-size:13px;text-align:center;padding:30px 8px}
 
 /* 編集 */
@@ -198,7 +204,9 @@ details.link .inner{padding:0 12px 12px;display:grid;gap:10px}
       <button id="lfAll" class="on" onclick="naListFilter('all')">すべて</button>
       <button id="lfPub" onclick="naListFilter('公開')">公開中</button>
       <button id="lfDraft" onclick="naListFilter('下書き')">下書き</button>
+      <button id="lfTrash" onclick="naListFilter('trash')">ゴミ箱</button>
     </div>
+    <div class="lbar"><span id="lbarInfo"></span><button onclick="naReload()">↻ 最新に更新</button></div>
     <div class="litems" id="listBox"><div class="lempty">読み込み中…</div></div>
   </section>
 
@@ -312,6 +320,7 @@ var naImages = [];       // 保存済み or アップロード済みURL
 var naUploading = 0;
 var naIsDirty = false;
 var naLF = 'all';
+var naTrash = [];
 var naPv = 'list';
 
 var NA_BELL = '<svg viewBox="0 0 24 24"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>';
@@ -373,21 +382,42 @@ function naEnter(){
 }
 
 /* ===== 一覧 ===== */
-function naLoad(selectId){
-  return api({action:'list'}).then(function(d){
-    if(d.auth===false){naShowLogin();return;}
-    if(!d.ok){$('listBox').innerHTML='<div class="lempty">読み込めませんでした：'+esc(d.message)+'</div>';return;}
+function naLoadErr(msg){
+  $('lbarInfo').textContent='';
+  $('listBox').innerHTML='<div class="lempty">'+esc(msg)+'<br><button class="btn sub" style="margin-top:10px" onclick="naReload()">もう一度読み込む</button></div>';
+}
+function naLoad(){
+  return Promise.all([api({action:'list'}),api({action:'trash'})]).then(function(rs){
+    var d=rs[0],t=rs[1];
+    if(d.auth===false||t.auth===false){naShowLogin();return;}
+    if(!d.ok){naLoadErr('読み込めませんでした：'+(d.message||''));return;}
     naPosts=d.news||[];
-    if(selectId)naCurId=selectId;
+    naTrash=(t.ok&&t.news)||[];
+    var n=new Date();
+    $('lbarInfo').textContent=n.getHours()+':'+('0'+n.getMinutes()).slice(-2)+' 時点（'+naPosts.length+'件）';
     naRenderList();
-  }).catch(function(){$('listBox').innerHTML='<div class="lempty">通信エラーで読み込めませんでした。</div>';});
+  }).catch(function(){naLoadErr('通信エラーで読み込めませんでした。');});
+}
+function naReload(){
+  $('listBox').innerHTML='<div class="lempty">読み込み中…</div>';
+  naLoad();
 }
 function naListFilter(f){
   naLF=f;
-  $('lfAll').className=f==='all'?'on':'';$('lfPub').className=f==='公開'?'on':'';$('lfDraft').className=f==='下書き'?'on':'';
+  $('lfAll').className=f==='all'?'on':'';$('lfPub').className=f==='公開'?'on':'';$('lfDraft').className=f==='下書き'?'on':'';$('lfTrash').className=f==='trash'?'on':'';
   naRenderList();
 }
 function naRenderList(){
+  if(naLF==='trash'){
+    if(!naTrash.length){$('listBox').innerHTML='<div class="lempty">ゴミ箱は空です。<br>削除した記事はここに入り、元に戻せます。</div>';return;}
+    $('listBox').innerHTML=naTrash.map(function(p){
+      return '<div class="litem trash">'+
+        '<div class="lt">'+esc(p.title)+'</div>'+
+        '<div class="lm"><span>'+fmtShort(p.date)+'</span><span>削除：'+esc((p.deleted||'').slice(0,16))+'</span></div>'+
+        '<button class="lrestore" onclick="naRestore(\''+esc(p.id)+'\')">元に戻す</button></div>';
+    }).join('');
+    return;
+  }
   var list=naPosts.filter(function(p){return naLF==='all'||p.status===naLF;});
   if(!list.length){$('listBox').innerHTML='<div class="lempty">'+(naPosts.length?'該当する記事はありません。':'まだ記事がありません。<br>「＋ 新しいお知らせ」から作成できます。')+'</div>';return;}
   $('listBox').innerHTML=list.map(function(p){
@@ -477,22 +507,32 @@ function naSave(status){
     if(!d.ok){m.className='msg err';m.textContent=d.message||'保存できませんでした';return;}
     naIsDirty=false;
     toast(status==='公開'?'公開しました':'下書きを保存しました');
-    naLoad(d.id).then(function(){
-      var p=naPosts.filter(function(x){return x.id===d.id;})[0];
-      if(p)naFill(p);
-    });
+    /* 保存したら入力欄を空にする（続けて書いた記事で、いま保存した記事を上書きしないため）。
+       保存した記事を直すときは、左の一覧から選び直す。 */
+    naNew(true);
+    naLoad();
   }).catch(function(){bs.forEach(function(b){b.disabled=false;});m.className='msg err';m.textContent='通信エラーです。もう一度お試しください。';});
 }
 function naDelete(){
   if(!naCurId)return;
-  if(!confirm('「'+$('fTitle').value+'」を削除します。元に戻せません。よろしいですか？'))return;
+  if(!confirm('「'+$('fTitle').value+'」をゴミ箱に移します。職員の画面からは見えなくなります。（ゴミ箱から元に戻せます）'))return;
   var m=$('edMsg');m.className='msg';m.textContent='削除中…';
   api({action:'delete',id:naCurId}).then(function(d){
     if(d.auth===false){naShowLogin();return;}
     if(!d.ok){m.className='msg err';m.textContent=d.message||'削除できませんでした';return;}
-    toast('削除しました');
-    naLoad().then(function(){naNew(true);});
+    toast('ゴミ箱に移しました');
+    naNew(true);naLoad();
   }).catch(function(){m.className='msg err';m.textContent='通信エラーです。もう一度お試しください。';});
+}
+
+function naRestore(id){
+  if(!confirm('この記事をゴミ箱から元に戻します。削除前が「公開」だった記事は、職員の画面にもう一度表示されます。よろしいですか？'))return;
+  api({action:'restore',id:id}).then(function(d){
+    if(d.auth===false){naShowLogin();return;}
+    if(!d.ok){toast(d.message||'元に戻せませんでした');return;}
+    toast('元に戻しました');
+    naListFilter('all');naLoad();
+  }).catch(function(){toast('通信エラーです。もう一度お試しください。');});
 }
 
 /* ===== 写真 ===== */
