@@ -88,6 +88,17 @@ textarea.inp{resize:vertical;line-height:1.75;min-height:200px}
 .litem.trash{cursor:default}
 .litem .lrestore{margin-top:8px;border:1.5px solid var(--line);background:#fff;border-radius:8px;padding:5px 12px;font-size:12.5px;font-weight:800;color:var(--law);cursor:pointer}
 .litem .lrestore:hover{background:#f6f7ff}
+.lcnt{margin-left:auto;font-size:11.5px;color:var(--ink-soft);font-weight:700;white-space:nowrap}
+.react{border:1.5px solid var(--line);border-radius:12px;background:#fbfaf7;padding:12px 14px;margin-bottom:18px}
+.react-h{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px}
+.react-h b{font-size:13.5px}
+.react-h span{flex:1;font-size:13px;color:var(--ink-soft);font-weight:700}
+.rcols{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:12px}
+@media (max-width:560px){.rcols{grid-template-columns:1fr}}
+.rcol h4{margin:0 0 6px;font-size:12.5px;color:var(--ink-soft)}
+.rcol ul{list-style:none;margin:0;padding:0;max-height:220px;overflow-y:auto;font-size:13px}
+.rcol li{display:flex;gap:8px;padding:5px 0;border-bottom:1px solid var(--line)}
+.rcol li span{color:var(--ink-soft);font-size:12px;margin-left:auto;white-space:nowrap}
 .lempty{color:var(--ink-soft);font-size:13px;text-align:center;padding:30px 8px}
 
 /* 編集 */
@@ -280,6 +291,14 @@ details.link .inner{padding:0 12px 12px;display:grid;gap:10px}
         </label>
       </div>
 
+      <div class="react hidden" id="reactBox">
+        <div class="react-h">
+          <b>職員の反応</b><span id="reactSum"></span>
+          <button class="btn sub" style="padding:6px 12px;font-size:12.5px" id="reactBtn" onclick="naShowReactions()">見た人・いいねした人</button>
+        </div>
+        <div id="reactList" class="hidden"></div>
+      </div>
+
       <div class="actions">
         <button class="btn danger hidden" id="delBtn" onclick="naDelete()">削除</button>
         <span class="sp"></span>
@@ -303,7 +322,7 @@ details.link .inner{padding:0 12px 12px;display:grid;gap:10px}
       <div class="pbar">News &amp; Topics</div>
       <div class="pscroll" id="pvBox"></div>
     </div>
-    <div class="pv-note">公開中の記事を職員と同じ順番で表示しています（記事をクリックすると編集できます）。<br>いいね・閲覧数の表示は省略しています。</div>
+    <div class="pv-note">公開中の記事を職員と同じ順番で表示しています（記事をクリックすると編集できます）。<br>閲覧数・いいねの数は、記事一覧と編集画面に表示しています。</div>
   </section>
 </div>
 
@@ -431,6 +450,7 @@ function naRenderList(){
       '<div class="lm"><span>'+fmtShort(p.date)+'</span>'+who+
         (p.important?'<span class="chip pin">固定</span>':'')+
         (p.status==='下書き'?'<span class="chip draft">下書き</span>':'')+
+        (p.status==='公開'?'<span class="lcnt">閲覧 '+(p.views||0)+'・いいね '+(p.likes||0)+'</span>':'')+
       '</div></button>';
   }).join('');
 }
@@ -462,6 +482,11 @@ function naFill(p){
   $('linkBox').open=!!l.url;
   $('edHead').textContent=naCurId?'お知らせを編集':'新しいお知らせ';
   $('edStatus').textContent=naCurId?('現在：'+naCurStatus+(p.updated?'（最終更新 '+p.updated+'）':'')):'';
+  var showReact=!!naCurId&&(naCurStatus==='公開'||(p.views||p.likes));
+  $('reactBox').classList.toggle('hidden',!showReact);
+  $('reactList').classList.add('hidden');$('reactList').innerHTML='';
+  $('reactBtn').textContent='見た人・いいねした人';
+  $('reactSum').textContent='閲覧 '+(p.views||0)+'人・いいね '+(p.likes||0)+'人';
   $('delBtn').classList.toggle('hidden',!naCurId);
   $('pubBtn').textContent=(naCurStatus==='公開')?'更新して公開':'公開する';
   $('draftBtn').textContent=(naCurStatus==='公開')?'下書きに戻す':'下書き保存';
@@ -537,6 +562,27 @@ function naRestore(id){
     toast('元に戻しました');
     naListFilter('all');naLoad();
   }).catch(function(){toast('通信エラーです。もう一度お試しください。');});
+}
+
+/* ===== 職員の反応（閲覧・いいね） ===== */
+function naShowReactions(){
+  var box=$('reactList');
+  if(!box.classList.contains('hidden')){box.classList.add('hidden');$('reactBtn').textContent='見た人・いいねした人';return;}
+  box.classList.remove('hidden');$('reactBtn').textContent='閉じる';
+  box.innerHTML='<div class="hint">読み込み中…</div>';
+  var id=naCurId;
+  api({action:'reactions',id:id}).then(function(d){
+    if(id!==naCurId)return;
+    if(d.auth===false){naShowLogin();return;}
+    if(!d.ok){box.innerHTML='<div class="hint">読み込めませんでした：'+esc(d.message||'')+'</div>';return;}
+    function who(r){return r.name?esc(r.name)+(r.garden?'（'+esc(r.garden)+'）':''):'未ログインの端末';}
+    function col(t,label){
+      var rows=d.rows.filter(function(r){return r.type===t;}).sort(function(a,b){return a.time<b.time?1:-1;});
+      return '<div class="rcol"><h4>'+label+'（'+rows.length+'人）</h4>'+
+        (rows.length?'<ul>'+rows.map(function(r){return '<li>'+who(r)+'<span>'+esc(r.time.slice(5,16))+'</span></li>';}).join('')+'</ul>':'<div class="hint">まだいません</div>')+'</div>';
+    }
+    box.innerHTML='<div class="rcols">'+col('view','見た人')+col('like','いいねした人')+'</div>';
+  }).catch(function(){box.innerHTML='<div class="hint">通信エラーで読み込めませんでした。</div>';});
 }
 
 /* ===== 写真 ===== */

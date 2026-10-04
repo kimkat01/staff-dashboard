@@ -7617,7 +7617,7 @@ if(NS_GAS_URL){
 function nsFetch(){
   if(!NS_GAS_URL||nsLoading)return;
   nsLoading=true;
-  fetch(NS_GAS_URL).then(function(r){return r.json();}).then(function(d){
+  fetch(NS_GAS_URL+'?u='+encodeURIComponent(nsUser().key)).then(function(r){return r.json();}).then(function(d){
     nsLoading=false;nsLoaded=true;
     nsErr=!(d&&d.ok&&Array.isArray(d.news));
     if(!nsErr){
@@ -7667,30 +7667,101 @@ function nsLink(n){
 }
 function nsOpenLink(u){window.open(u,'_blank','noopener');}
 
-/* --- 閲覧数・いいね（X風アクション行）。読み取り専用なので端末内で完結 --- */
+/* --- 閲覧数・いいね（X風アクション行）
+   NS_GAS_URL があるとき（本番）：お知らせGASの「反応」タブに記録した本物の人数を表示する。
+     ・閲覧数 … 一覧で記事が画面に1秒以上表示された／記事を開いた人の数（同じ人は1回）
+     ・いいね … ハートを押している人の数（もう一度押すと取り消し）
+     ・人の区別は PINログインの「園名＋ログインID」（未ログインの端末は端末ごとの番号）
+   NS_GAS_URL が空のとき（サンプル表示）：従来どおり端末内だけの仮の数字。 --- */
 var NS_LIKE_KEY='shiodome_news_like';
 var NS_EYE='<svg viewBox="0 0 24 24"><path d="M3 21h18"/><path d="M6 21v-6M11 21V8M16 21v-9"/></svg>';
 var NS_HEART='<svg viewBox="0 0 24 24"><path d="M12 20.3l-1.45-1.32C5.4 14.24 2 11.16 2 7.6 2 5.1 4 3.1 6.5 3.1c1.54 0 3.04.8 3.9 2.06h1.2C12.46 3.9 13.96 3.1 15.5 3.1 18 3.1 20 5.1 20 7.6c0 3.56-3.4 6.64-8.55 11.38L12 20.3z"/></svg>';
 function nsLikeSet(){try{return new Set(JSON.parse(localStorage.getItem(NS_LIKE_KEY)||'[]'));}catch(e){return new Set();}}
-function nsIsLiked(id){return nsLikeSet().has(id);}
+function nsIsLiked(id){
+  if(NS_GAS_URL){var n=nsFindById(id);return !!(n&&n.liked);}
+  return nsLikeSet().has(id);
+}
+var NS_DEVICE_KEY='shiodome_news_device';
+function nsUser(){
+  var s=null;try{s=(typeof getPinSession==='function')?getPinSession():null;}catch(e){}
+  if(s&&s.loginId)return {key:(s.garden||'')+'|'+s.loginId,garden:s.garden||'',name:s.name||''};
+  var d='';try{d=localStorage.getItem(NS_DEVICE_KEY)||'';}catch(e){}
+  if(!d){d='dev-'+Date.now().toString(36)+Math.random().toString(36).slice(2,8);try{localStorage.setItem(NS_DEVICE_KEY,d);}catch(e){}}
+  return {key:d,garden:'',name:''};
+}
+function nsPost(body){
+  var u=nsUser();body.user=u.key;body.garden=u.garden;body.name=u.name;
+  return fetch(NS_GAS_URL,{method:'POST',body:JSON.stringify(body),keepalive:true}).then(function(r){return r.json();});
+}
+function nsSaveCache(){try{localStorage.setItem(NS_CACHE_KEY,JSON.stringify(NEWS));}catch(e){}}
+function nsUpdateCounts(n){
+  document.querySelectorAll('[data-nsv="'+n.id+'"]').forEach(function(el){el.textContent=nsViews(n);});
+}
+/* 閲覧の記録（同じ人・同じ記事は1回だけ送る） */
+function nsViewedKey(){return 'shiodome_news_viewed__'+nsUser().key;}
+function nsViewedSet(){try{return new Set(JSON.parse(localStorage.getItem(nsViewedKey())||'[]'));}catch(e){return new Set();}}
+function nsSendView(id){
+  if(!NS_GAS_URL)return;
+  var n=nsFindById(id);if(!n)return;
+  var set=nsViewedSet();if(set.has(id))return;
+  set.add(id);try{localStorage.setItem(nsViewedKey(),JSON.stringify(Array.from(set)));}catch(e){}
+  n.views=(n.views||0)+1;nsUpdateCounts(n);
+  nsPost({action:'view',id:id}).then(function(d){
+    if(d&&d.ok){n.views=d.views;n.likes=d.likes;nsUpdateCounts(n);nsSaveCache();}
+    else{var s2=nsViewedSet();s2.delete(id);try{localStorage.setItem(nsViewedKey(),JSON.stringify(Array.from(s2)));}catch(e){}}
+  }).catch(function(){var s2=nsViewedSet();s2.delete(id);try{localStorage.setItem(nsViewedKey(),JSON.stringify(Array.from(s2)));}catch(e){}});
+}
+/* 一覧で記事が画面に1秒以上表示されたら閲覧として記録 */
+var nsObserver=null,nsTimers={};
+function nsWatchViews(){
+  if(!NS_GAS_URL||typeof IntersectionObserver==='undefined')return;
+  if(nsObserver)nsObserver.disconnect();
+  Object.keys(nsTimers).forEach(function(k){clearTimeout(nsTimers[k]);});nsTimers={};
+  nsObserver=new IntersectionObserver(function(entries){
+    entries.forEach(function(en){
+      var id=en.target.getAttribute('data-nsid');if(!id)return;
+      if(en.isIntersecting&&en.intersectionRatio>=0.6){
+        if(!nsTimers[id])nsTimers[id]=setTimeout(function(){delete nsTimers[id];nsSendView(id);},1000);
+      }else if(nsTimers[id]){clearTimeout(nsTimers[id]);delete nsTimers[id];}
+    });
+  },{threshold:[0,0.6,1]});
+  document.querySelectorAll('#nsList .nspost[data-nsid]').forEach(function(el){nsObserver.observe(el);});
+}
 function nsHash(s){var h=5381;s=s||'';for(var i=0;i<s.length;i++){h=((h<<5)+h+s.charCodeAt(i))>>>0;}return h;}
-function nsViews(n){return (n.views!=null)?n.views:(24+nsHash(n.id)%176);}
-function nsLikeCount(n){var base=1+nsHash('L'+n.id)%14;return base+(nsIsLiked(n.id)?1:0);}
+function nsViews(n){if(NS_GAS_URL)return n.views||0;return (n.views!=null)?n.views:(24+nsHash(n.id)%176);}
+function nsLikeCount(n){if(NS_GAS_URL)return n.likes||0;var base=1+nsHash('L'+n.id)%14;return base+(nsIsLiked(n.id)?1:0);}
 function nsFindById(id){for(var i=0;i<NEWS.length;i++){if(NEWS[i].id===id)return NEWS[i];}return null;}
 function nsActionRow(n){
   var liked=nsIsLiked(n.id);
   return '<div class="nsact">'+
-    '<span class="nsviews">'+NS_EYE+nsViews(n)+'</span>'+
+    '<span class="nsviews" aria-label="閲覧数">'+NS_EYE+'<span data-nsv="'+n.id+'">'+nsViews(n)+'</span></span>'+
     '<button class="nslike'+(liked?' on':'')+'" onclick="nsToggleLike(event,\''+n.id+'\')" aria-label="いいね">'+NS_HEART+'<span>'+nsLikeCount(n)+'</span></button>'+
   '</div>';
 }
-function nsToggleLike(ev,id){
-  if(ev){ev.stopPropagation();}
-  var s=nsLikeSet();if(s.has(id))s.delete(id);else s.add(id);
-  try{localStorage.setItem(NS_LIKE_KEY,JSON.stringify(Array.from(s)));}catch(e){}
+function nsRefreshLike(id){
   nsRender();
   var dv=document.getElementById('nsDetailView');
   if(dv&&dv.className.indexOf('nshidden')===-1){var n=nsFindById(id);if(n)nsRenderDetail(n);}
+}
+var nsLiking={};
+function nsToggleLike(ev,id){
+  if(ev){ev.stopPropagation();}
+  if(NS_GAS_URL){
+    var n=nsFindById(id);if(!n||nsLiking[id])return;
+    var on=!n.liked;
+    n.liked=on;n.likes=Math.max(0,(n.likes||0)+(on?1:-1));nsRefreshLike(id);
+    nsLiking[id]=true;
+    nsPost({action:'like',id:id,on:on}).then(function(d){
+      delete nsLiking[id];
+      if(d&&d.ok){n.likes=d.likes;n.views=d.views;n.liked=on;}
+      else{n.liked=!on;n.likes=Math.max(0,(n.likes||0)+(on?-1:1));}
+      nsSaveCache();nsRefreshLike(id);
+    }).catch(function(){delete nsLiking[id];n.liked=!on;n.likes=Math.max(0,(n.likes||0)+(on?-1:1));nsRefreshLike(id);});
+    return;
+  }
+  var s=nsLikeSet();if(s.has(id))s.delete(id);else s.add(id);
+  try{localStorage.setItem(NS_LIKE_KEY,JSON.stringify(Array.from(s)));}catch(e){}
+  nsRefreshLike(id);
 }
 function nsRenderDetail(n){
   var pin=n.important?'<div class="nspin">'+NS_PIN+'固定されたお知らせ</div>':'';
@@ -7729,7 +7800,7 @@ function nsRender(){
     var dot=read?'':'<span class="nsunread-dot"></span>';
     var long=nsIsLong(n.body);
     var text='<div class="nstext'+(long?' clamp':'')+'">'+nsEsc(n.body)+'</div>'+(long?'<div class="nsmore">続きを読む</div>':'');
-    return '<div class="nspost'+(read?'':' unread')+'" role="button" tabindex="0" onclick="nsOpen(\''+n.id+'\')">'+
+    return '<div class="nspost'+(read?'':' unread')+'" data-nsid="'+n.id+'" role="button" tabindex="0" onclick="nsOpen(\''+n.id+'\')">'+
       nsAvatar(n)+
       '<div class="nsbody-col">'+
         pin+
@@ -7744,11 +7815,13 @@ function nsRender(){
   if(NS_GAS_URL&&nsErr)empty='お知らせを読み込めませんでした。<br>電波の良いところで、もう一度開いてください。<br><button class="nsretry" onclick="nsRetry()">もう一度読み込む</button>';
   var warn=(NS_GAS_URL&&nsErr&&html)?'<div class="nswarn">最新のお知らせを読み込めませんでした（前回の内容を表示しています）</div>':'';
   document.getElementById('nsList').innerHTML=html?(warn+html):('<div class="nsempty">'+empty+'</div>');
+  nsWatchViews();
 }
 function nsOpen(id){
   var n=nsFindById(id);
   if(!n)return;
   nsMarkRead(id);
+  nsSendView(id);
   nsRenderDetail(n);
   document.getElementById('nsListView').className='nshidden';
   document.getElementById('nsDetailView').className='';
