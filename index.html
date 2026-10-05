@@ -2787,221 +2787,6 @@ const DATA = {
    ]
   },
   {
-   "name": "近藤 美貴",
-   "shifts": [
-    {
-     "iso": "2026-09-16",
-     "state": "off",
-     "cat": "公休",
-     "code": "",
-     "time": ""
-    },
-    {
-     "iso": "2026-09-17",
-     "state": "training",
-     "cat": "研修",
-     "code": "研修",
-     "time": ""
-    },
-    {
-     "iso": "2026-09-18",
-     "state": "work",
-     "cat": "中番",
-     "code": "８時",
-     "time": "8:00-17:00"
-    },
-    {
-     "iso": "2026-09-19",
-     "state": "off",
-     "cat": "公休",
-     "code": "",
-     "time": ""
-    },
-    {
-     "iso": "2026-09-20",
-     "state": "off",
-     "cat": "公休",
-     "code": "",
-     "time": ""
-    },
-    {
-     "iso": "2026-09-21",
-     "state": "off",
-     "cat": "公休",
-     "code": "",
-     "time": ""
-    },
-    {
-     "iso": "2026-09-22",
-     "state": "off",
-     "cat": "公休",
-     "code": "",
-     "time": ""
-    },
-    {
-     "iso": "2026-09-23",
-     "state": "off",
-     "cat": "公休",
-     "code": "",
-     "time": ""
-    },
-    {
-     "iso": "2026-09-24",
-     "state": "work",
-     "cat": "早番",
-     "code": "早",
-     "time": "7:15-16:15"
-    },
-    {
-     "iso": "2026-09-25",
-     "state": "work",
-     "cat": "早番",
-     "code": "早",
-     "time": "7:15-16:15"
-    },
-    {
-     "iso": "2026-09-26",
-     "state": "off",
-     "cat": "公休",
-     "code": "",
-     "time": ""
-    },
-    {
-     "iso": "2026-09-27",
-     "state": "off",
-     "cat": "公休",
-     "code": "",
-     "time": ""
-    },
-    {
-     "iso": "2026-09-28",
-     "state": "off",
-     "cat": "公休",
-     "code": "",
-     "time": ""
-    },
-    {
-     "iso": "2026-09-29",
-     "state": "off",
-     "cat": "公休",
-     "code": "",
-     "time": ""
-    },
-    {
-     "iso": "2026-09-30",
-     "state": "off",
-     "cat": "公休",
-     "code": "",
-     "time": ""
-    },
-    {
-     "iso": "2026-10-01",
-     "state": "work",
-     "cat": "中番",
-     "code": "通常",
-     "time": "8:30-17:30"
-    },
-    {
-     "iso": "2026-10-02",
-     "state": "off",
-     "cat": "公休",
-     "code": "",
-     "time": ""
-    },
-    {
-     "iso": "2026-10-03",
-     "state": "off",
-     "cat": "公休",
-     "code": "",
-     "time": ""
-    },
-    {
-     "iso": "2026-10-04",
-     "state": "work",
-     "cat": "遅番",
-     "code": "延",
-     "time": "9:30-18:30"
-    },
-    {
-     "iso": "2026-10-05",
-     "state": "off",
-     "cat": "公休",
-     "code": "",
-     "time": ""
-    },
-    {
-     "iso": "2026-10-06",
-     "state": "off",
-     "cat": "公休",
-     "code": "",
-     "time": ""
-    },
-    {
-     "iso": "2026-10-07",
-     "state": "off",
-     "cat": "公休",
-     "code": "",
-     "time": ""
-    },
-    {
-     "iso": "2026-10-08",
-     "state": "off",
-     "cat": "公休",
-     "code": "",
-     "time": ""
-    },
-    {
-     "iso": "2026-10-09",
-     "state": "off",
-     "cat": "公休",
-     "code": "",
-     "time": ""
-    },
-    {
-     "iso": "2026-10-10",
-     "state": "work",
-     "cat": "中番",
-     "code": "通常",
-     "time": "8:30-17:30"
-    },
-    {
-     "iso": "2026-10-11",
-     "state": "work",
-     "cat": "中番",
-     "code": "通常",
-     "time": "8:30-17:30"
-    },
-    {
-     "iso": "2026-10-12",
-     "state": "off",
-     "cat": "公休",
-     "code": "",
-     "time": ""
-    },
-    {
-     "iso": "2026-10-13",
-     "state": "off",
-     "cat": "公休",
-     "code": "",
-     "time": ""
-    },
-    {
-     "iso": "2026-10-14",
-     "state": "off",
-     "cat": "公休",
-     "code": "",
-     "time": ""
-    },
-    {
-     "iso": "2026-10-15",
-     "state": "off",
-     "cat": "公休",
-     "code": "",
-     "time": ""
-    }
-   ]
-  },
-  {
    "name": "佐倉 智子",
    "shifts": [
     {
@@ -7085,6 +6870,11 @@ const DATA = {
      "time": "9:00-15:00"
     }
    ]
+  },
+  {
+   "name": "近藤 美貴",
+   "absent": "産休",
+   "shifts": []
   }
  ],
  "uqGarden": "しおどめ保育園つくば",
@@ -8131,7 +7921,12 @@ function allHTML(){
   dates.forEach(d=>{const now=d.iso===today?"now":"",sc=d.dow==="日"?"sun":"";
     head+=`<th class="${now} ${sc}">${d.d}<span class="wk">${d.dow}</span></th>`;});head+=`</tr>`;
   let body="";
-  staff.forEach((s,i)=>{const me=i===current?"me":"";body+=`<tr class="${me}"><td class="namecol">${s.name}</td>`;
+  staff.forEach((s,i)=>{const me=i===current?"me":"";
+    if(s.absent){/* 産休など長期不在：名前の横に表示し、シフト欄は空欄 */
+      body+=`<tr class="${me}"><td class="namecol">${s.name}<span style="font-size:10px;color:var(--off-ink);margin-left:4px">（${s.absent}）</span></td>`;
+      dates.forEach(d=>{const now=d.iso===today?"now":"",sc=d.dow==="日"?"sun":"";body+=`<td class="${now} ${sc}"></td>`;});
+      body+=`</tr>`;return;}
+    body+=`<tr class="${me}"><td class="namecol">${s.name}</td>`;
     const map={};s.shifts.forEach(x=>map[x.iso]=x);
     dates.forEach(d=>{const sh=map[d.iso],ct=sh?stateCat(sh):"公休",cc=CAT[ct],now=d.iso===today?"now":"",sc=d.dow==="日"?"sun":"";
       let txt="・",cls="cell-off";
