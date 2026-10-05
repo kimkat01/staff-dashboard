@@ -1,8 +1,8 @@
 /* =============================================================
    守谷しおどめ保育園（Y02）のシフトデータ
-   2026年09月度（9/16〜10/15）。元データ：シフト管理2026年09月度.xlsx（2026-10-05作成、8月流用のダミーから差し替え）
-   ・シフト表で空欄のマスは「未定」（お休み扱い）にしている
-   ・増田 綾菜さんを追加（シフト表に記載あり）
+   2026年09月度（9/16〜10/15）。元データ：完成版シフト表（9/16-10/15）.xlsx（2026-10-05作成、8月流用のダミーから差し替え）
+   ・「休み」とシフト表の空欄はお休みとして表示（増田 綾菜さんは10/1から勤務）
+   ・パターン名なしで時間だけのマス（例 7:00-13:00）は略号「勤務」で表示
    ・行事予定はシフト表の行事欄から。祝日名を先頭に付けている
    index.html は ?garden= が守谷のときだけ、このファイルを読み込む（他の園には影響しない）
    ============================================================= */
@@ -1152,24 +1152,24 @@ window.SHIFT_OVERRIDE = {
    "shifts": [
     {
      "iso": "2026-09-16",
-     "state": "off",
-     "cat": "公休",
-     "code": "未定",
-     "time": ""
+     "state": "work",
+     "cat": "遅番",
+     "code": "遅1",
+     "time": "10:00-19:00"
     },
     {
      "iso": "2026-09-17",
-     "state": "off",
-     "cat": "公休",
-     "code": "未定",
-     "time": ""
+     "state": "work",
+     "cat": "遅番",
+     "code": "遅1",
+     "time": "10:00-19:00"
     },
     {
      "iso": "2026-09-18",
-     "state": "off",
-     "cat": "公休",
-     "code": "未定",
-     "time": ""
+     "state": "work",
+     "cat": "遅番",
+     "code": "遅１D",
+     "time": "9:00-19:00"
     },
     {
      "iso": "2026-09-19",
@@ -1208,17 +1208,17 @@ window.SHIFT_OVERRIDE = {
     },
     {
      "iso": "2026-09-24",
-     "state": "off",
-     "cat": "公休",
-     "code": "未定",
-     "time": ""
+     "state": "work",
+     "cat": "遅番",
+     "code": "遅２",
+     "time": "10:00-19:00"
     },
     {
      "iso": "2026-09-25",
-     "state": "off",
-     "cat": "公休",
-     "code": "未定",
-     "time": ""
+     "state": "work",
+     "cat": "中番",
+     "code": "中遅２",
+     "time": "9:00-18:00"
     },
     {
      "iso": "2026-09-26",
@@ -1236,38 +1236,38 @@ window.SHIFT_OVERRIDE = {
     },
     {
      "iso": "2026-09-28",
-     "state": "off",
-     "cat": "公休",
-     "code": "未定",
-     "time": ""
+     "state": "work",
+     "cat": "遅番",
+     "code": "遅２",
+     "time": "10:00-19:00"
     },
     {
      "iso": "2026-09-29",
-     "state": "off",
-     "cat": "公休",
-     "code": "未定",
-     "time": ""
+     "state": "work",
+     "cat": "遅番",
+     "code": "遅２D",
+     "time": "9:00-19:00"
     },
     {
      "iso": "2026-09-30",
-     "state": "off",
-     "cat": "公休",
-     "code": "未定",
-     "time": ""
+     "state": "work",
+     "cat": "遅番",
+     "code": "遅２",
+     "time": "10:00-19:00"
     },
     {
      "iso": "2026-10-01",
-     "state": "off",
-     "cat": "公休",
-     "code": "未定",
-     "time": ""
+     "state": "work",
+     "cat": "遅番",
+     "code": "遅２D",
+     "time": "9:00-19:00"
     },
     {
      "iso": "2026-10-02",
-     "state": "off",
-     "cat": "公休",
-     "code": "未定",
-     "time": ""
+     "state": "work",
+     "cat": "遅番",
+     "code": "遅２",
+     "time": "10:00-19:00"
     },
     {
      "iso": "2026-10-03",
@@ -1285,38 +1285,38 @@ window.SHIFT_OVERRIDE = {
     },
     {
      "iso": "2026-10-05",
-     "state": "off",
-     "cat": "公休",
-     "code": "未定",
-     "time": ""
+     "state": "work",
+     "cat": "早番",
+     "code": "早1",
+     "time": "6:45-15:45"
     },
     {
      "iso": "2026-10-06",
-     "state": "off",
-     "cat": "公休",
-     "code": "未定",
-     "time": ""
+     "state": "work",
+     "cat": "早番",
+     "code": "早1",
+     "time": "6:45-15:45"
     },
     {
      "iso": "2026-10-07",
-     "state": "off",
-     "cat": "公休",
-     "code": "未定",
-     "time": ""
+     "state": "work",
+     "cat": "早番",
+     "code": "早1",
+     "time": "6:45-15:45"
     },
     {
      "iso": "2026-10-08",
-     "state": "off",
-     "cat": "公休",
-     "code": "未定",
-     "time": ""
+     "state": "work",
+     "cat": "早番",
+     "code": "早1",
+     "time": "6:45-15:45"
     },
     {
      "iso": "2026-10-09",
-     "state": "off",
-     "cat": "公休",
-     "code": "未定",
-     "time": ""
+     "state": "work",
+     "cat": "早番",
+     "code": "早1",
+     "time": "6:45-15:45"
     },
     {
      "iso": "2026-10-10",
@@ -1350,7 +1350,7 @@ window.SHIFT_OVERRIDE = {
      "iso": "2026-10-14",
      "state": "off",
      "cat": "公休",
-     "code": "未定",
+     "code": "",
      "time": ""
     },
     {
@@ -1367,24 +1367,24 @@ window.SHIFT_OVERRIDE = {
    "shifts": [
     {
      "iso": "2026-09-16",
-     "state": "off",
-     "cat": "公休",
-     "code": "未定",
-     "time": ""
+     "state": "work",
+     "cat": "中番",
+     "code": "G",
+     "time": "9:00-15:00"
     },
     {
      "iso": "2026-09-17",
-     "state": "off",
-     "cat": "公休",
-     "code": "未定",
-     "time": ""
+     "state": "work",
+     "cat": "中番",
+     "code": "G",
+     "time": "9:00-15:00"
     },
     {
      "iso": "2026-09-18",
-     "state": "off",
-     "cat": "公休",
-     "code": "未定",
-     "time": ""
+     "state": "work",
+     "cat": "中番",
+     "code": "G",
+     "time": "9:00-15:00"
     },
     {
      "iso": "2026-09-19",
@@ -1423,17 +1423,17 @@ window.SHIFT_OVERRIDE = {
     },
     {
      "iso": "2026-09-24",
-     "state": "off",
-     "cat": "公休",
-     "code": "未定",
-     "time": ""
+     "state": "work",
+     "cat": "中番",
+     "code": "G",
+     "time": "9:00-15:00"
     },
     {
      "iso": "2026-09-25",
-     "state": "off",
-     "cat": "公休",
-     "code": "未定",
-     "time": ""
+     "state": "work",
+     "cat": "中番",
+     "code": "G",
+     "time": "9:00-15:00"
     },
     {
      "iso": "2026-09-26",
@@ -1453,42 +1453,42 @@ window.SHIFT_OVERRIDE = {
      "iso": "2026-09-28",
      "state": "off",
      "cat": "公休",
-     "code": "未定",
+     "code": "休み",
      "time": ""
     },
     {
      "iso": "2026-09-29",
-     "state": "off",
-     "cat": "公休",
-     "code": "未定",
-     "time": ""
+     "state": "work",
+     "cat": "中番",
+     "code": "G",
+     "time": "9:00-15:00"
     },
     {
      "iso": "2026-09-30",
-     "state": "off",
-     "cat": "公休",
-     "code": "未定",
-     "time": ""
+     "state": "work",
+     "cat": "中番",
+     "code": "G",
+     "time": "9:00-15:00"
     },
     {
      "iso": "2026-10-01",
-     "state": "off",
-     "cat": "公休",
-     "code": "未定",
-     "time": ""
+     "state": "work",
+     "cat": "中番",
+     "code": "G",
+     "time": "9:00-15:00"
     },
     {
      "iso": "2026-10-02",
-     "state": "off",
-     "cat": "公休",
-     "code": "未定",
-     "time": ""
+     "state": "work",
+     "cat": "中番",
+     "code": "G",
+     "time": "9:00-15:00"
     },
     {
      "iso": "2026-10-03",
      "state": "off",
      "cat": "公休",
-     "code": "未定",
+     "code": "休み",
      "time": ""
     },
     {
@@ -1502,36 +1502,36 @@ window.SHIFT_OVERRIDE = {
      "iso": "2026-10-05",
      "state": "off",
      "cat": "公休",
-     "code": "未定",
+     "code": "休み",
      "time": ""
     },
     {
      "iso": "2026-10-06",
-     "state": "off",
-     "cat": "公休",
-     "code": "未定",
-     "time": ""
+     "state": "work",
+     "cat": "中番",
+     "code": "G",
+     "time": "9:00-15:00"
     },
     {
      "iso": "2026-10-07",
-     "state": "off",
-     "cat": "公休",
-     "code": "未定",
-     "time": ""
+     "state": "work",
+     "cat": "中番",
+     "code": "G",
+     "time": "9:00-15:00"
     },
     {
      "iso": "2026-10-08",
-     "state": "off",
-     "cat": "公休",
-     "code": "未定",
-     "time": ""
+     "state": "work",
+     "cat": "中番",
+     "code": "G",
+     "time": "9:00-15:00"
     },
     {
      "iso": "2026-10-09",
-     "state": "off",
-     "cat": "公休",
-     "code": "未定",
-     "time": ""
+     "state": "work",
+     "cat": "中番",
+     "code": "G",
+     "time": "9:00-15:00"
     },
     {
      "iso": "2026-10-10",
@@ -1556,24 +1556,24 @@ window.SHIFT_OVERRIDE = {
     },
     {
      "iso": "2026-10-13",
-     "state": "off",
-     "cat": "公休",
-     "code": "未定",
-     "time": ""
+     "state": "work",
+     "cat": "中番",
+     "code": "G",
+     "time": "9:00-15:00"
     },
     {
      "iso": "2026-10-14",
-     "state": "off",
-     "cat": "公休",
-     "code": "未定",
-     "time": ""
+     "state": "work",
+     "cat": "中番",
+     "code": "G",
+     "time": "9:00-15:00"
     },
     {
      "iso": "2026-10-15",
-     "state": "off",
-     "cat": "公休",
-     "code": "未定",
-     "time": ""
+     "state": "work",
+     "cat": "中番",
+     "code": "G",
+     "time": "9:00-15:00"
     }
    ]
   },
@@ -1638,16 +1638,16 @@ window.SHIFT_OVERRIDE = {
     },
     {
      "iso": "2026-09-24",
-     "state": "off",
-     "cat": "公休",
-     "code": "未定",
+     "state": "leave",
+     "cat": "有給",
+     "code": "夏休",
      "time": ""
     },
     {
      "iso": "2026-09-25",
-     "state": "off",
-     "cat": "公休",
-     "code": "未定",
+     "state": "leave",
+     "cat": "有給",
+     "code": "夏休",
      "time": ""
     },
     {
@@ -1738,7 +1738,7 @@ window.SHIFT_OVERRIDE = {
      "iso": "2026-10-08",
      "state": "off",
      "cat": "公休",
-     "code": "未定",
+     "code": "休み",
      "time": ""
     },
     {
@@ -1797,24 +1797,24 @@ window.SHIFT_OVERRIDE = {
    "shifts": [
     {
      "iso": "2026-09-16",
-     "state": "off",
-     "cat": "公休",
-     "code": "未定",
-     "time": ""
+     "state": "work",
+     "cat": "中番",
+     "code": "A",
+     "time": "9:00-16:00"
     },
     {
      "iso": "2026-09-17",
-     "state": "off",
-     "cat": "公休",
-     "code": "未定",
-     "time": ""
+     "state": "work",
+     "cat": "中番",
+     "code": "A",
+     "time": "9:00-16:00"
     },
     {
      "iso": "2026-09-18",
-     "state": "off",
-     "cat": "公休",
-     "code": "未定",
-     "time": ""
+     "state": "work",
+     "cat": "中番",
+     "code": "A",
+     "time": "9:00-16:00"
     },
     {
      "iso": "2026-09-19",
@@ -1853,17 +1853,17 @@ window.SHIFT_OVERRIDE = {
     },
     {
      "iso": "2026-09-24",
-     "state": "off",
-     "cat": "公休",
-     "code": "未定",
-     "time": ""
+     "state": "work",
+     "cat": "中番",
+     "code": "A",
+     "time": "9:00-16:00"
     },
     {
      "iso": "2026-09-25",
-     "state": "off",
-     "cat": "公休",
-     "code": "未定",
-     "time": ""
+     "state": "work",
+     "cat": "中番",
+     "code": "A",
+     "time": "9:00-16:00"
     },
     {
      "iso": "2026-09-26",
@@ -1881,45 +1881,45 @@ window.SHIFT_OVERRIDE = {
     },
     {
      "iso": "2026-09-28",
-     "state": "off",
-     "cat": "公休",
-     "code": "未定",
-     "time": ""
+     "state": "work",
+     "cat": "中番",
+     "code": "A",
+     "time": "9:00-16:00"
     },
     {
      "iso": "2026-09-29",
-     "state": "off",
-     "cat": "公休",
-     "code": "未定",
-     "time": ""
+     "state": "work",
+     "cat": "中番",
+     "code": "A",
+     "time": "9:00-16:00"
     },
     {
      "iso": "2026-09-30",
-     "state": "off",
-     "cat": "公休",
-     "code": "未定",
-     "time": ""
+     "state": "work",
+     "cat": "中番",
+     "code": "A",
+     "time": "9:00-16:00"
     },
     {
      "iso": "2026-10-01",
-     "state": "off",
-     "cat": "公休",
-     "code": "未定",
-     "time": ""
+     "state": "work",
+     "cat": "中番",
+     "code": "A",
+     "time": "9:00-16:00"
     },
     {
      "iso": "2026-10-02",
-     "state": "off",
-     "cat": "公休",
-     "code": "未定",
-     "time": ""
+     "state": "work",
+     "cat": "中番",
+     "code": "A",
+     "time": "9:00-16:00"
     },
     {
      "iso": "2026-10-03",
-     "state": "off",
-     "cat": "公休",
-     "code": "未定",
-     "time": ""
+     "state": "work",
+     "cat": "早番",
+     "code": "勤務",
+     "time": "7:00-13:00"
     },
     {
      "iso": "2026-10-04",
@@ -1932,35 +1932,35 @@ window.SHIFT_OVERRIDE = {
      "iso": "2026-10-05",
      "state": "off",
      "cat": "公休",
-     "code": "未定",
+     "code": "休み",
      "time": ""
     },
     {
      "iso": "2026-10-06",
-     "state": "off",
-     "cat": "公休",
-     "code": "未定",
-     "time": ""
+     "state": "work",
+     "cat": "中番",
+     "code": "A",
+     "time": "9:00-16:00"
     },
     {
      "iso": "2026-10-07",
-     "state": "off",
-     "cat": "公休",
-     "code": "未定",
-     "time": ""
+     "state": "work",
+     "cat": "中番",
+     "code": "A",
+     "time": "9:00-16:00"
     },
     {
      "iso": "2026-10-08",
-     "state": "off",
-     "cat": "公休",
-     "code": "未定",
-     "time": ""
+     "state": "work",
+     "cat": "中番",
+     "code": "A",
+     "time": "9:00-16:00"
     },
     {
      "iso": "2026-10-09",
      "state": "off",
      "cat": "公休",
-     "code": "未定",
+     "code": "休み",
      "time": ""
     },
     {
@@ -1986,24 +1986,24 @@ window.SHIFT_OVERRIDE = {
     },
     {
      "iso": "2026-10-13",
-     "state": "off",
-     "cat": "公休",
-     "code": "未定",
-     "time": ""
+     "state": "work",
+     "cat": "中番",
+     "code": "A",
+     "time": "9:00-16:00"
     },
     {
      "iso": "2026-10-14",
-     "state": "off",
-     "cat": "公休",
-     "code": "未定",
-     "time": ""
+     "state": "work",
+     "cat": "中番",
+     "code": "A",
+     "time": "9:00-16:00"
     },
     {
      "iso": "2026-10-15",
-     "state": "off",
-     "cat": "公休",
-     "code": "未定",
-     "time": ""
+     "state": "work",
+     "cat": "中番",
+     "code": "A",
+     "time": "9:00-16:00"
     }
    ]
   },
@@ -2012,24 +2012,24 @@ window.SHIFT_OVERRIDE = {
    "shifts": [
     {
      "iso": "2026-09-16",
-     "state": "off",
-     "cat": "公休",
-     "code": "未定",
-     "time": ""
+     "state": "work",
+     "cat": "中番",
+     "code": "中遅",
+     "time": "9:00-18:00"
     },
     {
      "iso": "2026-09-17",
-     "state": "off",
-     "cat": "公休",
-     "code": "未定",
-     "time": ""
+     "state": "work",
+     "cat": "中番",
+     "code": "中遅",
+     "time": "9:00-18:00"
     },
     {
      "iso": "2026-09-18",
-     "state": "off",
-     "cat": "公休",
-     "code": "未定",
-     "time": ""
+     "state": "work",
+     "cat": "早番",
+     "code": "早1",
+     "time": "6:45-15:45"
     },
     {
      "iso": "2026-09-19",
@@ -2068,17 +2068,17 @@ window.SHIFT_OVERRIDE = {
     },
     {
      "iso": "2026-09-24",
-     "state": "off",
-     "cat": "公休",
-     "code": "未定",
-     "time": ""
+     "state": "work",
+     "cat": "早番",
+     "code": "早2",
+     "time": "6:45-15:45"
     },
     {
      "iso": "2026-09-25",
-     "state": "off",
-     "cat": "公休",
-     "code": "未定",
-     "time": ""
+     "state": "work",
+     "cat": "早番",
+     "code": "早2",
+     "time": "6:45-15:45"
     },
     {
      "iso": "2026-09-26",
@@ -2096,38 +2096,38 @@ window.SHIFT_OVERRIDE = {
     },
     {
      "iso": "2026-09-28",
-     "state": "off",
-     "cat": "公休",
-     "code": "未定",
-     "time": ""
+     "state": "work",
+     "cat": "遅番",
+     "code": "遅1",
+     "time": "10:00-19:00"
     },
     {
      "iso": "2026-09-29",
-     "state": "off",
-     "cat": "公休",
-     "code": "未定",
-     "time": ""
+     "state": "work",
+     "cat": "遅番",
+     "code": "遅１D",
+     "time": "9:00-19:00"
     },
     {
      "iso": "2026-09-30",
-     "state": "off",
-     "cat": "公休",
-     "code": "未定",
-     "time": ""
+     "state": "work",
+     "cat": "遅番",
+     "code": "遅1",
+     "time": "10:00-19:00"
     },
     {
      "iso": "2026-10-01",
-     "state": "off",
-     "cat": "公休",
-     "code": "未定",
-     "time": ""
+     "state": "work",
+     "cat": "遅番",
+     "code": "遅１D",
+     "time": "9:00-19:00"
     },
     {
      "iso": "2026-10-02",
-     "state": "off",
-     "cat": "公休",
-     "code": "未定",
-     "time": ""
+     "state": "work",
+     "cat": "遅番",
+     "code": "遅1",
+     "time": "10:00-19:00"
     },
     {
      "iso": "2026-10-03",
@@ -2145,38 +2145,38 @@ window.SHIFT_OVERRIDE = {
     },
     {
      "iso": "2026-10-05",
-     "state": "off",
-     "cat": "公休",
-     "code": "未定",
-     "time": ""
+     "state": "work",
+     "cat": "遅番",
+     "code": "遅２",
+     "time": "10:00-19:00"
     },
     {
      "iso": "2026-10-06",
-     "state": "off",
-     "cat": "公休",
-     "code": "未定",
-     "time": ""
+     "state": "work",
+     "cat": "遅番",
+     "code": "遅２",
+     "time": "10:00-19:00"
     },
     {
      "iso": "2026-10-07",
-     "state": "off",
-     "cat": "公休",
-     "code": "未定",
-     "time": ""
+     "state": "work",
+     "cat": "遅番",
+     "code": "遅２",
+     "time": "10:00-19:00"
     },
     {
      "iso": "2026-10-08",
-     "state": "off",
-     "cat": "公休",
-     "code": "未定",
-     "time": ""
+     "state": "work",
+     "cat": "遅番",
+     "code": "遅２D",
+     "time": "9:00-19:00"
     },
     {
      "iso": "2026-10-09",
-     "state": "off",
-     "cat": "公休",
-     "code": "未定",
-     "time": ""
+     "state": "work",
+     "cat": "遅番",
+     "code": "遅２",
+     "time": "10:00-19:00"
     },
     {
      "iso": "2026-10-10",
@@ -2201,24 +2201,24 @@ window.SHIFT_OVERRIDE = {
     },
     {
      "iso": "2026-10-13",
-     "state": "off",
-     "cat": "公休",
-     "code": "未定",
+     "state": "leave",
+     "cat": "有給",
+     "code": "有休",
      "time": ""
     },
     {
      "iso": "2026-10-14",
-     "state": "off",
-     "cat": "公休",
-     "code": "未定",
-     "time": ""
+     "state": "work",
+     "cat": "遅番",
+     "code": "遅２",
+     "time": "10:00-19:00"
     },
     {
      "iso": "2026-10-15",
-     "state": "off",
-     "cat": "公休",
-     "code": "未定",
-     "time": ""
+     "state": "work",
+     "cat": "遅番",
+     "code": "遅２",
+     "time": "10:00-19:00"
     }
    ]
   },
@@ -2227,24 +2227,24 @@ window.SHIFT_OVERRIDE = {
    "shifts": [
     {
      "iso": "2026-09-16",
-     "state": "off",
-     "cat": "公休",
-     "code": "未定",
-     "time": ""
+     "state": "work",
+     "cat": "早番",
+     "code": "早2",
+     "time": "6:45-15:45"
     },
     {
      "iso": "2026-09-17",
      "state": "off",
      "cat": "公休",
-     "code": "未定",
+     "code": "",
      "time": ""
     },
     {
      "iso": "2026-09-18",
-     "state": "off",
-     "cat": "公休",
-     "code": "未定",
-     "time": ""
+     "state": "work",
+     "cat": "早番",
+     "code": "早2",
+     "time": "6:45-15:45"
     },
     {
      "iso": "2026-09-19",
@@ -2283,17 +2283,17 @@ window.SHIFT_OVERRIDE = {
     },
     {
      "iso": "2026-09-24",
-     "state": "off",
-     "cat": "公休",
-     "code": "未定",
-     "time": ""
+     "state": "work",
+     "cat": "遅番",
+     "code": "遅1",
+     "time": "10:00-19:00"
     },
     {
      "iso": "2026-09-25",
-     "state": "off",
-     "cat": "公休",
-     "code": "未定",
-     "time": ""
+     "state": "work",
+     "cat": "遅番",
+     "code": "遅1",
+     "time": "10:00-19:00"
     },
     {
      "iso": "2026-09-26",
@@ -2311,38 +2311,38 @@ window.SHIFT_OVERRIDE = {
     },
     {
      "iso": "2026-09-28",
-     "state": "off",
-     "cat": "公休",
-     "code": "未定",
-     "time": ""
+     "state": "work",
+     "cat": "早番",
+     "code": "早２D",
+     "time": "6:45-16:45"
     },
     {
      "iso": "2026-09-29",
-     "state": "off",
-     "cat": "公休",
-     "code": "未定",
-     "time": ""
+     "state": "work",
+     "cat": "中番",
+     "code": "中遅２",
+     "time": "9:00-18:00"
     },
     {
      "iso": "2026-09-30",
-     "state": "off",
-     "cat": "公休",
-     "code": "未定",
-     "time": ""
+     "state": "work",
+     "cat": "中番",
+     "code": "中遅２",
+     "time": "9:00-18:00"
     },
     {
      "iso": "2026-10-01",
-     "state": "off",
-     "cat": "公休",
-     "code": "未定",
-     "time": ""
+     "state": "work",
+     "cat": "中番",
+     "code": "中遅２",
+     "time": "9:00-18:00"
     },
     {
      "iso": "2026-10-02",
-     "state": "off",
-     "cat": "公休",
-     "code": "未定",
-     "time": ""
+     "state": "work",
+     "cat": "遅番",
+     "code": "遅１D",
+     "time": "9:00-19:00"
     },
     {
      "iso": "2026-10-03",
@@ -2360,37 +2360,37 @@ window.SHIFT_OVERRIDE = {
     },
     {
      "iso": "2026-10-05",
-     "state": "off",
-     "cat": "公休",
-     "code": "未定",
+     "state": "leave",
+     "cat": "有給",
+     "code": "夏休",
      "time": ""
     },
     {
      "iso": "2026-10-06",
-     "state": "off",
-     "cat": "公休",
-     "code": "未定",
+     "state": "leave",
+     "cat": "有給",
+     "code": "夏休",
      "time": ""
     },
     {
      "iso": "2026-10-07",
-     "state": "off",
-     "cat": "公休",
-     "code": "未定",
+     "state": "leave",
+     "cat": "有給",
+     "code": "夏休",
      "time": ""
     },
     {
      "iso": "2026-10-08",
-     "state": "off",
-     "cat": "公休",
-     "code": "未定",
+     "state": "leave",
+     "cat": "有給",
+     "code": "夏休",
      "time": ""
     },
     {
      "iso": "2026-10-09",
-     "state": "off",
-     "cat": "公休",
-     "code": "未定",
+     "state": "leave",
+     "cat": "有給",
+     "code": "夏休",
      "time": ""
     },
     {
@@ -2416,24 +2416,24 @@ window.SHIFT_OVERRIDE = {
     },
     {
      "iso": "2026-10-13",
-     "state": "off",
-     "cat": "公休",
-     "code": "未定",
-     "time": ""
+     "state": "work",
+     "cat": "早番",
+     "code": "早１D",
+     "time": "6:45-16:45"
     },
     {
      "iso": "2026-10-14",
-     "state": "off",
-     "cat": "公休",
-     "code": "未定",
-     "time": ""
+     "state": "work",
+     "cat": "早番",
+     "code": "早1",
+     "time": "6:45-15:45"
     },
     {
      "iso": "2026-10-15",
-     "state": "off",
-     "cat": "公休",
-     "code": "未定",
-     "time": ""
+     "state": "work",
+     "cat": "早番",
+     "code": "早1",
+     "time": "6:45-15:45"
     }
    ]
   },
@@ -2442,23 +2442,23 @@ window.SHIFT_OVERRIDE = {
    "shifts": [
     {
      "iso": "2026-09-16",
-     "state": "off",
-     "cat": "公休",
-     "code": "未定",
-     "time": ""
+     "state": "work",
+     "cat": "中番",
+     "code": "A",
+     "time": "9:00-16:00"
     },
     {
      "iso": "2026-09-17",
-     "state": "off",
-     "cat": "公休",
-     "code": "未定",
-     "time": ""
+     "state": "work",
+     "cat": "中番",
+     "code": "A",
+     "time": "9:00-16:00"
     },
     {
      "iso": "2026-09-18",
      "state": "off",
      "cat": "公休",
-     "code": "未定",
+     "code": "",
      "time": ""
     },
     {
@@ -2498,17 +2498,17 @@ window.SHIFT_OVERRIDE = {
     },
     {
      "iso": "2026-09-24",
-     "state": "off",
-     "cat": "公休",
-     "code": "未定",
-     "time": ""
+     "state": "work",
+     "cat": "中番",
+     "code": "A",
+     "time": "9:00-16:00"
     },
     {
      "iso": "2026-09-25",
-     "state": "off",
-     "cat": "公休",
-     "code": "未定",
-     "time": ""
+     "state": "work",
+     "cat": "中番",
+     "code": "A",
+     "time": "9:00-16:00"
     },
     {
      "iso": "2026-09-26",
@@ -2526,45 +2526,45 @@ window.SHIFT_OVERRIDE = {
     },
     {
      "iso": "2026-09-28",
-     "state": "off",
-     "cat": "公休",
-     "code": "未定",
-     "time": ""
+     "state": "work",
+     "cat": "中番",
+     "code": "A",
+     "time": "9:00-16:00"
     },
     {
      "iso": "2026-09-29",
      "state": "off",
      "cat": "公休",
-     "code": "未定",
+     "code": "",
      "time": ""
     },
     {
      "iso": "2026-09-30",
-     "state": "off",
-     "cat": "公休",
-     "code": "未定",
-     "time": ""
+     "state": "work",
+     "cat": "中番",
+     "code": "A",
+     "time": "9:00-16:00"
     },
     {
      "iso": "2026-10-01",
-     "state": "off",
-     "cat": "公休",
-     "code": "未定",
-     "time": ""
+     "state": "work",
+     "cat": "中番",
+     "code": "A",
+     "time": "9:00-16:00"
     },
     {
      "iso": "2026-10-02",
-     "state": "off",
-     "cat": "公休",
-     "code": "未定",
-     "time": ""
+     "state": "work",
+     "cat": "中番",
+     "code": "A",
+     "time": "9:00-16:00"
     },
     {
      "iso": "2026-10-03",
-     "state": "off",
-     "cat": "公休",
-     "code": "未定",
-     "time": ""
+     "state": "work",
+     "cat": "早番",
+     "code": "勤務",
+     "time": "7:00-13:00"
     },
     {
      "iso": "2026-10-04",
@@ -2575,38 +2575,38 @@ window.SHIFT_OVERRIDE = {
     },
     {
      "iso": "2026-10-05",
-     "state": "off",
-     "cat": "公休",
-     "code": "未定",
-     "time": ""
+     "state": "work",
+     "cat": "中番",
+     "code": "A",
+     "time": "9:00-16:00"
     },
     {
      "iso": "2026-10-06",
-     "state": "off",
-     "cat": "公休",
-     "code": "未定",
-     "time": ""
+     "state": "work",
+     "cat": "中番",
+     "code": "A",
+     "time": "9:00-16:00"
     },
     {
      "iso": "2026-10-07",
-     "state": "off",
-     "cat": "公休",
-     "code": "未定",
-     "time": ""
+     "state": "work",
+     "cat": "中番",
+     "code": "A",
+     "time": "9:00-16:00"
     },
     {
      "iso": "2026-10-08",
-     "state": "off",
-     "cat": "公休",
-     "code": "未定",
-     "time": ""
+     "state": "work",
+     "cat": "中番",
+     "code": "A",
+     "time": "9:00-16:00"
     },
     {
      "iso": "2026-10-09",
-     "state": "off",
-     "cat": "公休",
-     "code": "未定",
-     "time": ""
+     "state": "work",
+     "cat": "中番",
+     "code": "A",
+     "time": "9:00-16:00"
     },
     {
      "iso": "2026-10-10",
@@ -2631,23 +2631,23 @@ window.SHIFT_OVERRIDE = {
     },
     {
      "iso": "2026-10-13",
-     "state": "off",
-     "cat": "公休",
-     "code": "未定",
-     "time": ""
+     "state": "work",
+     "cat": "中番",
+     "code": "A",
+     "time": "9:00-16:00"
     },
     {
      "iso": "2026-10-14",
-     "state": "off",
-     "cat": "公休",
-     "code": "未定",
+     "state": "leave",
+     "cat": "有給",
+     "code": "A夏休",
      "time": ""
     },
     {
      "iso": "2026-10-15",
-     "state": "off",
-     "cat": "公休",
-     "code": "未定",
+     "state": "leave",
+     "cat": "有給",
+     "code": "A夏休",
      "time": ""
     }
    ]
@@ -2715,7 +2715,7 @@ window.SHIFT_OVERRIDE = {
      "iso": "2026-09-24",
      "state": "off",
      "cat": "公休",
-     "code": "未定",
+     "code": "",
      "time": ""
     },
     {
@@ -2874,120 +2874,120 @@ window.SHIFT_OVERRIDE = {
      "iso": "2026-09-16",
      "state": "off",
      "cat": "公休",
-     "code": "未定",
+     "code": "",
      "time": ""
     },
     {
      "iso": "2026-09-17",
      "state": "off",
      "cat": "公休",
-     "code": "未定",
+     "code": "",
      "time": ""
     },
     {
      "iso": "2026-09-18",
      "state": "off",
      "cat": "公休",
-     "code": "未定",
+     "code": "",
      "time": ""
     },
     {
      "iso": "2026-09-19",
      "state": "off",
      "cat": "公休",
-     "code": "未定",
+     "code": "",
      "time": ""
     },
     {
      "iso": "2026-09-20",
      "state": "off",
      "cat": "公休",
-     "code": "未定",
+     "code": "",
      "time": ""
     },
     {
      "iso": "2026-09-21",
      "state": "off",
      "cat": "公休",
-     "code": "未定",
+     "code": "",
      "time": ""
     },
     {
      "iso": "2026-09-22",
      "state": "off",
      "cat": "公休",
-     "code": "未定",
+     "code": "",
      "time": ""
     },
     {
      "iso": "2026-09-23",
      "state": "off",
      "cat": "公休",
-     "code": "未定",
+     "code": "",
      "time": ""
     },
     {
      "iso": "2026-09-24",
      "state": "off",
      "cat": "公休",
-     "code": "未定",
+     "code": "",
      "time": ""
     },
     {
      "iso": "2026-09-25",
      "state": "off",
      "cat": "公休",
-     "code": "未定",
+     "code": "",
      "time": ""
     },
     {
      "iso": "2026-09-26",
      "state": "off",
      "cat": "公休",
-     "code": "未定",
+     "code": "",
      "time": ""
     },
     {
      "iso": "2026-09-27",
      "state": "off",
      "cat": "公休",
-     "code": "未定",
+     "code": "",
      "time": ""
     },
     {
      "iso": "2026-09-28",
      "state": "off",
      "cat": "公休",
-     "code": "未定",
+     "code": "",
      "time": ""
     },
     {
      "iso": "2026-09-29",
      "state": "off",
      "cat": "公休",
-     "code": "未定",
+     "code": "",
      "time": ""
     },
     {
      "iso": "2026-09-30",
      "state": "off",
      "cat": "公休",
-     "code": "未定",
+     "code": "",
      "time": ""
     },
     {
      "iso": "2026-10-01",
-     "state": "off",
-     "cat": "公休",
-     "code": "未定",
-     "time": ""
+     "state": "work",
+     "cat": "中番",
+     "code": "日",
+     "time": "8:30-17:30"
     },
     {
      "iso": "2026-10-02",
-     "state": "off",
-     "cat": "公休",
-     "code": "未定",
-     "time": ""
+     "state": "work",
+     "cat": "中番",
+     "code": "日",
+     "time": "8:30-17:30"
     },
     {
      "iso": "2026-10-03",
@@ -3005,38 +3005,38 @@ window.SHIFT_OVERRIDE = {
     },
     {
      "iso": "2026-10-05",
-     "state": "off",
-     "cat": "公休",
-     "code": "未定",
-     "time": ""
+     "state": "work",
+     "cat": "中番",
+     "code": "日",
+     "time": "8:30-17:30"
     },
     {
      "iso": "2026-10-06",
-     "state": "off",
-     "cat": "公休",
-     "code": "未定",
-     "time": ""
+     "state": "work",
+     "cat": "中番",
+     "code": "日",
+     "time": "8:30-17:30"
     },
     {
      "iso": "2026-10-07",
-     "state": "off",
-     "cat": "公休",
-     "code": "未定",
-     "time": ""
+     "state": "work",
+     "cat": "遅番",
+     "code": "遅1",
+     "time": "10:00-19:00"
     },
     {
      "iso": "2026-10-08",
-     "state": "off",
-     "cat": "公休",
-     "code": "未定",
-     "time": ""
+     "state": "work",
+     "cat": "遅番",
+     "code": "遅２",
+     "time": "10:00-19:00"
     },
     {
      "iso": "2026-10-09",
-     "state": "off",
-     "cat": "公休",
-     "code": "未定",
-     "time": ""
+     "state": "work",
+     "cat": "中番",
+     "code": "中遅",
+     "time": "9:00-18:00"
     },
     {
      "iso": "2026-10-10",
@@ -3061,24 +3061,24 @@ window.SHIFT_OVERRIDE = {
     },
     {
      "iso": "2026-10-13",
-     "state": "off",
-     "cat": "公休",
-     "code": "未定",
-     "time": ""
+     "state": "work",
+     "cat": "中番",
+     "code": "中遅２",
+     "time": "9:00-18:00"
     },
     {
      "iso": "2026-10-14",
-     "state": "off",
-     "cat": "公休",
-     "code": "未定",
-     "time": ""
+     "state": "work",
+     "cat": "早番",
+     "code": "早1",
+     "time": "6:45-15:45"
     },
     {
      "iso": "2026-10-15",
-     "state": "off",
-     "cat": "公休",
-     "code": "未定",
-     "time": ""
+     "state": "work",
+     "cat": "早番",
+     "code": "早2",
+     "time": "6:45-15:45"
     }
    ]
   },
@@ -3089,7 +3089,7 @@ window.SHIFT_OVERRIDE = {
      "iso": "2026-09-16",
      "state": "off",
      "cat": "公休",
-     "code": "未定",
+     "code": "",
      "time": ""
     },
     {
@@ -3187,7 +3187,7 @@ window.SHIFT_OVERRIDE = {
      "iso": "2026-09-30",
      "state": "off",
      "cat": "公休",
-     "code": "未定",
+     "code": "",
      "time": ""
     },
     {
@@ -3302,23 +3302,23 @@ window.SHIFT_OVERRIDE = {
    "shifts": [
     {
      "iso": "2026-09-16",
-     "state": "off",
-     "cat": "公休",
-     "code": "未定",
-     "time": ""
+     "state": "work",
+     "cat": "中番",
+     "code": "E",
+     "time": "9:00-14:30"
     },
     {
      "iso": "2026-09-17",
-     "state": "off",
-     "cat": "公休",
-     "code": "未定",
-     "time": ""
+     "state": "work",
+     "cat": "中番",
+     "code": "E",
+     "time": "9:00-14:30"
     },
     {
      "iso": "2026-09-18",
      "state": "off",
      "cat": "公休",
-     "code": "未定",
+     "code": "休み",
      "time": ""
     },
     {
@@ -3358,16 +3358,16 @@ window.SHIFT_OVERRIDE = {
     },
     {
      "iso": "2026-09-24",
-     "state": "off",
-     "cat": "公休",
-     "code": "未定",
-     "time": ""
+     "state": "work",
+     "cat": "中番",
+     "code": "E",
+     "time": "9:00-14:30"
     },
     {
      "iso": "2026-09-25",
      "state": "off",
      "cat": "公休",
-     "code": "未定",
+     "code": "休み",
      "time": ""
     },
     {
@@ -3386,44 +3386,44 @@ window.SHIFT_OVERRIDE = {
     },
     {
      "iso": "2026-09-28",
-     "state": "off",
-     "cat": "公休",
-     "code": "未定",
-     "time": ""
+     "state": "work",
+     "cat": "中番",
+     "code": "E",
+     "time": "9:00-14:30"
     },
     {
      "iso": "2026-09-29",
      "state": "off",
      "cat": "公休",
-     "code": "未定",
+     "code": "休み",
      "time": ""
     },
     {
      "iso": "2026-09-30",
-     "state": "off",
-     "cat": "公休",
-     "code": "未定",
-     "time": ""
+     "state": "work",
+     "cat": "中番",
+     "code": "E",
+     "time": "9:00-14:30"
     },
     {
      "iso": "2026-10-01",
-     "state": "off",
-     "cat": "公休",
-     "code": "未定",
-     "time": ""
+     "state": "work",
+     "cat": "中番",
+     "code": "E",
+     "time": "9:00-14:30"
     },
     {
      "iso": "2026-10-02",
      "state": "off",
      "cat": "公休",
-     "code": "未定",
+     "code": "休み",
      "time": ""
     },
     {
      "iso": "2026-10-03",
      "state": "off",
      "cat": "公休",
-     "code": "未定",
+     "code": "休み",
      "time": ""
     },
     {
@@ -3435,37 +3435,37 @@ window.SHIFT_OVERRIDE = {
     },
     {
      "iso": "2026-10-05",
-     "state": "off",
-     "cat": "公休",
-     "code": "未定",
-     "time": ""
+     "state": "work",
+     "cat": "中番",
+     "code": "E",
+     "time": "9:00-14:30"
     },
     {
      "iso": "2026-10-06",
      "state": "off",
      "cat": "公休",
-     "code": "未定",
+     "code": "休み",
      "time": ""
     },
     {
      "iso": "2026-10-07",
-     "state": "off",
-     "cat": "公休",
-     "code": "未定",
-     "time": ""
+     "state": "work",
+     "cat": "中番",
+     "code": "E",
+     "time": "9:00-14:30"
     },
     {
      "iso": "2026-10-08",
      "state": "off",
      "cat": "公休",
-     "code": "未定",
+     "code": "休み",
      "time": ""
     },
     {
      "iso": "2026-10-09",
      "state": "off",
      "cat": "公休",
-     "code": "未定",
+     "code": "休み",
      "time": ""
     },
     {
@@ -3493,22 +3493,22 @@ window.SHIFT_OVERRIDE = {
      "iso": "2026-10-13",
      "state": "off",
      "cat": "公休",
-     "code": "未定",
+     "code": "休み",
      "time": ""
     },
     {
      "iso": "2026-10-14",
-     "state": "off",
-     "cat": "公休",
-     "code": "未定",
-     "time": ""
+     "state": "work",
+     "cat": "中番",
+     "code": "E",
+     "time": "9:00-14:30"
     },
     {
      "iso": "2026-10-15",
-     "state": "off",
-     "cat": "公休",
-     "code": "未定",
-     "time": ""
+     "state": "work",
+     "cat": "中番",
+     "code": "E",
+     "time": "9:00-14:30"
     }
    ]
   },
@@ -3517,24 +3517,24 @@ window.SHIFT_OVERRIDE = {
    "shifts": [
     {
      "iso": "2026-09-16",
-     "state": "off",
-     "cat": "公休",
-     "code": "未定",
-     "time": ""
+     "state": "work",
+     "cat": "中番",
+     "code": "C",
+     "time": "8:00-16:00"
     },
     {
      "iso": "2026-09-17",
-     "state": "off",
-     "cat": "公休",
-     "code": "未定",
-     "time": ""
+     "state": "work",
+     "cat": "中番",
+     "code": "C",
+     "time": "8:00-16:00"
     },
     {
      "iso": "2026-09-18",
-     "state": "off",
-     "cat": "公休",
-     "code": "未定",
-     "time": ""
+     "state": "work",
+     "cat": "中番",
+     "code": "C",
+     "time": "8:00-16:00"
     },
     {
      "iso": "2026-09-19",
@@ -3573,17 +3573,17 @@ window.SHIFT_OVERRIDE = {
     },
     {
      "iso": "2026-09-24",
-     "state": "off",
-     "cat": "公休",
-     "code": "未定",
-     "time": ""
+     "state": "work",
+     "cat": "中番",
+     "code": "C",
+     "time": "8:00-16:00"
     },
     {
      "iso": "2026-09-25",
-     "state": "off",
-     "cat": "公休",
-     "code": "未定",
-     "time": ""
+     "state": "work",
+     "cat": "中番",
+     "code": "勤務",
+     "time": "8:00-12:00"
     },
     {
      "iso": "2026-09-26",
@@ -3601,44 +3601,44 @@ window.SHIFT_OVERRIDE = {
     },
     {
      "iso": "2026-09-28",
-     "state": "off",
-     "cat": "公休",
-     "code": "未定",
-     "time": ""
+     "state": "work",
+     "cat": "中番",
+     "code": "C",
+     "time": "8:00-16:00"
     },
     {
      "iso": "2026-09-29",
-     "state": "off",
-     "cat": "公休",
-     "code": "未定",
-     "time": ""
+     "state": "work",
+     "cat": "中番",
+     "code": "C",
+     "time": "8:00-16:00"
     },
     {
      "iso": "2026-09-30",
-     "state": "off",
-     "cat": "公休",
-     "code": "未定",
-     "time": ""
+     "state": "work",
+     "cat": "中番",
+     "code": "C",
+     "time": "8:00-16:00"
     },
     {
      "iso": "2026-10-01",
-     "state": "off",
-     "cat": "公休",
-     "code": "未定",
-     "time": ""
+     "state": "work",
+     "cat": "中番",
+     "code": "C",
+     "time": "8:00-16:00"
     },
     {
      "iso": "2026-10-02",
-     "state": "off",
-     "cat": "公休",
-     "code": "未定",
-     "time": ""
+     "state": "work",
+     "cat": "中番",
+     "code": "C",
+     "time": "8:00-16:00"
     },
     {
      "iso": "2026-10-03",
      "state": "off",
      "cat": "公休",
-     "code": "未定",
+     "code": "休み",
      "time": ""
     },
     {
@@ -3650,38 +3650,38 @@ window.SHIFT_OVERRIDE = {
     },
     {
      "iso": "2026-10-05",
-     "state": "off",
-     "cat": "公休",
-     "code": "未定",
-     "time": ""
+     "state": "work",
+     "cat": "中番",
+     "code": "C",
+     "time": "8:00-16:00"
     },
     {
      "iso": "2026-10-06",
-     "state": "off",
-     "cat": "公休",
-     "code": "未定",
-     "time": ""
+     "state": "work",
+     "cat": "中番",
+     "code": "C",
+     "time": "8:00-16:00"
     },
     {
      "iso": "2026-10-07",
-     "state": "off",
-     "cat": "公休",
-     "code": "未定",
-     "time": ""
+     "state": "work",
+     "cat": "中番",
+     "code": "C",
+     "time": "8:00-16:00"
     },
     {
      "iso": "2026-10-08",
-     "state": "off",
-     "cat": "公休",
-     "code": "未定",
-     "time": ""
+     "state": "work",
+     "cat": "中番",
+     "code": "C",
+     "time": "8:00-16:00"
     },
     {
      "iso": "2026-10-09",
-     "state": "off",
-     "cat": "公休",
-     "code": "未定",
-     "time": ""
+     "state": "work",
+     "cat": "中番",
+     "code": "C",
+     "time": "8:00-16:00"
     },
     {
      "iso": "2026-10-10",
@@ -3706,24 +3706,24 @@ window.SHIFT_OVERRIDE = {
     },
     {
      "iso": "2026-10-13",
-     "state": "off",
-     "cat": "公休",
-     "code": "未定",
-     "time": ""
+     "state": "work",
+     "cat": "中番",
+     "code": "C",
+     "time": "8:00-16:00"
     },
     {
      "iso": "2026-10-14",
-     "state": "off",
-     "cat": "公休",
-     "code": "未定",
-     "time": ""
+     "state": "work",
+     "cat": "中番",
+     "code": "C",
+     "time": "8:00-16:00"
     },
     {
      "iso": "2026-10-15",
-     "state": "off",
-     "cat": "公休",
-     "code": "未定",
-     "time": ""
+     "state": "work",
+     "cat": "中番",
+     "code": "C",
+     "time": "8:00-16:00"
     }
    ]
   },
@@ -3734,22 +3734,22 @@ window.SHIFT_OVERRIDE = {
      "iso": "2026-09-16",
      "state": "off",
      "cat": "公休",
-     "code": "未定",
+     "code": "休み",
      "time": ""
     },
     {
      "iso": "2026-09-17",
      "state": "off",
      "cat": "公休",
-     "code": "未定",
+     "code": "休み",
      "time": ""
     },
     {
      "iso": "2026-09-18",
-     "state": "off",
-     "cat": "公休",
-     "code": "未定",
-     "time": ""
+     "state": "work",
+     "cat": "中番",
+     "code": "E",
+     "time": "9:00-14:30"
     },
     {
      "iso": "2026-09-19",
@@ -3790,14 +3790,14 @@ window.SHIFT_OVERRIDE = {
      "iso": "2026-09-24",
      "state": "off",
      "cat": "公休",
-     "code": "未定",
+     "code": "休み",
      "time": ""
     },
     {
      "iso": "2026-09-25",
      "state": "off",
      "cat": "公休",
-     "code": "未定",
+     "code": "休み",
      "time": ""
     },
     {
@@ -3816,44 +3816,44 @@ window.SHIFT_OVERRIDE = {
     },
     {
      "iso": "2026-09-28",
-     "state": "off",
-     "cat": "公休",
-     "code": "未定",
-     "time": ""
+     "state": "work",
+     "cat": "中番",
+     "code": "E",
+     "time": "9:00-14:30"
     },
     {
      "iso": "2026-09-29",
-     "state": "off",
-     "cat": "公休",
-     "code": "未定",
-     "time": ""
+     "state": "work",
+     "cat": "中番",
+     "code": "E",
+     "time": "9:00-14:30"
     },
     {
      "iso": "2026-09-30",
      "state": "off",
      "cat": "公休",
-     "code": "未定",
+     "code": "休み",
      "time": ""
     },
     {
      "iso": "2026-10-01",
      "state": "off",
      "cat": "公休",
-     "code": "未定",
+     "code": "休み",
      "time": ""
     },
     {
      "iso": "2026-10-02",
      "state": "off",
      "cat": "公休",
-     "code": "未定",
+     "code": "休み",
      "time": ""
     },
     {
      "iso": "2026-10-03",
      "state": "off",
      "cat": "公休",
-     "code": "未定",
+     "code": "休み",
      "time": ""
     },
     {
@@ -3865,38 +3865,38 @@ window.SHIFT_OVERRIDE = {
     },
     {
      "iso": "2026-10-05",
-     "state": "off",
-     "cat": "公休",
-     "code": "未定",
-     "time": ""
+     "state": "work",
+     "cat": "中番",
+     "code": "E",
+     "time": "9:00-14:30"
     },
     {
      "iso": "2026-10-06",
-     "state": "off",
-     "cat": "公休",
-     "code": "未定",
-     "time": ""
+     "state": "work",
+     "cat": "中番",
+     "code": "E",
+     "time": "9:00-14:30"
     },
     {
      "iso": "2026-10-07",
      "state": "off",
      "cat": "公休",
-     "code": "未定",
+     "code": "休み",
      "time": ""
     },
     {
      "iso": "2026-10-08",
      "state": "off",
      "cat": "公休",
-     "code": "未定",
+     "code": "休み",
      "time": ""
     },
     {
      "iso": "2026-10-09",
-     "state": "off",
-     "cat": "公休",
-     "code": "未定",
-     "time": ""
+     "state": "work",
+     "cat": "中番",
+     "code": "E",
+     "time": "9:00-14:30"
     },
     {
      "iso": "2026-10-10",
@@ -3921,23 +3921,23 @@ window.SHIFT_OVERRIDE = {
     },
     {
      "iso": "2026-10-13",
-     "state": "off",
-     "cat": "公休",
-     "code": "未定",
-     "time": ""
+     "state": "work",
+     "cat": "中番",
+     "code": "E",
+     "time": "9:00-14:30"
     },
     {
      "iso": "2026-10-14",
      "state": "off",
      "cat": "公休",
-     "code": "未定",
+     "code": "休み",
      "time": ""
     },
     {
      "iso": "2026-10-15",
      "state": "off",
      "cat": "公休",
-     "code": "未定",
+     "code": "休み",
      "time": ""
     }
    ]
@@ -3947,31 +3947,31 @@ window.SHIFT_OVERRIDE = {
    "shifts": [
     {
      "iso": "2026-09-16",
-     "state": "off",
-     "cat": "公休",
-     "code": "未定",
-     "time": ""
+     "state": "work",
+     "cat": "中番",
+     "code": "中",
+     "time": "8:00-17:00"
     },
     {
      "iso": "2026-09-17",
-     "state": "off",
-     "cat": "公休",
-     "code": "未定",
-     "time": ""
+     "state": "work",
+     "cat": "中番",
+     "code": "中",
+     "time": "8:00-17:00"
     },
     {
      "iso": "2026-09-18",
-     "state": "off",
-     "cat": "公休",
-     "code": "未定",
-     "time": ""
+     "state": "work",
+     "cat": "中番",
+     "code": "中",
+     "time": "8:00-17:00"
     },
     {
      "iso": "2026-09-19",
-     "state": "off",
-     "cat": "公休",
-     "code": "",
-     "time": ""
+     "state": "work",
+     "cat": "中番",
+     "code": "中",
+     "time": "8:00-17:00"
     },
     {
      "iso": "2026-09-20",
@@ -4005,15 +4005,15 @@ window.SHIFT_OVERRIDE = {
      "iso": "2026-09-24",
      "state": "off",
      "cat": "公休",
-     "code": "未定",
+     "code": "",
      "time": ""
     },
     {
      "iso": "2026-09-25",
-     "state": "off",
-     "cat": "公休",
-     "code": "未定",
-     "time": ""
+     "state": "work",
+     "cat": "中番",
+     "code": "中",
+     "time": "8:00-17:00"
     },
     {
      "iso": "2026-09-26",
@@ -4033,36 +4033,36 @@ window.SHIFT_OVERRIDE = {
      "iso": "2026-09-28",
      "state": "off",
      "cat": "公休",
-     "code": "未定",
+     "code": "",
      "time": ""
     },
     {
      "iso": "2026-09-29",
      "state": "off",
      "cat": "公休",
-     "code": "未定",
+     "code": "",
      "time": ""
     },
     {
      "iso": "2026-09-30",
-     "state": "off",
-     "cat": "公休",
-     "code": "未定",
-     "time": ""
+     "state": "work",
+     "cat": "中番",
+     "code": "中",
+     "time": "8:00-17:00"
     },
     {
      "iso": "2026-10-01",
-     "state": "off",
-     "cat": "公休",
-     "code": "未定",
-     "time": ""
+     "state": "work",
+     "cat": "中番",
+     "code": "中",
+     "time": "8:00-17:00"
     },
     {
      "iso": "2026-10-02",
-     "state": "off",
-     "cat": "公休",
-     "code": "未定",
-     "time": ""
+     "state": "work",
+     "cat": "中番",
+     "code": "中",
+     "time": "8:00-17:00"
     },
     {
      "iso": "2026-10-03",
@@ -4082,35 +4082,35 @@ window.SHIFT_OVERRIDE = {
      "iso": "2026-10-05",
      "state": "off",
      "cat": "公休",
-     "code": "未定",
+     "code": "",
      "time": ""
     },
     {
      "iso": "2026-10-06",
-     "state": "off",
-     "cat": "公休",
-     "code": "未定",
-     "time": ""
+     "state": "work",
+     "cat": "中番",
+     "code": "中",
+     "time": "8:00-17:00"
     },
     {
      "iso": "2026-10-07",
      "state": "off",
      "cat": "公休",
-     "code": "未定",
+     "code": "",
      "time": ""
     },
     {
      "iso": "2026-10-08",
-     "state": "off",
-     "cat": "公休",
-     "code": "未定",
-     "time": ""
+     "state": "work",
+     "cat": "中番",
+     "code": "中",
+     "time": "8:00-17:00"
     },
     {
      "iso": "2026-10-09",
      "state": "off",
      "cat": "公休",
-     "code": "未定",
+     "code": "",
      "time": ""
     },
     {
@@ -4138,21 +4138,21 @@ window.SHIFT_OVERRIDE = {
      "iso": "2026-10-13",
      "state": "off",
      "cat": "公休",
-     "code": "未定",
+     "code": "",
      "time": ""
     },
     {
      "iso": "2026-10-14",
      "state": "off",
      "cat": "公休",
-     "code": "未定",
+     "code": "",
      "time": ""
     },
     {
      "iso": "2026-10-15",
      "state": "off",
      "cat": "公休",
-     "code": "未定",
+     "code": "",
      "time": ""
     }
    ]
@@ -4162,23 +4162,23 @@ window.SHIFT_OVERRIDE = {
    "shifts": [
     {
      "iso": "2026-09-16",
-     "state": "off",
-     "cat": "公休",
-     "code": "未定",
-     "time": ""
+     "state": "work",
+     "cat": "中番",
+     "code": "中",
+     "time": "8:00-17:00"
     },
     {
      "iso": "2026-09-17",
      "state": "off",
      "cat": "公休",
-     "code": "未定",
+     "code": "",
      "time": ""
     },
     {
      "iso": "2026-09-18",
      "state": "off",
      "cat": "公休",
-     "code": "未定",
+     "code": "",
      "time": ""
     },
     {
@@ -4220,14 +4220,14 @@ window.SHIFT_OVERRIDE = {
      "iso": "2026-09-24",
      "state": "off",
      "cat": "公休",
-     "code": "未定",
+     "code": "",
      "time": ""
     },
     {
      "iso": "2026-09-25",
      "state": "off",
      "cat": "公休",
-     "code": "未定",
+     "code": "",
      "time": ""
     },
     {
@@ -4248,36 +4248,36 @@ window.SHIFT_OVERRIDE = {
      "iso": "2026-09-28",
      "state": "off",
      "cat": "公休",
-     "code": "未定",
+     "code": "",
      "time": ""
     },
     {
      "iso": "2026-09-29",
      "state": "off",
      "cat": "公休",
-     "code": "未定",
+     "code": "",
      "time": ""
     },
     {
      "iso": "2026-09-30",
-     "state": "off",
-     "cat": "公休",
-     "code": "未定",
-     "time": ""
+     "state": "work",
+     "cat": "中番",
+     "code": "中",
+     "time": "8:00-17:00"
     },
     {
      "iso": "2026-10-01",
-     "state": "off",
-     "cat": "公休",
-     "code": "未定",
-     "time": ""
+     "state": "work",
+     "cat": "中番",
+     "code": "中",
+     "time": "8:00-17:00"
     },
     {
      "iso": "2026-10-02",
-     "state": "off",
-     "cat": "公休",
-     "code": "未定",
-     "time": ""
+     "state": "work",
+     "cat": "中番",
+     "code": "中",
+     "time": "8:00-17:00"
     },
     {
      "iso": "2026-10-03",
@@ -4295,37 +4295,37 @@ window.SHIFT_OVERRIDE = {
     },
     {
      "iso": "2026-10-05",
-     "state": "off",
-     "cat": "公休",
-     "code": "未定",
-     "time": ""
+     "state": "work",
+     "cat": "中番",
+     "code": "中",
+     "time": "8:00-17:00"
     },
     {
      "iso": "2026-10-06",
-     "state": "off",
-     "cat": "公休",
-     "code": "未定",
-     "time": ""
+     "state": "work",
+     "cat": "中番",
+     "code": "中",
+     "time": "8:00-17:00"
     },
     {
      "iso": "2026-10-07",
-     "state": "off",
-     "cat": "公休",
-     "code": "未定",
-     "time": ""
+     "state": "work",
+     "cat": "中番",
+     "code": "中",
+     "time": "8:00-17:00"
     },
     {
      "iso": "2026-10-08",
-     "state": "off",
-     "cat": "公休",
-     "code": "未定",
-     "time": ""
+     "state": "work",
+     "cat": "中番",
+     "code": "中",
+     "time": "8:00-17:00"
     },
     {
      "iso": "2026-10-09",
      "state": "off",
      "cat": "公休",
-     "code": "未定",
+     "code": "",
      "time": ""
     },
     {
@@ -4353,22 +4353,22 @@ window.SHIFT_OVERRIDE = {
      "iso": "2026-10-13",
      "state": "off",
      "cat": "公休",
-     "code": "未定",
+     "code": "",
      "time": ""
     },
     {
      "iso": "2026-10-14",
-     "state": "off",
-     "cat": "公休",
-     "code": "未定",
-     "time": ""
+     "state": "work",
+     "cat": "中番",
+     "code": "中",
+     "time": "8:00-17:00"
     },
     {
      "iso": "2026-10-15",
-     "state": "off",
-     "cat": "公休",
-     "code": "未定",
-     "time": ""
+     "state": "work",
+     "cat": "中番",
+     "code": "中",
+     "time": "8:00-17:00"
     }
    ]
   },
@@ -4379,22 +4379,22 @@ window.SHIFT_OVERRIDE = {
      "iso": "2026-09-16",
      "state": "off",
      "cat": "公休",
-     "code": "未定",
+     "code": "",
      "time": ""
     },
     {
      "iso": "2026-09-17",
-     "state": "off",
-     "cat": "公休",
-     "code": "未定",
-     "time": ""
+     "state": "work",
+     "cat": "中番",
+     "code": "中",
+     "time": "8:00-17:00"
     },
     {
      "iso": "2026-09-18",
-     "state": "off",
-     "cat": "公休",
-     "code": "未定",
-     "time": ""
+     "state": "work",
+     "cat": "中番",
+     "code": "中",
+     "time": "8:00-17:00"
     },
     {
      "iso": "2026-09-19",
@@ -4435,15 +4435,15 @@ window.SHIFT_OVERRIDE = {
      "iso": "2026-09-24",
      "state": "off",
      "cat": "公休",
-     "code": "未定",
+     "code": "",
      "time": ""
     },
     {
      "iso": "2026-09-25",
-     "state": "off",
-     "cat": "公休",
-     "code": "未定",
-     "time": ""
+     "state": "work",
+     "cat": "中番",
+     "code": "中",
+     "time": "8:00-17:00"
     },
     {
      "iso": "2026-09-26",
@@ -4463,35 +4463,35 @@ window.SHIFT_OVERRIDE = {
      "iso": "2026-09-28",
      "state": "off",
      "cat": "公休",
-     "code": "未定",
+     "code": "",
      "time": ""
     },
     {
      "iso": "2026-09-29",
      "state": "off",
      "cat": "公休",
-     "code": "未定",
+     "code": "",
      "time": ""
     },
     {
      "iso": "2026-09-30",
      "state": "off",
      "cat": "公休",
-     "code": "未定",
+     "code": "",
      "time": ""
     },
     {
      "iso": "2026-10-01",
      "state": "off",
      "cat": "公休",
-     "code": "未定",
+     "code": "",
      "time": ""
     },
     {
      "iso": "2026-10-02",
      "state": "off",
      "cat": "公休",
-     "code": "未定",
+     "code": "",
      "time": ""
     },
     {
@@ -4512,35 +4512,35 @@ window.SHIFT_OVERRIDE = {
      "iso": "2026-10-05",
      "state": "off",
      "cat": "公休",
-     "code": "未定",
+     "code": "",
      "time": ""
     },
     {
      "iso": "2026-10-06",
      "state": "off",
      "cat": "公休",
-     "code": "未定",
+     "code": "",
      "time": ""
     },
     {
      "iso": "2026-10-07",
-     "state": "off",
-     "cat": "公休",
-     "code": "未定",
-     "time": ""
+     "state": "work",
+     "cat": "中番",
+     "code": "中",
+     "time": "8:00-17:00"
     },
     {
      "iso": "2026-10-08",
      "state": "off",
      "cat": "公休",
-     "code": "未定",
+     "code": "",
      "time": ""
     },
     {
      "iso": "2026-10-09",
      "state": "off",
      "cat": "公休",
-     "code": "未定",
+     "code": "",
      "time": ""
     },
     {
@@ -4568,22 +4568,22 @@ window.SHIFT_OVERRIDE = {
      "iso": "2026-10-13",
      "state": "off",
      "cat": "公休",
-     "code": "未定",
+     "code": "",
      "time": ""
     },
     {
      "iso": "2026-10-14",
-     "state": "off",
-     "cat": "公休",
-     "code": "未定",
-     "time": ""
+     "state": "work",
+     "cat": "中番",
+     "code": "中",
+     "time": "8:00-17:00"
     },
     {
      "iso": "2026-10-15",
-     "state": "off",
-     "cat": "公休",
-     "code": "未定",
-     "time": ""
+     "state": "work",
+     "cat": "中番",
+     "code": "中",
+     "time": "8:00-17:00"
     }
    ]
   }
