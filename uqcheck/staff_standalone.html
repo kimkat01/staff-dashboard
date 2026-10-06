@@ -329,10 +329,15 @@ html.law-y .date-chip-x{color:#81c784}
       </div>
       <div class="form-row" id="hourRow" style="display:none">
         <div class="f-label">取得時間数</div>
-        <div class="radio-row">
+        <!-- 1〜7時間から選択（2026-10-06：1・2・4時間の3択から拡大）。スマホ幅でも収まるよう4列×2段 -->
+        <div class="radio-row" style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px">
           <div class="ropt sel" onclick="selHour(this,1)">1時間</div>
           <div class="ropt" onclick="selHour(this,2)">2時間</div>
+          <div class="ropt" onclick="selHour(this,3)">3時間</div>
           <div class="ropt" onclick="selHour(this,4)">4時間</div>
+          <div class="ropt" onclick="selHour(this,5)">5時間</div>
+          <div class="ropt" onclick="selHour(this,6)">6時間</div>
+          <div class="ropt" onclick="selHour(this,7)">7時間</div>
         </div>
       </div>
       <div class="form-row">

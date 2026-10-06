@@ -52,9 +52,10 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Hiragino Sans','Yu Gothic UI'
 .srch-icon{position:absolute;left:9px;top:50%;transform:translateY(-50%);color:var(--tm);font-size:14px;pointer-events:none}
 .filter-sel{padding:7px 10px;border:1px solid var(--bd);border-radius:var(--rs);font-size:13px;font-family:inherit;background:var(--w);color:var(--t);cursor:pointer}
 /* table */
-.tbl-wrap{background:var(--w);border:1px solid var(--bd);border-radius:var(--r);overflow:hidden}
+/* 2026-10-06：表の見出し行（一番上の行）を固定し、中身だけスクロールする。全園共通 */
+.tbl-wrap{background:var(--w);border:1px solid var(--bd);border-radius:var(--r);overflow:auto;max-height:calc(100vh - 200px)}
 table{width:100%;border-collapse:collapse}
-thead th{font-size:12px;font-weight:600;color:var(--tm);padding:10px 12px;text-align:left;background:var(--sb);border-bottom:1px solid var(--bd);white-space:nowrap}
+thead th{font-size:12px;font-weight:600;color:var(--tm);padding:10px 12px;text-align:left;background:var(--sb);border-bottom:1px solid var(--bd);white-space:nowrap;position:sticky;top:0;z-index:2;box-shadow:inset 0 -1px 0 var(--bd)}
 tbody tr{border-bottom:1px solid var(--bd)}
 tbody tr:last-child{border-bottom:none}
 tbody tr:hover{background:#fafaf8}
