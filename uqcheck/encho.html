@@ -103,6 +103,10 @@ tbody td{padding:11px 12px;font-size:13px;vertical-align:middle}
 .dt-btn{border:1px solid var(--bd);background:var(--w);border-radius:var(--rs);padding:6px 9px;cursor:pointer;font-size:15px;line-height:1}
 .dt-btn:hover{background:var(--bg)}
 .dt-err{border-color:var(--red) !important;background:var(--rl) !important}
+.se-taken{max-height:180px;overflow-y:auto;font-size:13px;margin-top:6px}
+.se-taken table{width:100%;border-collapse:collapse}
+.se-taken td{padding:5px 6px;border-bottom:1px solid var(--bd)}
+.se-taken .sum{font-size:12px;color:var(--ts);padding:4px 0 6px}
 /* page */
 .page{display:none}
 .page.active{display:block}
@@ -217,6 +221,8 @@ html.law-y{ --blue:#43a047; --bl:#e8f5e9; --bld:#2e7d32; --blm:#66bb6a; }
       <label>時間休付与（日）<input class="modal-input" type="number" step="0.125" min="0" id="se_hourLeaveGrant"></label>
       <label>時間休取得済（日）<input class="modal-input" type="number" step="0.125" min="0" id="se_hourLeaveUsed"></label>
     </div>
+    <div class="se-sec" style="margin-top:14px">取得日の一覧（アプリから申請・承認されたもの）</div>
+    <div id="seTaken" class="se-taken"></div>
     <datalist id="seStatusList"><option value="育休中"><option value="産休中"><option value="休職中"></datalist>
     <div class="se-preview" id="sePreview"></div>
     <div style="font-size:11px;color:var(--tm);margin-top:6px">※ 時間休は1時間＝0.125日です。変更内容はスプレッドシートの「変更履歴」シートに記録されます。</div>
@@ -532,8 +538,29 @@ function openStaffEdit(id){
     document.getElementById('se_'+k).value = (v===undefined||v===null||v==='') ? 0 : Number(v)||0;
   });
   SE_DATE.forEach(k=>{ const el=document.getElementById('se_'+k); el.value = showDate(s[k]); el.classList.remove('dt-err'); });
+  renderStaffTaken(s);
   updateStaffEditPreview();
   document.getElementById('staffEditModal').classList.add('open');
+}
+// 編集画面に、その職員の取得日（承認済み・申請中）を日付順で表示する
+function renderStaffTaken(s){
+  const box = document.getElementById('seTaken');
+  const list = DB.getRequests().filter(r=>r.staffId===s.id && (r.status==='承認済' || r.status==='申請中'))
+    .sort((a,b)=> String(a.date).localeCompare(String(b.date)));
+  if(!list.length){
+    box.innerHTML = '<div style="color:var(--tm);padding:6px 0">アプリからの取得はまだありません</div>';
+    return;
+  }
+  const sum = {有給:0, 夏期:0, 時間単位:0};
+  list.filter(r=>r.status==='承認済').forEach(r=>{ const c = r.category||'有給'; sum[c] = Math.round(((sum[c]||0) + (Number(r.days)||0))*1000)/1000; });
+  const catLabel = c => c==='夏期' ? '☀️ 夏期' : c==='時間単位' ? '⏰ 時間休' : '📋 有給';
+  box.innerHTML = `<div class="sum">承認済みの合計：有給 ${sum['有給']}日 ／ 夏期 ${sum['夏期']}日 ／ 時間休 ${sum['時間単位']}日</div>`
+    + '<table>' + list.map(r=>`<tr>
+        <td style="white-space:nowrap;font-weight:600">${showDate(r.date)||r.date}</td>
+        <td>${catLabel(r.category)}</td>
+        <td>${r.type}（${r.days}日）</td>
+        <td><span class="sbadge ${r.status==='承認済'?'s-ok':'s-pend'}">${r.status}</span></td>
+      </tr>`).join('') + '</table>';
 }
 function closeStaffEdit(){ document.getElementById('staffEditModal').classList.remove('open'); _seId=null; }
 function _seCollect(){
