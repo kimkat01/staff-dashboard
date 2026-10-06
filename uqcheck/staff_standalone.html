@@ -765,7 +765,9 @@ function renderCal(){
 
   const firstDow = new Date(calState.y, calState.m, 1).getDay();
   const daysInMonth = new Date(calState.y, calState.m+1, 0).getDate();
-  const todayStr = new Date().toISOString().slice(0,10);
+  // 日本時間（端末の時刻）で「今日」を判定する。toISOString()は世界標準時のため、朝9時前は前日扱いになっていた（2026-10-06修正）
+  const _now = new Date();
+  const todayStr = `${_now.getFullYear()}-${pad2(_now.getMonth()+1)}-${pad2(_now.getDate())}`;
 
   let html = DOW_JP.map(d=>`<div class="cal-dow">${d}</div>`).join('');
   for(let i=0;i<firstDow;i++) html += `<div class="cal-day other">-</div>`;
