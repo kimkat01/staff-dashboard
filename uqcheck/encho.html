@@ -100,7 +100,10 @@ tbody td{padding:11px 12px;font-size:13px;vertical-align:middle}
 @media (max-width:520px){.se-grid{grid-template-columns:1fr}}
 .dt-wrap{display:flex;gap:6px;align-items:center}
 .dt-wrap .modal-input{flex:1}
-.dt-btn{border:1px solid var(--bd);background:var(--w);border-radius:var(--rs);padding:6px 9px;cursor:pointer;font-size:15px;line-height:1}
+.dt-btn{position:relative;display:inline-flex;align-items:center;justify-content:center;width:38px;height:36px;flex-shrink:0;border:1px solid var(--bd);background:var(--w);border-radius:var(--rs);cursor:pointer;font-size:16px;line-height:1;overflow:hidden}
+/* 📅の上に透明なカレンダー入力を重ねる（押した場所にカレンダーが開く。スマホでもそのまま開く） */
+.dt-native{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;border:none;padding:0;margin:0;font-size:16px}
+.dt-native::-webkit-calendar-picker-indicator{position:absolute;inset:0;width:100%;height:100%;margin:0;padding:0;cursor:pointer}
 .dt-btn:hover{background:var(--bg)}
 .dt-err{border-color:var(--red) !important;background:var(--rl) !important}
 .se-taken{max-height:180px;overflow-y:auto;font-size:13px;margin-top:6px}
@@ -211,8 +214,8 @@ html.law-y{ --blue:#43a047; --bl:#e8f5e9; --bld:#2e7d32; --blm:#66bb6a; }
       <label>今年度付与（日）<input class="modal-input" type="number" step="0.125" min="0" id="se_grant"></label>
       <label>繰越（日）<input class="modal-input" type="number" step="0.125" min="0" id="se_carry"></label>
       <label>取得済み（日）<input class="modal-input" type="number" step="0.125" min="0" id="se_used"></label>
-      <label>基準日（直近付与日）<span class="dt-wrap"><input class="modal-input" type="text" inputmode="numeric" id="se_grantDate" placeholder="例：2026/10/1"><button type="button" class="dt-btn" onclick="pickDate('se_grantDate')">📅</button></span></label>
-      <label>次回付与日<span class="dt-wrap"><input class="modal-input" type="text" inputmode="numeric" id="se_nextGrantDate" placeholder="例：2027/10/1"><button type="button" class="dt-btn" onclick="pickDate('se_nextGrantDate')">📅</button></span></label>
+      <label>基準日（直近付与日）<span class="dt-wrap"><input class="modal-input" type="text" inputmode="numeric" id="se_grantDate" placeholder="例：2026/10/1"><span class="dt-btn" title="カレンダーから選ぶ">📅<input type="date" class="dt-native" data-for="se_grantDate" aria-label="カレンダーから選ぶ"></span></span></label>
+      <label>次回付与日<span class="dt-wrap"><input class="modal-input" type="text" inputmode="numeric" id="se_nextGrantDate" placeholder="例：2027/10/1"><span class="dt-btn" title="カレンダーから選ぶ">📅<input type="date" class="dt-native" data-for="se_nextGrantDate" aria-label="カレンダーから選ぶ"></span></span></label>
       <label>次回付与日数<input class="modal-input" type="number" step="1" min="0" id="se_nextGrant"></label>
       <div class="se-sec">夏期休暇</div>
       <label>夏期付与（日）<input class="modal-input" type="number" step="1" min="0" id="se_summerTotal"></label>
@@ -238,7 +241,7 @@ html.law-y{ --blue:#43a047; --bl:#e8f5e9; --bld:#2e7d32; --blm:#66bb6a; }
     <div class="modal-title">申請の取得日を変更</div>
     <div id="reInfo"></div>
     <div class="modal-label">新しい取得日</div>
-    <span class="dt-wrap"><input class="modal-input" type="text" inputmode="numeric" id="re_date" placeholder="例：2026/10/6"><button type="button" class="dt-btn" onclick="pickDate('re_date')">📅</button></span>
+    <span class="dt-wrap"><input class="modal-input" type="text" inputmode="numeric" id="re_date" placeholder="例：2026/10/6"><span class="dt-btn" title="カレンダーから選ぶ">📅<input type="date" class="dt-native" data-for="re_date" aria-label="カレンダーから選ぶ"></span></span>
     <div style="font-size:11px;color:var(--tm);margin-top:8px">※ 日数（消化数）は変わりません。変更内容は「変更履歴」シートに記録されます。</div>
     <div class="modal-btns">
       <button class="modal-btn modal-btn-cancel" onclick="closeReqEdit()">キャンセル</button>
@@ -246,8 +249,6 @@ html.law-y{ --blue:#43a047; --bl:#e8f5e9; --bld:#2e7d32; --blm:#66bb6a; }
     </div>
   </div>
 </div>
-<!-- 📅ボタン用の隠しカレンダー -->
-<input type="date" id="dtPicker" style="position:fixed;left:-9999px;top:0;opacity:0" tabindex="-1">
 <!-- 承認者設定モーダル -->
 <div class="modal-overlay" id="approverModal">
   <div class="modal">
@@ -506,25 +507,32 @@ function showDate(v){
   const [y,mo,d] = iso.split('-');
   return `${+y}/${+mo}/${+d}`;
 }
-// 📅ボタン：カレンダーで選んで入力欄に入れる
-let _dtTarget = null;
-function pickDate(id){
-  _dtTarget = id;
-  const pk = document.getElementById('dtPicker');
-  pk.value = parseInDate(document.getElementById(id).value) || '';
-  try{ pk.showPicker(); }catch(e){ pk.focus(); pk.click(); }
-}
-(function(){
-  const pk = document.getElementById('dtPicker');
+// 📅ボタン：ボタンに重ねた透明のカレンダー入力（.dt-native）で日付を選び、隣の入力欄に入れる
+//   ・開く前に、入力欄の今の日付をカレンダーにセットする
+//   ・パソコンのChrome/Edgeは showPicker() で確実に開く。スマホはタップでそのまま開く
+document.addEventListener('pointerdown', e=>{
+  const pk = e.target && e.target.closest ? e.target.closest('.dt-native') : null;
   if(!pk) return;
-  pk.addEventListener('change', ()=>{
-    if(!_dtTarget || !pk.value) return;
-    const el = document.getElementById(_dtTarget);
-    el.value = showDate(pk.value);
-    el.classList.remove('dt-err');
-    el.dispatchEvent(new Event('input', {bubbles:true}));
-  });
-})();
+  const el = document.getElementById(pk.dataset.for);
+  pk.value = (el && parseInDate(el.value)) || '';
+}, true);
+document.addEventListener('click', e=>{
+  const pk = e.target && e.target.closest ? e.target.closest('.dt-native') : null;
+  if(!pk) return;
+  e.stopPropagation();
+  if(typeof pk.showPicker === 'function'){
+    try{ e.preventDefault(); pk.showPicker(); }catch(err){ /* 開けない環境では標準の動きに任せる */ }
+  }
+}, true);
+document.addEventListener('change', e=>{
+  const pk = e.target;
+  if(!pk || !pk.classList || !pk.classList.contains('dt-native') || !pk.value) return;
+  const el = document.getElementById(pk.dataset.for);
+  if(!el) return;
+  el.value = showDate(pk.value);
+  el.classList.remove('dt-err');
+  el.dispatchEvent(new Event('input', {bubbles:true}));
+}, true);
 function openStaffEdit(id){
   const s = DB.getStaff().find(x=>x.id===id);
   if(!s) return;
