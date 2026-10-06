@@ -3,6 +3,11 @@
 // スプレッドシート：「UQchecker」（cryk0289@gmail.com）
 // スプレッドシートID: 197yLc-CxuIAomrtAoTPXY1cROu8hWfsxjCbmi7YGIno
 //
+// 2026-10-06 v3.1
+//  ・園長画面「全申請履歴」から申請の取得日を変更できる updateRequestDate を追加
+//  ・日付の形が正しくないときは、元の日付を消さずにそのまま残す
+//  ・空欄と0は同じとみなし、「変更履歴」に余計な記録を残さない
+//
 // 2026-10-06 v3
 //  ・園長画面「職員の残日数一覧」から職員マスタを変更できる updateStaff を追加
 //    （変更内容は「変更履歴」シートに自動記録。他園の職員は変更不可）
@@ -82,6 +87,11 @@ function doGet(e) {
                                        JSON.parse(e.parameter.data || '{}'));
       return response(result, callback);
     }
+    // 園長画面「全申請履歴」からの取得日変更（v3.1）
+    if (action === 'updateRequestDate') {
+      const result = updateRequestDate(e.parameter.reqId, e.parameter.garden, e.parameter.editor, e.parameter.date);
+      return response(result, callback);
+    }
 
     return response({ ok: false, error: 'Unknown action' }, callback);
   } catch(err) {
@@ -111,6 +121,9 @@ function doPost(e) {
     }
     if (action === 'updateStaff') {
       return response(updateStaffFields(body.id, body.garden, body.editor, body.data || {}));
+    }
+    if (action === 'updateRequestDate') {
+      return response(updateRequestDate(body.reqId, body.garden, body.editor, body.date));
     }
     return response({ ok: false, error: 'Unknown action' });
   } catch(err) {
@@ -232,8 +245,14 @@ function updateStaffFields(staffId, garden, editor, data) {
         v = Number(v);
         if (isNaN(v) || v < 0) return;
       } else if (def.kind === 'date') {
-        const m = String(v || '').match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
-        v = m ? new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3])) : '';
+        const t = String(v || '').trim();
+        if (t === '') {
+          v = '';                                  // 空欄にしたいとき
+        } else {
+          const m = t.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
+          if (!m) return;                          // 形が正しくない日付は書かない（元の日付を残す）
+          v = new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]));
+        }
       } else {
         v = String(v || '').trim();
       }
@@ -241,24 +260,61 @@ function updateStaffFields(staffId, garden, editor, data) {
       const b = (before instanceof Date) ? Utilities.formatDate(before, 'Asia/Tokyo', 'yyyy-MM-dd') : String(before);
       const a = (v instanceof Date) ? Utilities.formatDate(v, 'Asia/Tokyo', 'yyyy-MM-dd') : String(v);
       if (b === a) return;                       // 変わっていない項目は書かない
+      if (def.kind === 'num' && (Number(before) || 0) === v) return;   // 空欄と0は同じとみなす
       sheet.getRange(r + 1, def.col).setValue(v);
       logs.push([new Date(), garden, staffId, rows[r][1], def.label, b, a, editor || '園長']);
     });
 
-    // 変更履歴シートに記録（無ければ自動で作る）
-    if (logs.length) {
-      let logSheet = SS.getSheetByName(SHEET_EDITLOG);
-      if (!logSheet) {
-        logSheet = SS.insertSheet(SHEET_EDITLOG);
-        logSheet.appendRow(['日時', '園名', '職員ID', '氏名', '項目', '変更前', '変更後', '変更者']);
-        logSheet.getRange(1, 1, 1, 8).setFontWeight('bold').setBackground('#4169e1').setFontColor('#ffffff');
-      }
-      logSheet.getRange(logSheet.getLastRow() + 1, 1, logs.length, 8).setValues(logs);
-    }
+    writeEditLog(logs);
     return { ok: true, changed: logs.length };
   } finally {
     lock.releaseLock();
   }
+}
+
+// ------------------------------------------------------------
+// 園長画面からの申請の取得日変更（v3.1）
+// ------------------------------------------------------------
+function updateRequestDate(reqId, garden, editor, date) {
+  const m = String(date || '').trim().match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
+  if (!m) return { ok: false, error: '日付の形が正しくありません' };
+  const newDate = m[1] + '-' + ('0' + m[2]).slice(-2) + '-' + ('0' + m[3]).slice(-2);
+  const lock = LockService.getScriptLock();
+  lock.waitLock(10000);
+  try {
+    const sheet = SS.getSheetByName(SHEET_REQUESTS);
+    const rows = sheet.getDataRange().getValues();
+    for (let i = 1; i < rows.length; i++) {
+      if (String(rows[i][0]) !== String(reqId)) continue;
+      // 他の園の申請は変更できない（申請ログのD列＝園名で確認）
+      if (String(rows[i][3]) !== String(garden || '')) {
+        return { ok: false, error: 'この園の申請ではないため変更できません' };
+      }
+      const before = formatDate(rows[i][4]);
+      if (before === newDate) return { ok: true, changed: 0 };
+      const cell = sheet.getRange(i + 1, 5);
+      cell.setNumberFormat('@');                 // 文字の日付として保存（形がくずれないように）
+      cell.setValue(newDate);
+      writeEditLog([[new Date(), garden, rows[i][1], rows[i][2],
+                     '申請の取得日（' + reqId + '）', before, newDate, editor || '園長']]);
+      return { ok: true, changed: 1, data: rowToRequest(sheet.getRange(i + 1, 1, 1, 14).getValues()[0]) };
+    }
+    return { ok: false, error: '申請が見つかりません：' + reqId };
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+// 変更履歴シートに記録（無ければ自動で作る）
+function writeEditLog(logs) {
+  if (!logs || !logs.length) return;
+  let logSheet = SS.getSheetByName(SHEET_EDITLOG);
+  if (!logSheet) {
+    logSheet = SS.insertSheet(SHEET_EDITLOG);
+    logSheet.appendRow(['日時', '園名', '職員ID', '氏名', '項目', '変更前', '変更後', '変更者']);
+    logSheet.getRange(1, 1, 1, 8).setFontWeight('bold').setBackground('#4169e1').setFontColor('#ffffff');
+  }
+  logSheet.getRange(logSheet.getLastRow() + 1, 1, logs.length, 8).setValues(logs);
 }
 
 // ============================================================

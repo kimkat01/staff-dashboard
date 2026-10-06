@@ -98,6 +98,11 @@ tbody td{padding:11px 12px;font-size:13px;vertical-align:middle}
 .se-sec{grid-column:1/-1;font-size:12px;font-weight:700;color:var(--blue);border-bottom:1px solid var(--bd);padding:6px 0 4px;margin-top:4px}
 .se-preview{margin-top:14px;background:var(--bg);border-radius:var(--rs);padding:10px 12px;font-size:13px}
 @media (max-width:520px){.se-grid{grid-template-columns:1fr}}
+.dt-wrap{display:flex;gap:6px;align-items:center}
+.dt-wrap .modal-input{flex:1}
+.dt-btn{border:1px solid var(--bd);background:var(--w);border-radius:var(--rs);padding:6px 9px;cursor:pointer;font-size:15px;line-height:1}
+.dt-btn:hover{background:var(--bg)}
+.dt-err{border-color:var(--red) !important;background:var(--rl) !important}
 /* page */
 .page{display:none}
 .page.active{display:block}
@@ -164,7 +169,7 @@ html.law-y{ --blue:#43a047; --bl:#e8f5e9; --bld:#2e7d32; --blm:#66bb6a; }
       </div>
       <div class="tbl-wrap">
         <table>
-          <thead><tr><th>氏名</th><th>取得日</th><th>種別</th><th>申請日時</th><th>承認者</th><th>ステータス</th></tr></thead>
+          <thead><tr><th>氏名</th><th>取得日</th><th>種別</th><th>申請日時</th><th>承認者</th><th>ステータス</th><th>編集</th></tr></thead>
           <tbody id="allBody"></tbody>
         </table>
       </div>
@@ -202,8 +207,8 @@ html.law-y{ --blue:#43a047; --bl:#e8f5e9; --bld:#2e7d32; --blm:#66bb6a; }
       <label>今年度付与（日）<input class="modal-input" type="number" step="0.125" min="0" id="se_grant"></label>
       <label>繰越（日）<input class="modal-input" type="number" step="0.125" min="0" id="se_carry"></label>
       <label>取得済み（日）<input class="modal-input" type="number" step="0.125" min="0" id="se_used"></label>
-      <label>基準日（直近付与日）<input class="modal-input" type="date" id="se_grantDate"></label>
-      <label>次回付与日<input class="modal-input" type="date" id="se_nextGrantDate"></label>
+      <label>基準日（直近付与日）<span class="dt-wrap"><input class="modal-input" type="text" inputmode="numeric" id="se_grantDate" placeholder="例：2026/10/1"><button type="button" class="dt-btn" onclick="pickDate('se_grantDate')">📅</button></span></label>
+      <label>次回付与日<span class="dt-wrap"><input class="modal-input" type="text" inputmode="numeric" id="se_nextGrantDate" placeholder="例：2027/10/1"><button type="button" class="dt-btn" onclick="pickDate('se_nextGrantDate')">📅</button></span></label>
       <label>次回付与日数<input class="modal-input" type="number" step="1" min="0" id="se_nextGrant"></label>
       <div class="se-sec">夏期休暇</div>
       <label>夏期付与（日）<input class="modal-input" type="number" step="1" min="0" id="se_summerTotal"></label>
@@ -221,6 +226,22 @@ html.law-y{ --blue:#43a047; --bl:#e8f5e9; --bld:#2e7d32; --blm:#66bb6a; }
     </div>
   </div>
 </div>
+<!-- 申請の取得日 編集モーダル（2026-10-06追加） -->
+<div class="modal-overlay" id="reqEditModal">
+  <div class="modal">
+    <div class="modal-title">申請の取得日を変更</div>
+    <div id="reInfo"></div>
+    <div class="modal-label">新しい取得日</div>
+    <span class="dt-wrap"><input class="modal-input" type="text" inputmode="numeric" id="re_date" placeholder="例：2026/10/6"><button type="button" class="dt-btn" onclick="pickDate('re_date')">📅</button></span>
+    <div style="font-size:11px;color:var(--tm);margin-top:8px">※ 日数（消化数）は変わりません。変更内容は「変更履歴」シートに記録されます。</div>
+    <div class="modal-btns">
+      <button class="modal-btn modal-btn-cancel" onclick="closeReqEdit()">キャンセル</button>
+      <button class="modal-btn modal-btn-ok" id="reSaveBtn" onclick="saveReqEdit()">保存</button>
+    </div>
+  </div>
+</div>
+<!-- 📅ボタン用の隠しカレンダー -->
+<input type="date" id="dtPicker" style="position:fixed;left:-9999px;top:0;opacity:0" tabindex="-1">
 <!-- 承認者設定モーダル -->
 <div class="modal-overlay" id="approverModal">
   <div class="modal">
@@ -321,6 +342,7 @@ const DEMO_API = {
   async approveRequest(reqId, approver){ try{ return await this.request({action:'approveRequest',reqId,approver,garden:MY_GARDEN}); }catch(e){ return {ok:false}; } },
   async rejectRequest(reqId, approver, reason){ try{ return await this.request({action:'rejectRequest',reqId,approver,reason:reason||'',garden:MY_GARDEN}); }catch(e){ return {ok:false}; } },
   // 職員マスタの値を園長が変更する（GAS側に updateStaff の追記が必要）
+  async updateRequestDate(reqId, date, editor){ try{ return await this.request({action:'updateRequestDate',reqId,date,garden:MY_GARDEN,editor:editor||''}); }catch(e){ return {ok:false,error:String(e&&e.message||e)}; } },
   async updateStaff(id, data, editor){ try{ return await this.request({action:'updateStaff',id,garden:MY_GARDEN,editor:editor||'',data:JSON.stringify(data)}); }catch(e){ return {ok:false,error:String(e&&e.message||e)}; } },
 };
 
@@ -405,10 +427,10 @@ function renderAll(){
     return true;
   });
   const tbody=document.getElementById('allBody');
-  if(!reqs.length){ tbody.innerHTML=`<tr><td colspan="6" class="empty">該当する申請がありません</td></tr>`; return; }
+  if(!reqs.length){ tbody.innerHTML=`<tr><td colspan="7" class="empty">該当する申請がありません</td></tr>`; return; }
   tbody.innerHTML=reqs.map(r=>{
     const cls=r.status==='承認済'?'s-ok':r.status==='却下'?'s-ng':'s-pend';
-    const catB2 = r.category==='夏期'?'<span class="sbadge" style="background:#fff0f7;color:#ff69b4;font-size:10px">☀️</span> ':r.category==='時間単位'?'<span class="sbadge" style="background:#eef3ff;color:#4169e1;font-size:10px">⏰ 時間休</span> ':''; return `<tr><td style="font-weight:500">${r.name}</td><td>${r.date}</td><td>${catB2}${r.type}（${r.days}日）</td><td style="font-size:12px;color:var(--tm)">${r.createdAt}</td><td style="font-size:12px">${r.approver||'—'}</td><td><span class="sbadge ${cls}">${r.status}</span></td></tr>`;
+    const catB2 = r.category==='夏期'?'<span class="sbadge" style="background:#fff0f7;color:#ff69b4;font-size:10px">☀️</span> ':r.category==='時間単位'?'<span class="sbadge" style="background:#eef3ff;color:#4169e1;font-size:10px">⏰ 時間休</span> ':''; return `<tr><td style="font-weight:500">${r.name}</td><td>${r.date}</td><td>${catB2}${r.type}（${r.days}日）</td><td style="font-size:12px;color:var(--tm)">${r.createdAt}</td><td style="font-size:12px">${r.approver||'—'}</td><td><span class="sbadge ${cls}">${r.status}</span></td><td><button class="abtn abtn-ok" style="white-space:nowrap" onclick="openReqEdit('${r.id}')">📅 日付</button></td></tr>`;
   }).join('');
 }
 
@@ -459,11 +481,44 @@ function renderStaff(){
 const SE_NUM = ['grant','carry','used','summerTotal','summerUsed','hourLeaveGrant','hourLeaveUsed','nextGrant'];
 const SE_DATE = ['grantDate','nextGrantDate'];
 let _seId = null;
-function _seToInputDate(v){
-  if(!v) return '';
-  const m = String(v).match(/(\d{4})[\/-](\d{1,2})[\/-](\d{1,2})/);
-  return m ? `${m[1]}-${String(m[2]).padStart(2,'0')}-${String(m[3]).padStart(2,'0')}` : '';
+// 日付の入力：「2026/10/1」「2026-10-01」「20261001」のどれでも受け付ける
+// 戻り値：'yyyy-mm-dd'（正しい日付）／''（空欄）／null（日付として正しくない）
+function parseInDate(v){
+  const t = String(v||'').trim().replace(/[０-９]/g, c=>String.fromCharCode(c.charCodeAt(0)-0xFEE0)).replace(/[．.年月]/g,'/').replace(/日/g,'');
+  if(!t) return '';
+  let m = t.match(/^(\d{4})[\/-](\d{1,2})[\/-](\d{1,2})$/) || t.match(/^(\d{4})(\d{2})(\d{2})$/);
+  if(!m) return null;
+  const y=+m[1], mo=+m[2], d=+m[3];
+  const dt = new Date(y, mo-1, d);
+  if(dt.getFullYear()!==y || dt.getMonth()!==mo-1 || dt.getDate()!==d || y<2000 || y>2100) return null;
+  return `${y}-${String(mo).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
 }
+// 画面表示用：'2026/10/1'
+function showDate(v){
+  const iso = parseInDate(String(v||'').slice(0,10));
+  if(!iso) return '';
+  const [y,mo,d] = iso.split('-');
+  return `${+y}/${+mo}/${+d}`;
+}
+// 📅ボタン：カレンダーで選んで入力欄に入れる
+let _dtTarget = null;
+function pickDate(id){
+  _dtTarget = id;
+  const pk = document.getElementById('dtPicker');
+  pk.value = parseInDate(document.getElementById(id).value) || '';
+  try{ pk.showPicker(); }catch(e){ pk.focus(); pk.click(); }
+}
+(function(){
+  const pk = document.getElementById('dtPicker');
+  if(!pk) return;
+  pk.addEventListener('change', ()=>{
+    if(!_dtTarget || !pk.value) return;
+    const el = document.getElementById(_dtTarget);
+    el.value = showDate(pk.value);
+    el.classList.remove('dt-err');
+    el.dispatchEvent(new Event('input', {bubbles:true}));
+  });
+})();
 function openStaffEdit(id){
   const s = DB.getStaff().find(x=>x.id===id);
   if(!s) return;
@@ -476,7 +531,7 @@ function openStaffEdit(id){
     if(k==='hourLeaveGrant' && (v===undefined||v===null||v==='')) v = (s.type==='パート') ? 0 : 5;
     document.getElementById('se_'+k).value = (v===undefined||v===null||v==='') ? 0 : Number(v)||0;
   });
-  SE_DATE.forEach(k=>{ document.getElementById('se_'+k).value = _seToInputDate(s[k]); });
+  SE_DATE.forEach(k=>{ const el=document.getElementById('se_'+k); el.value = showDate(s[k]); el.classList.remove('dt-err'); });
   updateStaffEditPreview();
   document.getElementById('staffEditModal').classList.add('open');
 }
@@ -484,7 +539,7 @@ function closeStaffEdit(){ document.getElementById('staffEditModal').classList.r
 function _seCollect(){
   const d = { type: document.getElementById('se_type').value, status: document.getElementById('se_status').value.trim() };
   SE_NUM.forEach(k=>{ d[k] = Number(document.getElementById('se_'+k).value)||0; });
-  SE_DATE.forEach(k=>{ d[k] = document.getElementById('se_'+k).value || ''; });
+  SE_DATE.forEach(k=>{ d[k] = parseInDate(document.getElementById('se_'+k).value); });
   return d;
 }
 function updateStaffEditPreview(){
@@ -503,6 +558,9 @@ async function saveStaffEdit(){
   const d = _seCollect();
   const s = DB.getStaff().find(x=>x.id===_seId);
   if(!s) return;
+  const bad = SE_DATE.filter(k=>d[k]===null);
+  SE_DATE.forEach(k=>document.getElementById('se_'+k).classList.toggle('dt-err', d[k]===null));
+  if(bad.length){ alert('日付の形が正しくありません。\n「2026/10/1」のように入力するか、📅ボタンから選んでください。'); return; }
   if(!confirm(`${s.name} さんの内容を保存します。よろしいですか？`)) return;
   const btn = document.getElementById('seSaveBtn');
   btn.disabled = true; btn.textContent = '保存中...';
@@ -519,6 +577,49 @@ async function saveStaffEdit(){
   if(t){ Object.assign(t, d); DB.saveStaff(staff); }
   closeStaffEdit();
   renderStaff();
+  syncDemo();
+}
+
+// ============================================================
+// 申請の取得日を変更（2026-10-06追加・全園共通）
+// ============================================================
+let _reId = null;
+function openReqEdit(id){
+  const r = DB.getRequests().find(x=>x.id===id);
+  if(!r) return;
+  _reId = id;
+  document.getElementById('reInfo').innerHTML =
+    `<div class="modal-row"><span class="modal-key">氏名</span><span class="modal-val">${r.name}</span></div>`+
+    `<div class="modal-row"><span class="modal-key">現在の取得日</span><span class="modal-val">${showDate(r.date)||r.date}</span></div>`+
+    `<div class="modal-row"><span class="modal-key">種別</span><span class="modal-val">${r.type}（${r.days}日）</span></div>`+
+    `<div class="modal-row"><span class="modal-key">状態</span><span class="modal-val">${r.status}</span></div>`;
+  const el = document.getElementById('re_date');
+  el.value = showDate(r.date); el.classList.remove('dt-err');
+  document.getElementById('reqEditModal').classList.add('open');
+}
+function closeReqEdit(){ document.getElementById('reqEditModal').classList.remove('open'); _reId=null; }
+async function saveReqEdit(){
+  if(!_reId) return;
+  const r = DB.getRequests().find(x=>x.id===_reId);
+  const el = document.getElementById('re_date');
+  const iso = parseInDate(el.value);
+  if(!iso){ el.classList.add('dt-err'); alert('日付の形が正しくありません。\n「2026/10/6」のように入力するか、📅ボタンから選んでください。'); return; }
+  if(r && parseInDate(String(r.date).slice(0,10))===iso){ closeReqEdit(); return; }
+  if(!confirm(`${r?r.name:''} さんの取得日を ${showDate(iso)} に変更します。よろしいですか？`)) return;
+  const btn = document.getElementById('reSaveBtn');
+  btn.disabled = true; btn.textContent = '保存中...';
+  const res = await DEMO_API.updateRequestDate(_reId, iso, getApprover());
+  btn.disabled = false; btn.textContent = '保存';
+  if(!res || !res.ok){
+    const msg = (res && res.error) ? res.error : '通信に失敗しました';
+    alert('保存できませんでした。\n' + (String(msg).indexOf('Unknown action')>=0 ? 'サーバー（GAS）側の更新がまだ済んでいません。本部にご連絡ください。' : msg));
+    return;
+  }
+  const reqs = DB.getRequests();
+  const t = reqs.find(x=>x.id===_reId);
+  if(t){ t.date = iso; DB.saveRequests(reqs); }
+  closeReqEdit();
+  renderAll(); renderPending();
   syncDemo();
 }
 
