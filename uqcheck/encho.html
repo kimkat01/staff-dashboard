@@ -91,6 +91,13 @@ tbody td{padding:11px 12px;font-size:13px;vertical-align:middle}
 .modal-btn-ng{background:var(--rl);color:var(--red);border-color:var(--rb)}
 .modal-btn-cancel{background:var(--w);color:var(--ts)}
 .modal-btn-cancel:hover{background:var(--bg)}
+/* 職員編集モーダル */
+.se-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px 12px}
+.se-grid label{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--ts);font-weight:500}
+.se-grid .modal-input{padding:8px 10px}
+.se-sec{grid-column:1/-1;font-size:12px;font-weight:700;color:var(--blue);border-bottom:1px solid var(--bd);padding:6px 0 4px;margin-top:4px}
+.se-preview{margin-top:14px;background:var(--bg);border-radius:var(--rs);padding:10px 12px;font-size:13px}
+@media (max-width:520px){.se-grid{grid-template-columns:1fr}}
 /* page */
 .page{display:none}
 .page.active{display:block}
@@ -167,7 +174,7 @@ html.law-y{ --blue:#43a047; --bl:#e8f5e9; --bld:#2e7d32; --blm:#66bb6a; }
       <div class="page-title">職員の残日数一覧</div>
       <div class="tbl-wrap">
         <table>
-          <thead><tr><th>氏名</th><th>雇用形態</th><th>有給付与</th><th>繰越</th><th>取得済</th><th>有給残</th><th>基準日</th><th>失効まで</th><th>夏期休暇</th><th>時間休</th><th>5日義務</th></tr></thead>
+          <thead><tr><th>氏名</th><th>雇用形態</th><th>有給付与</th><th>繰越</th><th>取得済</th><th>有給残</th><th>基準日</th><th>失効まで</th><th>夏期休暇</th><th>時間休</th><th>5日義務</th><th>編集</th></tr></thead>
           <tbody id="staffBody"></tbody>
         </table>
       </div>
@@ -182,6 +189,36 @@ html.law-y{ --blue:#43a047; --bl:#e8f5e9; --bld:#2e7d32; --blm:#66bb6a; }
     <div class="modal-title" id="modalTitle">申請内容の確認</div>
     <div id="modalBody"></div>
     <div class="modal-btns" id="modalBtns"></div>
+  </div>
+</div>
+<!-- 職員の残日数 編集モーダル（2026-10-06追加：園長が職員マスタを直接修正できる） -->
+<div class="modal-overlay" id="staffEditModal">
+  <div class="modal" style="width:520px;max-height:90vh;overflow-y:auto">
+    <div class="modal-title" id="seTitle">職員情報の編集</div>
+    <div class="se-grid">
+      <label>雇用形態<select class="modal-input" id="se_type"><option>正規</option><option>パート</option><option>嘱託</option></select></label>
+      <label>状態（育休中など）<input class="modal-input" id="se_status" list="seStatusList" placeholder="空欄＝通常"></label>
+      <div class="se-sec">有給休暇</div>
+      <label>今年度付与（日）<input class="modal-input" type="number" step="0.125" min="0" id="se_grant"></label>
+      <label>繰越（日）<input class="modal-input" type="number" step="0.125" min="0" id="se_carry"></label>
+      <label>取得済み（日）<input class="modal-input" type="number" step="0.125" min="0" id="se_used"></label>
+      <label>基準日（直近付与日）<input class="modal-input" type="date" id="se_grantDate"></label>
+      <label>次回付与日<input class="modal-input" type="date" id="se_nextGrantDate"></label>
+      <label>次回付与日数<input class="modal-input" type="number" step="1" min="0" id="se_nextGrant"></label>
+      <div class="se-sec">夏期休暇</div>
+      <label>夏期付与（日）<input class="modal-input" type="number" step="1" min="0" id="se_summerTotal"></label>
+      <label>夏期取得済（日）<input class="modal-input" type="number" step="1" min="0" id="se_summerUsed"></label>
+      <div class="se-sec">時間休</div>
+      <label>時間休付与（日）<input class="modal-input" type="number" step="0.125" min="0" id="se_hourLeaveGrant"></label>
+      <label>時間休取得済（日）<input class="modal-input" type="number" step="0.125" min="0" id="se_hourLeaveUsed"></label>
+    </div>
+    <datalist id="seStatusList"><option value="育休中"><option value="産休中"><option value="休職中"></datalist>
+    <div class="se-preview" id="sePreview"></div>
+    <div style="font-size:11px;color:var(--tm);margin-top:6px">※ 時間休は1時間＝0.125日です。変更内容はスプレッドシートの「変更履歴」シートに記録されます。</div>
+    <div class="modal-btns">
+      <button class="modal-btn modal-btn-cancel" onclick="closeStaffEdit()">キャンセル</button>
+      <button class="modal-btn modal-btn-ok" id="seSaveBtn" onclick="saveStaffEdit()">保存</button>
+    </div>
   </div>
 </div>
 <!-- 承認者設定モーダル -->
@@ -283,6 +320,8 @@ const DEMO_API = {
   async getRequests(garden){ try{ const r=await this.request({action:'getRequests',garden:garden||''}); return r.ok?r.data:null; }catch(e){ return null; } },
   async approveRequest(reqId, approver){ try{ return await this.request({action:'approveRequest',reqId,approver,garden:MY_GARDEN}); }catch(e){ return {ok:false}; } },
   async rejectRequest(reqId, approver, reason){ try{ return await this.request({action:'rejectRequest',reqId,approver,reason:reason||'',garden:MY_GARDEN}); }catch(e){ return {ok:false}; } },
+  // 職員マスタの値を園長が変更する（GAS側に updateStaff の追記が必要）
+  async updateStaff(id, data, editor){ try{ return await this.request({action:'updateStaff',id,garden:MY_GARDEN,editor:editor||'',data:JSON.stringify(data)}); }catch(e){ return {ok:false,error:String(e&&e.message||e)}; } },
 };
 
 // デモ専用GASから最新データを取ってきてローカルキャッシュに反映する。
@@ -377,7 +416,7 @@ function renderStaff(){
   const staff=DB.getStaff();
   const tbody=document.getElementById('staffBody');
   if(!staff.length){
-    tbody.innerHTML=`<tr><td colspan="11" class="empty">${_staffLoaded?'この園の職員が登録されていません（職員マスタの園名をご確認ください）':'読み込み中...'}</td></tr>`;
+    tbody.innerHTML=`<tr><td colspan="12" class="empty">${_staffLoaded?'この園の職員が登録されていません（職員マスタの園名をご確認ください）':'読み込み中...'}</td></tr>`;
     return;
   }
   tbody.innerHTML=staff.map(s=>{
@@ -409,8 +448,78 @@ function renderStaff(){
       <td>${summerBadge}</td>
       <td>${hourCell}</td>
       <td><span class="sbadge ${done?'s-ok':'s-pend'}">${done?'✓ 達成':'未達成'}</span></td>
+      <td><button class="abtn abtn-ok" style="white-space:nowrap" onclick="openStaffEdit('${s.id}')">✏️ 編集</button></td>
     </tr>`;
   }).join('');
+}
+
+// ============================================================
+// 職員の残日数 編集（2026-10-06追加・全園共通）
+// ============================================================
+const SE_NUM = ['grant','carry','used','summerTotal','summerUsed','hourLeaveGrant','hourLeaveUsed','nextGrant'];
+const SE_DATE = ['grantDate','nextGrantDate'];
+let _seId = null;
+function _seToInputDate(v){
+  if(!v) return '';
+  const m = String(v).match(/(\d{4})[\/-](\d{1,2})[\/-](\d{1,2})/);
+  return m ? `${m[1]}-${String(m[2]).padStart(2,'0')}-${String(m[3]).padStart(2,'0')}` : '';
+}
+function openStaffEdit(id){
+  const s = DB.getStaff().find(x=>x.id===id);
+  if(!s) return;
+  _seId = id;
+  document.getElementById('seTitle').textContent = `${s.name} さんの編集`;
+  document.getElementById('se_type').value = s.type || '正規';
+  document.getElementById('se_status').value = s.status || '';
+  SE_NUM.forEach(k=>{
+    let v = s[k];
+    if(k==='hourLeaveGrant' && (v===undefined||v===null||v==='')) v = (s.type==='パート') ? 0 : 5;
+    document.getElementById('se_'+k).value = (v===undefined||v===null||v==='') ? 0 : Number(v)||0;
+  });
+  SE_DATE.forEach(k=>{ document.getElementById('se_'+k).value = _seToInputDate(s[k]); });
+  updateStaffEditPreview();
+  document.getElementById('staffEditModal').classList.add('open');
+}
+function closeStaffEdit(){ document.getElementById('staffEditModal').classList.remove('open'); _seId=null; }
+function _seCollect(){
+  const d = { type: document.getElementById('se_type').value, status: document.getElementById('se_status').value.trim() };
+  SE_NUM.forEach(k=>{ d[k] = Number(document.getElementById('se_'+k).value)||0; });
+  SE_DATE.forEach(k=>{ d[k] = document.getElementById('se_'+k).value || ''; });
+  return d;
+}
+function updateStaffEditPreview(){
+  const d = _seCollect();
+  const remain = Math.round((d.grant + d.carry - d.used)*1000)/1000;
+  const sr = Math.max(0, d.summerTotal - d.summerUsed);
+  const hr = d.type==='パート' ? '対象外' : Math.max(0, Math.min(Math.round((d.hourLeaveGrant-d.hourLeaveUsed)*1000)/1000, remain))+'日';
+  document.getElementById('sePreview').innerHTML =
+    `保存後の表示：<b>有給残 ${remain}日</b>　／　夏期 ${sr}日残　／　時間休 ${hr}`
+    + (remain<0 ? '<div style="color:var(--red);margin-top:4px">⚠️ 有給残がマイナスです。数値をご確認ください。</div>' : '');
+}
+document.addEventListener('input', e=>{ if(e.target && String(e.target.id||'').indexOf('se_')===0) updateStaffEditPreview(); });
+document.addEventListener('change', e=>{ if(e.target && String(e.target.id||'').indexOf('se_')===0) updateStaffEditPreview(); });
+async function saveStaffEdit(){
+  if(!_seId) return;
+  const d = _seCollect();
+  const s = DB.getStaff().find(x=>x.id===_seId);
+  if(!s) return;
+  if(!confirm(`${s.name} さんの内容を保存します。よろしいですか？`)) return;
+  const btn = document.getElementById('seSaveBtn');
+  btn.disabled = true; btn.textContent = '保存中...';
+  const r = await DEMO_API.updateStaff(_seId, d, getApprover());
+  btn.disabled = false; btn.textContent = '保存';
+  if(!r || !r.ok){
+    const msg = (r && r.error) ? r.error : '通信に失敗しました';
+    alert('保存できませんでした。\n' + (String(msg).indexOf('Unknown action')>=0 ? 'サーバー（GAS）側の更新がまだ済んでいません。本部にご連絡ください。' : msg));
+    return;
+  }
+  // 画面にすぐ反映（次回の自動同期でスプレッドシートの値に揃う）
+  const staff = DB.getStaff();
+  const t = staff.find(x=>x.id===_seId);
+  if(t){ Object.assign(t, d); DB.saveStaff(staff); }
+  closeStaffEdit();
+  renderStaff();
+  syncDemo();
 }
 
 // 承認ボタンは確認画面を挟まず即実行する（却下は openAction のモーダルを使用）
