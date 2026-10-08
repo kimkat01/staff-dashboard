@@ -519,6 +519,19 @@ html.law-y .pin-box:focus,html.law-y .pg-text:focus{border-color:#43a047;box-sha
   .pg-fixnote{color:#9a6a00;font-size:13px;margin:6px 10px 0;min-height:0;}
   .pin-btn:disabled{background:#b9b9b9 !important;opacity:1;}
   .pg-ok{color:#1e7e34;font-size:13px;margin:8px 10px 0;min-height:18px;font-weight:700;}
+  /* パスワードを忘れたとき（2026-10-08） */
+  .pg-forgot-link{display:block;background:none;border:0;color:#005FFF;font-size:14px;font-weight:700;
+    margin:16px auto 0;cursor:pointer;font-family:inherit;text-decoration:underline;}
+  .pg-forgot{margin:12px 0 0;padding:14px 14px 12px;background:#f4f8ff;border:1px solid #cfe0ff;border-radius:12px;
+    font-size:14px;line-height:1.75;color:var(--ink);}
+  .pg-forgot h3{margin:0 0 6px;font-size:15px;font-weight:800;color:#005FFF;}
+  .pg-forgot .pg-fg-lead{margin:0 0 10px;}
+  .pg-forgot ol{margin:0;padding:0;list-style:none;counter-reset:fg;}
+  .pg-forgot ol li{position:relative;padding:0 0 10px 34px;counter-increment:fg;}
+  .pg-forgot ol li::before{content:counter(fg);position:absolute;left:0;top:1px;width:24px;height:24px;border-radius:50%;
+    background:#005FFF;color:#fff;font-weight:800;font-size:13px;line-height:24px;text-align:center;}
+  .pg-forgot .pg-fg-note{margin:4px 0 0;padding:10px 12px;background:#fff;border-radius:10px;font-size:13px;color:var(--ink-soft);}
+  .pg-forgot .pg-fg-note ul{margin:4px 0 0;padding-left:1.2em;}
 </style>
 
 <div id="pinGate">
@@ -540,6 +553,41 @@ html.law-y .pin-box:focus,html.law-y .pg-text:focus{border-color:#43a047;box-sha
       <label class="pg-show"><input type="checkbox" onchange="pgToggleShow(this,'pgPassword')">パスワードを表示する</label>
       <div class="pin-err" id="pgErr"></div>
       <button class="pin-btn" id="pgLoginBtn" onclick="pgSubmit()">ログイン</button>
+
+      <!-- パスワードを忘れたとき（2026-10-08） -->
+      <button class="pg-forgot-link" id="pgForgotLink" type="button" onclick="pgToggleForgot()" aria-expanded="false" aria-controls="pgForgot">パスワードを忘れたとき</button>
+      <div class="pg-forgot" id="pgForgot" hidden>
+        <h3>パスワードを忘れたとき</h3>
+        <div id="pgFgForm">
+          <p class="pg-fg-lead">ログインID（4桁）とお名前を入力すると、その場で<b>仮パスワード</b>が発行されます。仮パスワードでログインしたあと、ご自分用のパスワードを決め直してください。</p>
+          <div class="pg-label" style="margin-left:0;margin-right:0;">ログインID（4桁）</div>
+          <div class="pin-boxes" id="pgFgIdBoxes" style="padding:0;">
+            <input class="pin-box" type="tel" inputmode="numeric" maxlength="1" pattern="[0-9]" autocomplete="off">
+            <input class="pin-box" type="tel" inputmode="numeric" maxlength="1" pattern="[0-9]" autocomplete="off">
+            <input class="pin-box" type="tel" inputmode="numeric" maxlength="1" pattern="[0-9]" autocomplete="off">
+            <input class="pin-box" type="tel" inputmode="numeric" maxlength="1" pattern="[0-9]" autocomplete="off">
+          </div>
+          <div class="pg-label" style="margin-left:0;margin-right:0;">お名前（フルネーム）</div>
+          <input class="pg-text" id="pgFgName" type="text" maxlength="30" autocomplete="off" placeholder="例：山田 花子" style="width:100%;margin:0;">
+          <div class="pin-err" id="pgFgErr" style="margin-left:0;margin-right:0;"></div>
+          <button class="pin-btn" id="pgFgBtn" type="button" onclick="pgSubmitReset()">仮パスワードを発行する</button>
+          <div class="pg-fg-note" style="margin-top:12px;">
+            <b>ご注意</b>
+            <ul>
+              <li>ログインIDを忘れた場合は、園長にお問い合わせください。</li>
+              <li>リセットは1日3回までです。</li>
+              <li>リセットした記録は本部に届きます。他の人のパスワードをリセットしないでください。</li>
+            </ul>
+          </div>
+        </div>
+        <div id="pgFgDone" style="display:none;">
+          <div class="pg-ok" style="margin:0;">仮パスワードを発行しました。</div>
+          <p class="pg-fg-lead" style="margin-top:6px;">あなたの仮パスワードはこちらです。</p>
+          <div id="pgFgTemp" style="font-size:28px;font-weight:800;letter-spacing:.12em;text-align:center;background:#fff;border:1.5px dashed #005FFF;border-radius:12px;padding:12px;font-variant-numeric:tabular-nums;font-family:ui-monospace,Menlo,Consolas,monospace;"></div>
+          <p class="pg-fg-lead" style="margin-top:10px;font-size:13px;">下のボタンを押すと、この仮パスワードでログインし、続けてご自分用のパスワードを決める画面になります。</p>
+          <button class="pin-btn" type="button" onclick="pgLoginWithTemp()">このパスワードでログインする</button>
+        </div>
+      </div>
     </div>
 
     <div id="pgChangeStep" style="display:none;padding:0 10px;">
@@ -684,6 +732,67 @@ html.law-y .pin-box:focus,html.law-y .pg-text:focus{border-color:#43a047;box-sha
   }
   setupIdBoxes('pgIdBoxes');
   document.getElementById('pgPassword').addEventListener('keydown', function(e){ if(e.key === 'Enter'){ pgSubmit(); } });
+
+  /* 「パスワードを忘れたとき」：自動リセット（2026-10-08）
+     ログインID＋名前が一致すれば、GASが仮パスワードを発行（D列を書き換え・E列をFALSE）し、本部へ通知メールを送る */
+  setupIdBoxes('pgFgIdBoxes');
+  var pgFgTempPw = '';
+  window.pgToggleForgot = function(){
+    var box = document.getElementById('pgForgot');
+    var link = document.getElementById('pgForgotLink');
+    var open = box.hidden;
+    box.hidden = !open;
+    link.setAttribute('aria-expanded', open ? 'true' : 'false');
+    link.textContent = open ? '閉じる' : 'パスワードを忘れたとき';
+    if(open){
+      // ログイン欄に入力済みのIDがあれば引き継ぐ
+      var src = document.querySelectorAll('#pgIdBoxes .pin-box');
+      var dst = document.querySelectorAll('#pgFgIdBoxes .pin-box');
+      for(var i = 0; i < dst.length; i++){ if(!dst[i].value && src[i]) dst[i].value = normDigit(src[i].value); }
+      box.scrollIntoView({behavior:'smooth', block:'start'});
+    }
+  };
+  window.pgSubmitReset = function(){
+    var loginId = getIdBoxesValue('pgFgIdBoxes');
+    var name = String(document.getElementById('pgFgName').value || '').trim();
+    var err = document.getElementById('pgFgErr');
+    err.textContent = '';
+    if(!GARDEN){ err.textContent = 'このURLには園名が入っていません。園から配布された専用のリンクから開いてください。'; return; }
+    if(!/^[0-9]{4}$/.test(loginId)){ err.textContent = 'ログインIDは4桁の数字で入力してください'; return; }
+    if(!name){ err.textContent = 'お名前を入力してください'; return; }
+    var btn = document.getElementById('pgFgBtn');
+    btn.disabled = true; btn.textContent = '確認中…';
+    // リセットは送り直すと仮パスワードが変わってしまうため、送信は1回だけ
+    postGas({ action:'resetPassword', garden:GARDEN, loginId:loginId, name:name }, 1, 45000)
+      .then(function(data){
+        btn.disabled = false; btn.textContent = '仮パスワードを発行する';
+        if(data && data.ok && data.tempPassword){
+          pgFgTempPw = data.tempPassword;
+          document.getElementById('pgFgTemp').textContent = data.tempPassword;
+          document.getElementById('pgFgForm').style.display = 'none';
+          document.getElementById('pgFgDone').style.display = 'block';
+          // ログイン欄にIDと仮パスワードを入れておく
+          var dst = document.querySelectorAll('#pgIdBoxes .pin-box');
+          for(var i = 0; i < dst.length; i++){ dst[i].value = loginId.charAt(i); }
+          document.getElementById('pgPassword').value = data.tempPassword;
+        } else {
+          err.textContent = (data && data.message) || 'ログインIDとお名前が一致しませんでした';
+        }
+      })
+      .catch(function(e){
+        btn.disabled = false; btn.textContent = '仮パスワードを発行する';
+        err.textContent = netErrText(e) + ' 発行できたか分からない場合は、少し待ってから、もう一度お試しください。';
+      });
+  };
+  window.pgLoginWithTemp = function(){
+    document.getElementById('pgForgot').hidden = true;
+    var link = document.getElementById('pgForgotLink');
+    link.setAttribute('aria-expanded', 'false');
+    link.textContent = 'パスワードを忘れたとき';
+    document.getElementById('pgPassword').value = pgFgTempPw;
+    window.scrollTo(0, 0);
+    pgSubmit();
+  };
 
   window.pgSubmit = function(){
     var loginId = getIdBoxesValue('pgIdBoxes');
