@@ -21,7 +21,8 @@ var GARDEN_FOLDERS = {
   "ふれあいしおどめ保育園": "fureai_shiodome",
   "しおどめ保育園三郷中央": "misato_chuo",
   "守谷しおどめ保育園":     "moriya_shiodome",
-  "しおどめ保育園春日部":   "kasukabe"
+  "しおどめ保育園春日部":   "kasukabe",
+  "しおどめ保育園江戸川中央": "edogawa_chuo"
 };
 
 /* 園のダッシュボードが別のリポジトリにある園だけ、PDF内検索の「Home」の戻り先を書く。
@@ -77,6 +78,12 @@ var MANUALS = {
       { title:"就業規則（正規職員）",   file:"seiki-shugyo-kisoku.pdf" },
       { title:"就業規則（パート職員）", file:"part-shugyo-kisoku.pdf" },
       { title:"給与規程（正規職員）",   file:"seiki-kyuyo-kitei.pdf" }
+    ]}
+  ],
+  edogawa_chuo: [
+    { label:"規約・マニュアル", docs:[
+      { title:"就業規則（正規職員）",         file:"seiki-shugyo-kisoku.pdf" },
+      { title:"就業規則・給与規程（パート職員）", file:"part-shugyo-kisoku.pdf" }
     ]}
   ],
   tsukuba: [
