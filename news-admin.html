@@ -334,6 +334,9 @@ var NA_GAS_URL = "https://script.google.com/macros/s/AKfycbwvO_eVBaPA31-c93roVoH
 
 /* ===== 状態 ===== */
 var NA_PW_KEY = 'news_admin_pw';
+// 2026-10：パスワード入力なしで入れるようにする（お知らせGASのパスワードをここに入れて自動ログイン）
+//   パスワード入力を復活させる時は '' にする。GAS側でパスワードを変えたら、ここも同じものに変える
+var NA_AUTO_PW = 'honbu2026';
 var naPw = '';
 var naPosts = [];
 var naCurId = '';        // 編集中の記事ID（新規は空）
@@ -368,6 +371,14 @@ function api(body){
   sel.innerHTML='<option value="">選択してください</option>'+
     (window.GARDEN_MASTER||[]).map(function(g){return '<option>'+esc(g.name)+'</option>';}).join('');
   if(!NA_GAS_URL){$('setupWarn').classList.remove('hidden');return;}
+  if(NA_AUTO_PW){
+    naPw=NA_AUTO_PW;
+    api({action:'login'}).then(function(d){
+      if(d.ok) naEnter();
+      else{ naShowLogin(); $('loginErr').textContent='自動ログインできませんでした（パスワードが変わった可能性があります）'; }
+    }).catch(function(){ naShowLogin(); $('loginErr').textContent='通信エラーです。ページを再読み込みしてください。'; });
+    return;
+  }
   try{naPw=sessionStorage.getItem(NA_PW_KEY)||'';}catch(e){}
   if(naPw){api({action:'login'}).then(function(d){if(d.ok)naEnter();else naShowLogin();}).catch(naShowLogin);}
   else naShowLogin();
@@ -399,7 +410,7 @@ function naLogout(){
 function naEnter(){
   $('loginView').classList.add('hidden');
   $('mainView').classList.remove('hidden');
-  $('whoLbl').classList.remove('hidden');$('logoutBtn').classList.remove('hidden');
+  if(!NA_AUTO_PW){ $('whoLbl').classList.remove('hidden');$('logoutBtn').classList.remove('hidden'); }
   naNew(true);
   naLoad();
 }
