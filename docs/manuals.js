@@ -45,6 +45,13 @@ var MANUALS = {
       { title:"管理規程（法人）", file:"kanri-kitei.pdf" },
       { title:"経理規程（法人）", file:"keiri-kitei.pdf" }
     ]},
+    /* カスタマーハラスメント防止マニュアル：法人ごとに版が違うので law で出し分け（2026-10-01作成版） */
+    { label:"マニュアル", law:"s", docs:[
+      { title:"カスタマーハラスメント防止マニュアル", file:"customer-harassment-shiba.pdf" }
+    ]},
+    { label:"マニュアル", law:"y", docs:[
+      { title:"カスタマーハラスメント防止マニュアル", file:"customer-harassment-yuga.pdf" }
+    ]},
     { label:"参考資料", docs:[
       { title:"こども性暴力防止法の施行について", file:"kodomo-seibouryoku-hou.pdf" }
     ]}
@@ -111,6 +118,11 @@ var MANUALS = {
   ]
 };
 
+/* 社会福祉法人雄雅会（園コードY）の園キー。gardens.js を読み込んでいないページ
+   （例：ふれあいしおどめ保育園の専用リポジトリ）でも法人を判定できるようにするための予備。
+   これ以外の園キーは学校法人柴学園として扱う。 */
+var LAW_Y_FOLDERS = ["yashio_shiodome", "moriya_shiodome", "shiodome_nakayoshi"];
+
 /* 園名（または園キー）から、表示するグループ一覧を作る（file は docs/ からの相対パスに変換済み）
    opts.encho=true のときは園長向け（enchoOnly のグループも含める）。 */
 function manualGroupsFor(garden, opts){
@@ -123,6 +135,7 @@ function manualGroupsFor(garden, opts){
   // 園の法人（園マスタ gardens.js の園コードの頭文字：S＝柴学園／Y＝雄雅会）
   var gm = (typeof findGarden === "function") ? findGarden(garden) : null;
   var law = gm && gm.code ? gm.code.charAt(0).toLowerCase() : "";
+  if(!law && folder) law = LAW_Y_FOLDERS.indexOf(folder) >= 0 ? "y" : "s";   // gardens.js を読まないページ用の予備判定
   var sets = [];
   if(folder && MANUALS[folder]) sets.push({ dir:folder, groups:MANUALS[folder] });
   sets.push({ dir:"common", groups:MANUALS.common || [] });
