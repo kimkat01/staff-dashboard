@@ -113,6 +113,7 @@ var MANUALS = {
       { title:"給与規程（正規職員）",   file:"seiki-kyuyo-kitei.pdf" }
     ]},
     { label:"BCP・防災", docs:[
+      { title:"業務継続計画（BCP）", file:"bcp.pdf" },
       { title:"防災・防犯マニュアル", file:"bousai-bouhan-manual.pdf" }
     ]}
   ]
