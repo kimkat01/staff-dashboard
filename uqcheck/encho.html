@@ -110,6 +110,16 @@ tbody td{padding:11px 12px;font-size:13px;vertical-align:middle}
 .se-taken table{width:100%;border-collapse:collapse}
 .se-taken td{padding:5px 6px;border-bottom:1px solid var(--bd)}
 .se-taken .sum{font-size:12px;color:var(--ts);padding:4px 0 6px}
+/* 月次締め出力（2026-10-14） */
+.shime-bar{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin-bottom:12px}
+.shime-period{font-size:13px;color:var(--ts)}
+.shime-period b{color:var(--t);font-size:14px}
+.shime-btn{padding:8px 16px;border-radius:var(--rs);font-size:13px;font-weight:700;font-family:inherit;cursor:pointer;border:none;background:var(--blue);color:#fff}
+.shime-btn:hover{background:var(--bld)}
+.shime-btn:disabled{opacity:.5;cursor:wait}
+.shime-note{font-size:12px;color:var(--tm);margin-top:8px;line-height:1.6}
+.shime-warn{display:none;padding:9px 14px;background:var(--wl);border:1px solid var(--wb);border-radius:var(--rs);margin-bottom:12px;font-size:13px;color:var(--warn)}
+td.num,th.num{text-align:right}
 /* page */
 .page{display:none}
 .page.active{display:block}
@@ -146,6 +156,7 @@ html.law-y{ --blue:#43a047; --bl:#e8f5e9; --bld:#2e7d32; --blm:#66bb6a; }
     <div class="sidebar-item active" onclick="showPage('pending',this)"><span class="icon">⏳</span>承認待ち<span class="pending-cnt" id="sidebarCnt">0</span></div>
     <div class="sidebar-item" onclick="showPage('all',this)"><span class="icon">📋</span>全申請履歴</div>
     <div class="sidebar-item" onclick="showPage('staff',this)"><span class="icon">👥</span>職員の残日数</div>
+    <div class="sidebar-item" onclick="showPage('shime',this)"><span class="icon">📤</span>月次締め出力</div>
     <div class="sidebar-divider"></div>
     <div class="sidebar-label">設定</div>
     <div class="sidebar-item" onclick="document.getElementById('approverModal').classList.add('open')"><span class="icon">⚙️</span>承認者名の設定</div>
@@ -180,6 +191,34 @@ html.law-y{ --blue:#43a047; --bl:#e8f5e9; --bld:#2e7d32; --blm:#66bb6a; }
           <tbody id="allBody"></tbody>
         </table>
       </div>
+    </div>
+    <!-- 月次締め出力（2026-10-14追加・全園共通） -->
+    <div id="page-shime" class="page">
+      <div class="page-title">月次締め出力（期間中の取得一覧）</div>
+      <div class="shime-bar">
+        <label style="font-size:13px">締め月
+          <select class="filter-sel" id="shimeMonth" onchange="renderShime()"></select>
+        </label>
+        <label style="font-size:13px">締め日
+          <select class="filter-sel" id="shimeDay" onchange="onShimeDayChange()">
+            <option value="15">15日締め</option>
+            <option value="20">20日締め</option>
+            <option value="25">25日締め</option>
+            <option value="0">末日締め</option>
+          </select>
+        </label>
+        <span class="shime-period" id="shimePeriod"></span>
+        <button class="shime-btn" id="shimeXlsxBtn" onclick="exportShimeXlsx()" style="margin-left:auto">📥 Excelで出力</button>
+      </div>
+      <div class="shime-warn" id="shimeWarn"></div>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>氏名</th><th>雇用形態</th><th class="num">有給（日）</th><th class="num">時間休（時間）</th><th class="num">夏期（日）</th><th class="num">期間計（日）</th><th>取得日</th><th class="num">有給残（現在）</th><th>5日義務</th></tr></thead>
+          <tbody id="shimeBody"></tbody>
+        </table>
+      </div>
+      <div class="shime-note">※ 承認済みの申請だけを集計しています（申請中は集計に入れず、Excelの明細に「申請中」として載せます。却下は載せません）。<br>
+      ※ Excelには「職員別集計」と「取得明細」の2枚のシートが入ります。時間休は1時間＝0.125日として期間計に含めます。</div>
     </div>
     <!-- 職員残日数 -->
     <div id="page-staff" class="page">
@@ -389,6 +428,7 @@ function showPage(name,el){
   if(name==='all') renderAll();
   if(name==='staff') renderStaff();
   if(name==='pending') renderPending();
+  if(name==='shime') renderShime();
 }
 
 function fmtDate(d){ const dt=new Date(d); return `${dt.getMonth()+1}/${dt.getDate()}`; }
@@ -710,6 +750,216 @@ function refreshAll(){
   renderPending();
   renderAll();
   renderStaff();
+  if(document.getElementById('page-shime').classList.contains('active')) renderShime();
+}
+
+// ============================================================
+// 月次締め出力（2026-10-14追加・全園共通）
+// ・締め月と締め日を選ぶと、その期間（例：15日締めの10月分＝9/16〜10/15）の取得を職員ごとに集計する
+// ・集計は承認済みのみ。申請中は明細に「申請中」として載せる（却下は載せない）
+// ・Excel出力は ExcelJS（cdnjs）をボタンを押したときだけ読み込む。フォントはＭＳ ゴシック・12pt以上
+// ・締め日の選択はこの端末に保存する
+// ============================================================
+const SHIME_DAY_KEY = 'uq_shime_day_' + GARDEN_KEY;
+const DOW_JP = ['日','月','火','水','木','金','土'];
+function _iso(d){ return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
+function _r3(n){ return Math.round((Number(n)||0)*1000)/1000; }
+function getShimeDay(){ const v = Number(document.getElementById('shimeDay').value); return isNaN(v) ? 15 : v; }
+// 締め月（y年m月, mは1〜12）と締め日から期間を返す。締め日0＝末日締め
+function shimePeriod(y, m, day){
+  if(day===0) return { from: new Date(y, m-1, 1), to: new Date(y, m, 0) };
+  return { from: new Date(y, m-2, day+1), to: new Date(y, m-1, day) };
+}
+// 今日が含まれる締め月
+function currentShimeMonth(day){
+  const t = new Date(); t.setHours(0,0,0,0);
+  let y = t.getFullYear(), m = t.getMonth()+1;
+  if(day!==0 && t.getDate() > day){ m++; if(m>12){ m=1; y++; } }
+  return {y, m};
+}
+function initShime(){
+  const daySel = document.getElementById('shimeDay');
+  const saved = lsGet(SHIME_DAY_KEY);
+  if(saved!==null && saved!==undefined && daySel.querySelector(`option[value="${saved}"]`)) daySel.value = saved;
+  buildShimeMonths();
+}
+function buildShimeMonths(){
+  const sel = document.getElementById('shimeMonth');
+  const prev = sel.value;
+  const cur = currentShimeMonth(getShimeDay());
+  const opts = [];
+  for(let i=-12;i<=1;i++){
+    let y = cur.y, m = cur.m + i;
+    while(m<1){ m+=12; y--; } while(m>12){ m-=12; y++; }
+    opts.push({v:`${y}-${m}`, label:`${y}年${m}月分${i===0?'（今回）':''}`});
+  }
+  sel.innerHTML = opts.reverse().map(o=>`<option value="${o.v}">${o.label}</option>`).join('');
+  sel.value = (prev && opts.some(o=>o.v===prev)) ? prev : `${cur.y}-${cur.m}`;
+}
+function onShimeDayChange(){
+  lsSet(SHIME_DAY_KEY, String(getShimeDay()));
+  buildShimeMonths();
+  renderShime();
+}
+// 画面表示とExcel出力で共通の集計
+function calcShime(){
+  const [y, m] = document.getElementById('shimeMonth').value.split('-').map(Number);
+  const day = getShimeDay();
+  const p = shimePeriod(y, m, day);
+  const fromS = _iso(p.from), toS = _iso(p.to);
+  const inPeriod = r => { const d = parseInDate(String(r.date||'').slice(0,10)); return d && d>=fromS && d<=toS; };
+  const reqs = DB.getRequests().filter(r => (r.status==='承認済' || r.status==='申請中') && inPeriod(r))
+    .sort((a,b)=> String(a.date).localeCompare(String(b.date)));
+  const staff = DB.getStaff();
+  const rows = staff.map(s=>{
+    const mine = reqs.filter(r=>r.staffId===s.id);
+    const ok = mine.filter(r=>r.status==='承認済');
+    const sumCat = c => _r3(ok.filter(r=>(r.category||'有給')===c).reduce((a,r)=>a+(Number(r.days)||0),0));
+    const yu = sumCat('有給'), hr = sumCat('時間単位'), su = sumCat('夏期');
+    const dates = ok.map(r=>{
+      const d = parseInDate(String(r.date).slice(0,10));
+      const [,mm,dd] = d.split('-');
+      const tag = r.category==='時間単位' ? `(${r.type})` : r.category==='夏期' ? '(夏)' : r.type==='全日' ? '' : r.type.indexOf('午前')>=0 ? '(前半)' : r.type.indexOf('午後')>=0 ? '(後半)' : '';
+      return `${+mm}/${+dd}${tag}`;
+    });
+    return { s, yu, hrHours: _r3(hr*8), hrDays: hr, su, total: _r3(yu+hr+su), dates, pending: mine.filter(r=>r.status==='申請中').length };
+  });
+  return { y, m, day, from: p.from, to: p.to, fromS, toS, reqs, rows };
+}
+function fmtJp(d){ return `${d.getFullYear()}/${d.getMonth()+1}/${d.getDate()}（${DOW_JP[d.getDay()]}）`; }
+function renderShime(){
+  if(!document.getElementById('shimeMonth').options.length) initShime();
+  const c = calcShime();
+  document.getElementById('shimePeriod').innerHTML = `対象期間：<b>${fmtJp(c.from)} 〜 ${fmtJp(c.to)}</b>`;
+  const pend = c.reqs.filter(r=>r.status==='申請中').length;
+  const w = document.getElementById('shimeWarn');
+  if(pend){ w.style.display='block'; w.textContent = `⚠️ この期間に承認待ちの申請が${pend}件あります。締めの前に「承認待ち」から承認・却下を済ませてください（申請中は集計に入りません）。`; }
+  else w.style.display='none';
+  const tbody = document.getElementById('shimeBody');
+  if(!c.rows.length){ tbody.innerHTML = `<tr><td colspan="9" class="empty">${_staffLoaded?'この園の職員が登録されていません':'読み込み中...'}</td></tr>`; return; }
+  const z = v => v ? v : '<span style="color:var(--tm)">0</span>';
+  tbody.innerHTML = c.rows.map(x=>`<tr>
+    <td style="font-weight:500">${x.s.name}${x.pending?` <span class="sbadge s-pend">申請中${x.pending}</span>`:''}</td>
+    <td><span class="sbadge s-gray">${x.s.type}</span></td>
+    <td class="num">${z(x.yu)}</td>
+    <td class="num">${x.s.type==='パート'?'<span style="font-size:11px;color:var(--tm)">対象外</span>':z(x.hrHours)}</td>
+    <td class="num">${z(x.su)}</td>
+    <td class="num" style="font-weight:600">${z(x.total)}</td>
+    <td style="font-size:12px;color:var(--ts)">${x.dates.join('、')||'—'}</td>
+    <td class="num">${DB.getRemain(x.s)}日</td>
+    <td><span class="sbadge ${DB.getObligDone(x.s)?'s-ok':'s-pend'}">${DB.getObligDone(x.s)?'✓ 達成':'未達成'}</span></td>
+  </tr>`).join('');
+}
+function loadExcelJS(){
+  if(window.ExcelJS) return Promise.resolve();
+  return new Promise((res, rej)=>{
+    const sc = document.createElement('script');
+    sc.src = 'https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js';
+    sc.onload = ()=> window.ExcelJS ? res() : rej(new Error('ExcelJS not found'));
+    sc.onerror = ()=> rej(new Error('ExcelJSを読み込めませんでした'));
+    document.head.appendChild(sc);
+  });
+}
+// Excelファイル（ブック）を作る。ブラウザ・テストの両方で使えるよう ExcelJS を引数で受け取る
+function buildShimeWorkbook(XL, c, gardenName, hojin){
+  const FONT = 'ＭＳ ゴシック';
+  const wb = new XL.Workbook();
+  wb.creator = 'UQチェッカー';
+  const thin = {style:'thin', color:{argb:'FF999999'}};
+  const border = {top:thin, left:thin, bottom:thin, right:thin};
+  const headFill = {type:'pattern', pattern:'solid', fgColor:{argb:'FFE8EEFB'}};
+  const periodTxt = `対象期間：${fmtJp(c.from)} 〜 ${fmtJp(c.to)}（${c.day===0?'末日':c.day+'日'}締め）`;
+  const outTxt = `出力日時：${(()=>{const n=new Date();return `${n.getFullYear()}/${n.getMonth()+1}/${n.getDate()} ${String(n.getHours()).padStart(2,'0')}:${String(n.getMinutes()).padStart(2,'0')}`})()}`;
+  function setup(ws, title, headers, widths){
+    ws.pageSetup = { paperSize:9, orientation:'landscape', fitToPage:true, fitToWidth:1, fitToHeight:0,
+      margins:{left:0.4,right:0.4,top:0.5,bottom:0.5,header:0.3,footer:0.3} };
+    ws.headerFooter = { oddFooter: '&C&"ＭＳ ゴシック"&12&P / &N' };
+    ws.columns = widths.map(w=>({width:w}));
+    ws.addRow([title]); ws.getRow(1).font = {name:FONT, size:16, bold:true};
+    ws.addRow([`${hojin}　${gardenName}`]); ws.getRow(2).font = {name:FONT, size:12};
+    ws.addRow([periodTxt]); ws.getRow(3).font = {name:FONT, size:12, bold:true};
+    ws.addRow([outTxt]); ws.getRow(4).font = {name:FONT, size:12};
+    ws.addRow([]);
+    const hr = ws.addRow(headers);
+    hr.eachCell(cell=>{ cell.font={name:FONT,size:12,bold:true}; cell.fill=headFill; cell.border=border;
+      cell.alignment={vertical:'middle',horizontal:'center',wrapText:true}; });
+    hr.height = 36;
+    ws.views = [{state:'frozen', ySplit:6}];
+    ws.pageSetup.printTitlesRow = '6:6';
+  }
+  function styleBody(row, numCols){
+    row.eachCell({includeEmpty:true}, (cell, col)=>{
+      cell.font = {name:FONT, size:12}; cell.border = border;
+      cell.alignment = {vertical:'middle', horizontal: numCols.includes(col)?'right':'left', wrapText: !numCols.includes(col)};
+    });
+  }
+  // シート1：職員別集計
+  const ws1 = wb.addWorksheet('職員別集計');
+  setup(ws1, `有給休暇 月次締め一覧（${c.y}年${c.m}月分）`,
+    ['氏名','雇用形態','有給\n（日）','時間休\n（時間）','夏期\n（日）','期間計\n（日）','取得日','有給残\n（出力時点）','5日義務','申請中\n（件）'],
+    [18,10,9,10,9,9,42,15,10,9]);
+  const tot = {yu:0, hr:0, su:0, total:0};
+  c.rows.forEach(x=>{
+    const isPart = x.s.type==='パート';
+    const row = ws1.addRow([x.s.name, x.s.type, x.yu, isPart?'対象外':x.hrHours, x.su, x.total,
+      x.dates.join('、'), DB.getRemain(x.s), DB.getObligDone(x.s)?'達成':'未達成', x.pending||'']);
+    styleBody(row, [3,4,5,6,8,10]);
+    [3,5,6,8].forEach(i=>row.getCell(i).numFmt='0.###');
+    if(!isPart) row.getCell(4).numFmt='0.##';
+    tot.yu+=x.yu; tot.hr+=isPart?0:x.hrHours; tot.su+=x.su; tot.total+=x.total;
+  });
+  const tr = ws1.addRow(['合計','', _r3(tot.yu), _r3(tot.hr), _r3(tot.su), _r3(tot.total), '', '', '', '']);
+  styleBody(tr, [3,4,5,6,8,10]);
+  tr.eachCell({includeEmpty:true}, cell=>{ cell.font={name:FONT,size:12,bold:true}; cell.fill={type:'pattern',pattern:'solid',fgColor:{argb:'FFF2F2F2'}}; });
+  [3,4,5,6].forEach(i=>tr.getCell(i).numFmt='0.###');
+  const n1 = ws1.addRow([]); 
+  const n2 = ws1.addRow(['※ 承認済みの申請のみ集計。時間休は1時間＝0.125日として期間計に含む。申請中は「取得明細」シートを参照。']);
+  n2.font = {name:FONT, size:12};
+  // シート2：取得明細
+  const ws2 = wb.addWorksheet('取得明細');
+  setup(ws2, `有給休暇 取得明細（${c.y}年${c.m}月分）`,
+    ['氏名','取得日','曜日','区分','種別','日数','状態','承認者','承認日時','メモ'],
+    [18,13,7,10,14,8,10,14,19,30]);
+  const order = {}; DB.getStaff().forEach((s,i)=>order[s.id]=i);
+  const list = [...c.reqs].sort((a,b)=> ((order[a.staffId]??999)-(order[b.staffId]??999)) || String(a.date).localeCompare(String(b.date)));
+  if(!list.length){
+    const r = ws2.addRow(['この期間の取得はありません']); r.font={name:FONT,size:12};
+  }
+  list.forEach(r=>{
+    const iso = parseInDate(String(r.date).slice(0,10));
+    const d = iso ? new Date(iso+'T00:00:00') : null;
+    const cat = r.category==='夏期'?'夏期':r.category==='時間単位'?'時間休':'有給';
+    const row = ws2.addRow([r.name, d?`${d.getFullYear()}/${d.getMonth()+1}/${d.getDate()}`:r.date, d?DOW_JP[d.getDay()]:'',
+      cat, r.type, Number(r.days)||0, r.status, r.approver||'', r.approvedAt||'', r.memo||'']);
+    styleBody(row, [6]);
+    row.getCell(6).numFmt='0.###';
+    [2,3,4,7].forEach(i=>row.getCell(i).alignment={vertical:'middle',horizontal:'center'});
+    if(r.status==='申請中') row.eachCell({includeEmpty:true}, cell=>{ cell.fill={type:'pattern',pattern:'solid',fgColor:{argb:'FFFFF4D6'}}; });
+  });
+  return wb;
+}
+async function exportShimeXlsx(){
+  const btn = document.getElementById('shimeXlsxBtn');
+  const c = calcShime();
+  const pend = c.reqs.filter(r=>r.status==='申請中').length;
+  if(pend && !confirm(`この期間に承認待ちの申請が${pend}件あります（集計には入りません）。\nこのまま出力しますか？`)) return;
+  btn.disabled = true; btn.textContent = '作成中...';
+  try{
+    await loadExcelJS();
+    const hojin = document.documentElement.classList.contains('law-y') ? '社会福祉法人雄雅会' : '学校法人柴学園';
+    const wb = buildShimeWorkbook(window.ExcelJS, c, MY_GARDEN, hojin);
+    const buf = await wb.xlsx.writeBuffer();
+    const blob = new Blob([buf], {type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `有給締め_${MY_GARDEN}_${c.y}年${c.m}月分.xlsx`;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(()=>URL.revokeObjectURL(a.href), 3000);
+  }catch(e){
+    alert('Excelファイルを作成できませんでした。\n' + (e && e.message || e) + '\nインターネット接続を確認し、もう一度お試しください。');
+  }finally{
+    btn.disabled = false; btn.textContent = '📥 Excelで出力';
+  }
 }
 
 try {
