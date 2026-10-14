@@ -434,7 +434,8 @@ const GAS_URL = 'https://script.google.com/macros/s/AKfycbwoVzAB2ZHhhX6O7vHBJstE
 const API = {
   jsonp(params) {
     return new Promise((resolve, reject) => {
-      const cb = 'cb_' + Date.now();
+      // 5秒ごとの自動更新と同じ瞬間に呼ばれても名前がかぶらないよう、乱数を付ける（2026-10-14）
+      const cb = 'cb_' + Date.now() + '_' + Math.floor(Math.random()*1000000);
       const script = document.createElement('script');
       const query = new URLSearchParams({...params, callback: cb}).toString();
       script.src = GAS_URL + '?' + query;
@@ -1272,13 +1273,37 @@ function showToast(msg){
   setTimeout(()=>t.classList.remove('show'),2500);
 }
 
+// 二重送信防止（2026-10-14 つくば園：1回押しただけで2件・4件登録される不具合の対策）
+//  ・送信中は何度押しても受け付けない（_submitting）
+//  ・同じ日・同じ種類の申請が「申請中」か「受付済」で既にあれば送らない
+//  ・サーバー（GAS v3.4）側でも同じチェックをして、二重なら登録しない
+let _submitting = false;
+function applyTypeOf(d){
+  if(applyCategory==='夏期') return '全日（夏季）';
+  if(applyCategory==='時間単位') return applyHours+'時間';
+  return dateTypes[d] || '全日';
+}
+function findSameRequest(d){
+  const t = applyTypeOf(d);
+  return DB.getRequests().find(r =>
+    String(r.staffId)===String(me.id) && r.date===d &&
+    (r.category||'有給')===applyCategory && String(r.type)===String(t) &&
+    (r.status==='申請中' || r.status==='承認済'));
+}
+
 async function submitApply(){
   if(!me) return;
+  if(_submitting) return;
   const memo=document.getElementById('applyMemo').value;
   const s=getLatestMe(); if(!s) return;
   const btn = document.getElementById('subBtn');
 
   if(!multiDates.length){ showToast('日付を1つ以上選択してください'); return; }
+  const already = multiDates.filter(d => findSameRequest(d));
+  if(already.length){
+    showToast(`${already.map(d=>d.slice(5).replace('-','/')).join('、')} はすでに申請済みです（履歴をご確認ください）`);
+    return;
+  }
   const dates = [...multiDates];
 
   let totalDays;
@@ -1295,7 +1320,9 @@ async function submitApply(){
     if(r < totalDays){ showToast(`残日数が不足しています（必要：${totalDays}日）`); return; }
   }
 
+  _submitting = true;
   btn.disabled = true;
+  let okCount = 0, dupCount = 0, ngCount = 0;
   for(let i=0;i<dates.length;i++){
     btn.textContent = dates.length>1 ? `送信中... (${i+1}/${dates.length})` : '送信中...';
     let reqData;
@@ -1308,9 +1335,31 @@ async function submitApply(){
       const days = t==='全日' ? 1 : 0.5;
       reqData = {staffId:me.id,name:s.name,date:dates[i],type:t,days,memo,category:'有給',garden:MY_GARDEN};
     }
-    // ローカル（この端末）にすぐ反映しつつ、本番GASにも送って園長側に届くようにする
-    DB.addRequest(reqData);
-    await API.addRequest(reqData);
+    // 本番GASに送り、登録できたものだけこの端末の履歴にも反映する
+    // （以前は送信前に端末へ仮登録していたため、サーバーの登録と合わせて2件に見えることがあった）
+    const res = await API.addRequest(reqData);
+    if(res && res.ok && res.duplicate){
+      dupCount++;
+    } else if(res && res.ok && res.data){
+      const reqs = DB.getRequests();
+      if(!reqs.some(r=>r.id===res.data.id)){ reqs.unshift(res.data); DB.saveRequests(reqs); }
+      okCount++;
+    } else {
+      ngCount++;
+    }
+  }
+  _submitting = false;
+  btn.textContent = '申請する'; btn.disabled = false;
+
+  if(ngCount){
+    // 通信がうまくいかなかった日は選択を残す（最新の履歴を読み込んでから再送すれば、二重にはならない）
+    await syncProd();
+    multiDates = multiDates.filter(d => !findSameRequest(d));
+    renderCal(); renderMultiDateChips(); updateRemainPreview();
+    if(multiDates.length){
+      showToast(`通信が不安定で ${multiDates.length}日分 が送れていない可能性があります。履歴を確認してから、もう一度「申請する」を押してください`);
+      return;
+    }
   }
   document.getElementById('applyMemo').value='';
   multiDates = [];
@@ -1318,9 +1367,10 @@ async function submitApply(){
   renderCal();
   renderMultiDateChips();
   updateRemainPreview();
-  showToast(`${dates.length}日分の申請を送信しました！園長の受付をお待ちください`);
+  showToast(dupCount && !okCount
+    ? 'すでに申請済みです（二重には登録していません）'
+    : `${okCount || dates.length}日分の申請を送信しました！園長の受付をお待ちください`);
   showPage('history',document.querySelectorAll('.ni')[2]);
-  btn.textContent = '申請する'; btn.disabled = false;
   syncProd();
 }
 </script>
