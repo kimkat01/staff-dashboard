@@ -10,7 +10,7 @@
    ・LOG_URL が空のあいだは何もしない
    ============================================================ */
 (function () {
-  var LOG_URL = '';   // ← GAS「アクセスログ」のウェブアプリ /exec のURL
+  var LOG_URL = 'https://script.google.com/macros/s/AKfycbxtFnYXdUs1XW5nIEoLmbJXo7HlGe7z4r-Uftuxv-tZq-CNF1vOk3JKzQXOUC7h-cAMSw/exec';   // ← GAS「アクセスログ」のウェブアプリ /exec のURL
   var THROTTLE_MS = 60 * 1000;          // 同じツールは1分以内なら1回
   var THROTTLE_HOME_MS = 30 * 60 * 1000; // ホームは30分以内なら1回
 
