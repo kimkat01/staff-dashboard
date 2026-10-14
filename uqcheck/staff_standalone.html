@@ -94,6 +94,9 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Hiragino Sans','Yu Gothic UI'
 .cal-day.other{visibility:hidden;cursor:default}
 .cal-day.today{box-shadow:inset 0 0 0 1.5px #4169e1}
 .cal-day.past{color:#ddd;cursor:not-allowed}
+/* 過去日でも申請できる日（前月1日〜昨日）：少し薄く表示してタップ可能（2026-10-14） */
+.cal-day.pastok:not(.sel){background:#f4f4f6;color:#999}
+.cal-day.pastok.sun:not(.sel),.cal-day.pastok.sat:not(.sel){color:#bbb}
 .cal-day.sun:not(.sel){color:#e05a5a}
 .cal-day.sat:not(.sel){color:#4a7fd6}
 .cal-day.sel{background:#4169e1;color:#fff;font-weight:700;box-shadow:none}
@@ -316,6 +319,7 @@ html.law-y .date-chip-x{color:#81c784}
     <div class="form-section">
       <div class="form-row" id="dateRow">
         <div class="f-label">取得したい日をタップして選択（複数選択可）</div>
+        <div style="font-size:12px;color:#999;margin:-2px 0 8px">※申請し忘れた過去の日も、前月1日までさかのぼって申請できます（‹ で前月へ）</div>
         <div class="cal-wrap">
           <div class="cal-head">
             <button type="button" class="cal-nav" onclick="calMove(-1)">‹</button>
@@ -773,6 +777,9 @@ function renderCal(){
   // 日本時間（端末の時刻）で「今日」を判定する。toISOString()は世界標準時のため、朝9時前は前日扱いになっていた（2026-10-06修正）
   const _now = new Date();
   const todayStr = `${_now.getFullYear()}-${pad2(_now.getMonth()+1)}-${pad2(_now.getDate())}`;
+  // 過去日の申請（2026-10-14 江戸川中央園の要望）：締め前に申請し忘れた分を出せるよう、前月1日まで遡って選べる
+  const _lim = new Date(_now.getFullYear(), _now.getMonth()-1, 1);
+  const pastLimitStr = `${_lim.getFullYear()}-${pad2(_lim.getMonth()+1)}-01`;
 
   let html = DOW_JP.map(d=>`<div class="cal-dow">${d}</div>`).join('');
   for(let i=0;i<firstDow;i++) html += `<div class="cal-day other">-</div>`;
@@ -781,13 +788,15 @@ function renderCal(){
     const dateStr = `${calState.y}-${pad2(calState.m+1)}-${pad2(d)}`;
     const dow = new Date(calState.y, calState.m, d).getDay();
     const isPast = dateStr < todayStr;
+    const isLocked = dateStr < pastLimitStr;   // 前月1日より前は申請不可
     let cls = 'cal-day';
     if(dow===0) cls += ' sun';
     if(dow===6) cls += ' sat';
     if(dateStr===todayStr) cls += ' today';
-    if(isPast) cls += ' past';
+    if(isLocked) cls += ' past';
+    else if(isPast) cls += ' pastok';
     if(multiDates.includes(dateStr)) cls += ' sel';
-    const onclick = isPast ? '' : ` onclick="calPick('${dateStr}')"`;
+    const onclick = isLocked ? '' : ` onclick="calPick('${dateStr}')"`;
     html += `<div class="${cls}"${onclick}>${d}</div>`;
   }
   gridEl.innerHTML = html;
