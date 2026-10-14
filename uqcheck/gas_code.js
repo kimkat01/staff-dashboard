@@ -3,6 +3,10 @@
 // スプレッドシート：「UQchecker」（cryk0289@gmail.com）
 // スプレッドシートID: 197yLc-CxuIAomrtAoTPXY1cROu8hWfsxjCbmi7YGIno
 //
+// 2026-10-14 v3.2
+//  ・職員マスタ W列「1日の所定時間」を追加（空欄なら8時間）。短時間勤務の職員の時間休を正しく日数に直すため
+//  ・園長画面の「職員の編集」から W列も変更できるようにした
+//
 // 2026-10-06 v3.1
 //  ・園長画面「全申請履歴」から申請の取得日を変更できる updateRequestDate を追加
 //  ・日付の形が正しくないときは、元の日付を消さずにそのまま残す
@@ -145,9 +149,9 @@ function initSheets() {
       '時間休付与','時間休取得済',
       '基本給','手当','月平均所定時間','時給',
       'メールアドレス','園名','園長メール','基準日',
-      '次回付与日','次回付与日数','状態'
+      '次回付与日','次回付与日数','状態','1日の所定時間'
     ]);
-    staffSheet.getRange(1,1,1,22).setFontWeight('bold').setBackground('#4169e1').setFontColor('#ffffff');
+    staffSheet.getRange(1,1,1,23).setFontWeight('bold').setBackground('#4169e1').setFontColor('#ffffff');
   }
   let reqSheet = SS.getSheetByName(SHEET_REQUESTS);
   if (!reqSheet) reqSheet = SS.insertSheet(SHEET_REQUESTS);
@@ -192,6 +196,8 @@ function rowToStaff(row) {
     nextGrantDate: formatDate(row[19]),
     nextGrant: Number(row[20])||0,
     status: row[21] ? String(row[21]) : '',
+    // 1日の所定時間（W列）：空欄・0なら8時間
+    dailyHours: (Number(row[22]) > 0) ? Number(row[22]) : 8,
   };
 }
 
@@ -218,6 +224,7 @@ const STAFF_EDIT_COLS = {
   nextGrantDate:  { col: 20, label: '次回付与日',   kind: 'date' },
   nextGrant:      { col: 21, label: '次回付与日数', kind: 'num'  },
   status:         { col: 22, label: '状態',         kind: 'text' },
+  dailyHours:     { col: 23, label: '1日の所定時間', kind: 'num'  },
 };
 
 function updateStaffFields(staffId, garden, editor, data) {

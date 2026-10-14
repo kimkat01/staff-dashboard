@@ -695,6 +695,8 @@ const DB = {
   getObligDone(s){ return s.used >= 5; },
   // 時間休（単位：日）。パートは対象外
   isPart(s){ return s && s.type==='パート'; },
+  // 1日の所定労働時間（職員マスタW列）。空欄・0なら8時間。短時間勤務（例：6時間）は時間休の換算に使う
+  hpd(s){ const h = Number(s && s.dailyHours); return h>0 ? h : 8; },
   isIkukyu(s){ return s && String(s.status||'').indexOf('育休')>=0; },
   getHourLeaveRemain(s){
     if(this.isPart(s)) return 0;
@@ -1053,8 +1055,10 @@ function renderHome(){
   document.getElementById('hUsed').textContent = part ? '—' : (s.hourLeaveUsed||0);
   const hn = document.getElementById('hourNote');
   const hRaw = Math.max(0, Math.round(((s.hourLeaveGrant===undefined||s.hourLeaveGrant===''?5:Number(s.hourLeaveGrant)||0) - (Number(s.hourLeaveUsed)||0))*1000)/1000);
+  const hpd = DB.hpd(s);
+  const hpdNote = (!part && hpd!==8) ? `<div style="background:#eef3ff;border-radius:8px;padding:7px 10px;font-size:12px;color:#4169e1;text-align:center;margin-top:6px">1日${hpd}時間勤務で計算（残り${Math.round(hr*hpd*100)/100}時間）</div>` : '';
   if(hn) hn.innerHTML = part ? `<div style="background:#f2f2f2;border-radius:8px;padding:7px 10px;font-size:12px;color:#888;text-align:center">パートのため対象外</div>`
-    : (hr < hRaw ? `<div style="background:#fff8e1;border-radius:8px;padding:7px 10px;font-size:12px;color:#b8860b;text-align:center">有休の残りが${hr}日のため、時間休も${hr}日まで</div>` : '');
+    : (hr < hRaw ? `<div style="background:#fff8e1;border-radius:8px;padding:7px 10px;font-size:12px;color:#b8860b;text-align:center">有休の残りが${hr}日のため、時間休も${hr}日まで</div>` : '') + hpdNote;
   const ht = document.getElementById('catTabHour');
   if(ht) ht.style.display = part ? 'none' : '';
 }
@@ -1158,6 +1162,7 @@ function setCat(cat,el){
   el.classList.add('active');
   const isHour = cat==='時間単位';
   document.getElementById('hourRow').style.display = isHour ? '' : 'none';
+  if(isHour){ const sme = getLatestMe(); if(sme) refreshHourOptions(sme); }
   multiDates = [];
   dateTypes = {};
   renderCal();
@@ -1213,6 +1218,21 @@ function renderMultiDateChips(){
   }
 }
 
+// 時間休の時間数 → 日数（1日の所定時間で割る。8時間勤務なら1時間＝0.125日、6時間勤務なら1時間＝約0.167日）
+function hourDays(s, hours){ return Math.round(hours / DB.hpd(s) * 1000) / 1000; }
+// 時間休のボタンは「1日の所定時間より短い時間」だけ出す（6時間勤務なら1〜5時間）
+function refreshHourOptions(s){
+  const max = DB.hpd(s);
+  document.querySelectorAll('#hourRow .ropt').forEach(b=>{
+    const m = String(b.getAttribute('onclick')||'').match(/selHour\(this,(\d+)\)/);
+    const v = m ? Number(m[1]) : 0;
+    b.style.display = (v && v >= max) ? 'none' : '';
+  });
+  if(applyHours >= max){
+    const first = document.querySelector('#hourRow .ropt');
+    if(first) selHour(first, 1);
+  }
+}
 function selHour(el,val){
   document.querySelectorAll('#hourRow .ropt').forEach(b=>b.classList.remove('sel'));
   el.classList.add('sel'); applyHours=val; updateRemainPreview();
@@ -1233,7 +1253,8 @@ function updateRemainPreview(){
     el.textContent = cnt>0 ? `現在 ${r}日 → 申請後 ${Math.max(0,r-cnt)}日（夏季休暇・${cnt}日分）` : '';
   } else if(applyCategory==='時間単位'){
     const r=DB.getHourLeaveRemain(s);
-    el.textContent = cnt>0 ? `現在 ${r}日 → 申請後 ${Math.max(0,Math.round((r-applyHours/8)*1000)/1000)}日（${applyHours}時間＝${applyHours/8}日）` : '';
+    const hd = hourDays(s, applyHours);
+    el.textContent = cnt>0 ? `現在 ${r}日 → 申請後 ${Math.max(0,Math.round((r-hd)*1000)/1000)}日（${applyHours}時間＝${hd}日）` : '';
   } else {
     const totalDays = multiDates.reduce((sum,d)=> sum + ((dateTypes[d]||'全日')==='全日'?1:0.5), 0);
     const r=DB.getRemain(s);
@@ -1263,7 +1284,7 @@ async function submitApply(){
   } else if(applyCategory==='時間単位'){
     if(DB.isPart(s)){ showToast('パートの方は時間休の対象外です'); return; }
     const r=DB.getHourLeaveRemain(s);
-    if(r<applyHours/8){ showToast('時間休の残りが不足しています'); return; }
+    if(r<hourDays(s, applyHours)){ showToast('時間休の残りが不足しています'); return; }
   } else {
     totalDays = dates.reduce((sum,d)=> sum + ((dateTypes[d]||'全日')==='全日'?1:0.5), 0);
     const r = DB.getRemain(s);
@@ -1277,7 +1298,7 @@ async function submitApply(){
     if(applyCategory==='夏期'){
       reqData = {staffId:me.id,name:s.name,date:dates[i],type:'全日（夏季）',days:1,memo,category:'夏期',garden:MY_GARDEN};
     } else if(applyCategory==='時間単位'){
-      reqData = {staffId:me.id,name:s.name,date:dates[i],type:applyHours+'時間',days:applyHours/8,memo,category:'時間単位',garden:MY_GARDEN};
+      reqData = {staffId:me.id,name:s.name,date:dates[i],type:applyHours+'時間',days:hourDays(s, applyHours),memo,category:'時間単位',garden:MY_GARDEN};
     } else {
       const t = dateTypes[dates[i]] || '全日';
       const days = t==='全日' ? 1 : 0.5;

@@ -218,7 +218,7 @@ html.law-y{ --blue:#43a047; --bl:#e8f5e9; --bld:#2e7d32; --blm:#66bb6a; }
         </table>
       </div>
       <div class="shime-note">※ 承認済みの申請だけを集計しています（申請中は集計に入れず、Excelの明細に「申請中」として載せます。却下は載せません）。<br>
-      ※ Excelには「職員別集計」と「取得明細」の2枚のシートが入ります。時間休は1時間＝0.125日として期間計に含めます。</div>
+      ※ Excelには「職員別集計」と「取得明細」の2枚のシートが入ります。時間休は「1日の所定時間」で日数に直して期間計に含めます（8時間勤務なら1時間＝0.125日）。</div>
     </div>
     <!-- 職員残日数 -->
     <div id="page-staff" class="page">
@@ -249,10 +249,11 @@ html.law-y{ --blue:#43a047; --bl:#e8f5e9; --bld:#2e7d32; --blm:#66bb6a; }
     <div class="se-grid">
       <label>雇用形態<select class="modal-input" id="se_type"><option>正規</option><option>パート</option><option>嘱託</option></select></label>
       <label>状態（育休中など）<input class="modal-input" id="se_status" list="seStatusList" placeholder="空欄＝通常"></label>
+      <label>1日の所定時間（時間）<input class="modal-input" type="number" step="0.25" min="1" max="12" id="se_dailyHours" placeholder="8"></label>
       <div class="se-sec">有給休暇</div>
-      <label>今年度付与（日）<input class="modal-input" type="number" step="0.125" min="0" id="se_grant"></label>
-      <label>繰越（日）<input class="modal-input" type="number" step="0.125" min="0" id="se_carry"></label>
-      <label>取得済み（日）<input class="modal-input" type="number" step="0.125" min="0" id="se_used"></label>
+      <label>今年度付与（日）<input class="modal-input" type="number" step="any" min="0" id="se_grant"></label>
+      <label>繰越（日）<input class="modal-input" type="number" step="any" min="0" id="se_carry"></label>
+      <label>取得済み（日）<input class="modal-input" type="number" step="any" min="0" id="se_used"></label>
       <label>基準日（直近付与日）<span class="dt-wrap"><input class="modal-input" type="text" inputmode="numeric" id="se_grantDate" placeholder="例：2026/10/1"><span class="dt-btn" title="カレンダーから選ぶ">📅<input type="date" class="dt-native" data-for="se_grantDate" aria-label="カレンダーから選ぶ"></span></span></label>
       <label>次回付与日<span class="dt-wrap"><input class="modal-input" type="text" inputmode="numeric" id="se_nextGrantDate" placeholder="例：2027/10/1"><span class="dt-btn" title="カレンダーから選ぶ">📅<input type="date" class="dt-native" data-for="se_nextGrantDate" aria-label="カレンダーから選ぶ"></span></span></label>
       <label>次回付与日数<input class="modal-input" type="number" step="1" min="0" id="se_nextGrant"></label>
@@ -260,14 +261,14 @@ html.law-y{ --blue:#43a047; --bl:#e8f5e9; --bld:#2e7d32; --blm:#66bb6a; }
       <label>夏期付与（日）<input class="modal-input" type="number" step="1" min="0" id="se_summerTotal"></label>
       <label>夏期取得済（日）<input class="modal-input" type="number" step="1" min="0" id="se_summerUsed"></label>
       <div class="se-sec">時間休</div>
-      <label>時間休付与（日）<input class="modal-input" type="number" step="0.125" min="0" id="se_hourLeaveGrant"></label>
-      <label>時間休取得済（日）<input class="modal-input" type="number" step="0.125" min="0" id="se_hourLeaveUsed"></label>
+      <label>時間休付与（日）<input class="modal-input" type="number" step="any" min="0" id="se_hourLeaveGrant"></label>
+      <label>時間休取得済（日）<input class="modal-input" type="number" step="any" min="0" id="se_hourLeaveUsed"></label>
     </div>
     <div class="se-sec" style="margin-top:14px">取得日の一覧（アプリから申請・承認されたもの）</div>
     <div id="seTaken" class="se-taken"></div>
     <datalist id="seStatusList"><option value="育休中"><option value="産休中"><option value="休職中"></datalist>
     <div class="se-preview" id="sePreview"></div>
-    <div style="font-size:11px;color:var(--tm);margin-top:6px">※ 時間休は1時間＝0.125日です。変更内容はスプレッドシートの「変更履歴」シートに記録されます。</div>
+    <div style="font-size:11px;color:var(--tm);margin-top:6px">※ 時間休は1時間＝1日の所定時間分の1日です（8時間勤務なら0.125日、6時間勤務なら約0.167日）。変更内容はスプレッドシートの「変更履歴」シートに記録されます。</div>
     <div class="modal-btns">
       <button class="modal-btn modal-btn-cancel" onclick="closeStaffEdit()">キャンセル</button>
       <button class="modal-btn modal-btn-ok" id="seSaveBtn" onclick="saveStaffEdit()">保存</button>
@@ -525,7 +526,7 @@ function renderStaff(){
 // ============================================================
 // 職員の残日数 編集（2026-10-06追加・全園共通）
 // ============================================================
-const SE_NUM = ['grant','carry','used','summerTotal','summerUsed','hourLeaveGrant','hourLeaveUsed','nextGrant'];
+const SE_NUM = ['grant','carry','used','summerTotal','summerUsed','hourLeaveGrant','hourLeaveUsed','nextGrant','dailyHours'];
 const SE_DATE = ['grantDate','nextGrantDate'];
 let _seId = null;
 // 日付の入力：「2026/10/1」「2026-10-01」「20261001」のどれでも受け付ける
@@ -583,6 +584,7 @@ function openStaffEdit(id){
   SE_NUM.forEach(k=>{
     let v = s[k];
     if(k==='hourLeaveGrant' && (v===undefined||v===null||v==='')) v = (s.type==='パート') ? 0 : 5;
+    if(k==='dailyHours' && !(Number(v)>0)) v = 8;   // 空欄は8時間
     document.getElementById('se_'+k).value = (v===undefined||v===null||v==='') ? 0 : Number(v)||0;
   });
   SE_DATE.forEach(k=>{ const el=document.getElementById('se_'+k); el.value = showDate(s[k]); el.classList.remove('dt-err'); });
@@ -614,6 +616,7 @@ function closeStaffEdit(){ document.getElementById('staffEditModal').classList.r
 function _seCollect(){
   const d = { type: document.getElementById('se_type').value, status: document.getElementById('se_status').value.trim() };
   SE_NUM.forEach(k=>{ d[k] = Number(document.getElementById('se_'+k).value)||0; });
+  if(!(d.dailyHours>0)) d.dailyHours = 8;
   SE_DATE.forEach(k=>{ d[k] = parseInDate(document.getElementById('se_'+k).value); });
   return d;
 }
@@ -816,13 +819,19 @@ function calcShime(){
     const ok = mine.filter(r=>r.status==='承認済');
     const sumCat = c => _r3(ok.filter(r=>(r.category||'有給')===c).reduce((a,r)=>a+(Number(r.days)||0),0));
     const yu = sumCat('有給'), hr = sumCat('時間単位'), su = sumCat('夏期');
+    // 時間休の時間数は申請の「N時間」から数える（1日の所定時間に関係なく正しい時間になる）
+    const hpd = Number(s.dailyHours)>0 ? Number(s.dailyHours) : 8;
+    const hrH = _r3(ok.filter(r=>r.category==='時間単位').reduce((a,r)=>{
+      const m = String(r.type||'').match(/(\d+(?:\.\d+)?)\s*時間/);
+      return a + (m ? Number(m[1]) : (Number(r.days)||0)*hpd);
+    },0));
     const dates = ok.map(r=>{
       const d = parseInDate(String(r.date).slice(0,10));
       const [,mm,dd] = d.split('-');
       const tag = r.category==='時間単位' ? `(${r.type})` : r.category==='夏期' ? '(夏)' : r.type==='全日' ? '' : r.type.indexOf('午前')>=0 ? '(前半)' : r.type.indexOf('午後')>=0 ? '(後半)' : '';
       return `${+mm}/${+dd}${tag}`;
     });
-    return { s, yu, hrHours: _r3(hr*8), hrDays: hr, su, total: _r3(yu+hr+su), dates, pending: mine.filter(r=>r.status==='申請中').length };
+    return { s, yu, hrHours: hrH, hrDays: hr, su, total: _r3(yu+hr+su), dates, pending: mine.filter(r=>r.status==='申請中').length };
   });
   return { y, m, day, from: p.from, to: p.to, fromS, toS, reqs, rows };
 }
@@ -913,7 +922,7 @@ function buildShimeWorkbook(XL, c, gardenName, hojin){
   tr.eachCell({includeEmpty:true}, cell=>{ cell.font={name:FONT,size:12,bold:true}; cell.fill={type:'pattern',pattern:'solid',fgColor:{argb:'FFF2F2F2'}}; });
   [3,4,5,6].forEach(i=>tr.getCell(i).numFmt='0.###');
   const n1 = ws1.addRow([]); 
-  const n2 = ws1.addRow(['※ 承認済みの申請のみ集計。時間休は1時間＝0.125日として期間計に含む。申請中は「取得明細」シートを参照。']);
+  const n2 = ws1.addRow(['※ 承認済みの申請のみ集計。時間休は1日の所定時間で日数に直して期間計に含む（8時間勤務なら1時間＝0.125日）。申請中は「取得明細」シートを参照。']);
   n2.font = {name:FONT, size:12};
   // シート2：取得明細
   const ws2 = wb.addWorksheet('取得明細');
