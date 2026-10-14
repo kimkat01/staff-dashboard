@@ -140,6 +140,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Hiragino Sans','Yu Gothic UI'
 .sbadge{display:inline-block;padding:3px 10px;border-radius:100px;font-size:11px;font-weight:600}
 .s-ok{background:#e8f5ef;color:#1a7a4a}
 .s-ng{background:#fef0f0;color:#b83232}
+.s-sodan{background:#f3ecfb;color:#7b3fb5}
 .s-pend{background:#fff8e6;color:#a05a00}
 .s-summer{background:#fff0f7;color:#ff69b4}
 
@@ -1096,6 +1097,9 @@ function doCalc(){
     `<span style="font-size:28px;font-weight:700;color:${color}">${isDeduct?'▲':''}${result.toLocaleString()} 円</span><br><span style="font-size:11px;color:#aaa">${labels[String(mult)]}（${hours}時間）</span>`;
 }
 
+// 表示上の呼び方（2026-10-14）：年次有給休暇は労働者の権利で「許可・却下」するものではないため、
+// 画面では「承認済→受付済」「却下→相談」と表示する。データ（スプレッドシート）の値は従来どおり 承認済／却下 のまま。
+function stLabel(st){ return st==='承認済' ? '受付済' : st==='却下' ? '相談' : (st||''); }
 async function renderHistory(){
   if(!me) return;
   const el = document.getElementById('histList');
@@ -1103,9 +1107,9 @@ async function renderHistory(){
   const reqs = DB.getRequests().filter(r=>r.staffId===me.id);
   if(!reqs.length){ el.innerHTML='<div style="text-align:center;color:#aaa;font-size:13px;padding:40px 0">申請履歴はありません</div>'; return; }
   el.innerHTML = reqs.map(r=>{
-    const cls = r.status==='承認済'?(r.category==='夏期'?'s-summer':'s-ok'):r.status==='却下'?'s-ng':'s-pend';
+    const cls = r.status==='承認済'?(r.category==='夏期'?'s-summer':'s-ok'):r.status==='却下'?'s-sodan':'s-pend';
     const cat = r.category==='夏期'?'☀️ 夏季':r.category==='時間単位'?'⏰ 時間休':'📋 有給';
-    return `<div class="hist-item"><div><div class="h-date">${r.date} ${r.type||''}</div><div class="h-sub">${cat} ／ ${r.createdAt}${r.rejectedReason?' ／ '+r.rejectedReason:''}</div></div><span class="sbadge ${cls}">${r.status}</span></div>`;
+    return `<div class="hist-item"><div><div class="h-date">${r.date} ${r.type||''}</div><div class="h-sub">${cat} ／ ${r.createdAt}</div>${r.status==='却下'?`<div class="h-sub" style="color:#7b3fb5">💬 園長から相談があります${r.rejectedReason?'：'+r.rejectedReason:''}（園長と話して、必要なら別の日で申請し直してください）</div>`:''}</div><span class="sbadge ${cls}">${stLabel(r.status)}</span></div>`;
   }).join('');
 }
 
@@ -1314,7 +1318,7 @@ async function submitApply(){
   renderCal();
   renderMultiDateChips();
   updateRemainPreview();
-  showToast(`${dates.length}日分の申請を送信しました！園長の承認をお待ちください`);
+  showToast(`${dates.length}日分の申請を送信しました！園長の受付をお待ちください`);
   showPage('history',document.querySelectorAll('.ni')[2]);
   btn.textContent = '申請する'; btn.disabled = false;
   syncProd();

@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <!-- ★ アプリ名を変更する場合はこの<title>と、直下のhd-titleを変更してください -->
-<title>UQチェッカー - 園長承認画面</title>
+<title>UQチェッカー - 園長受付画面</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -64,6 +64,7 @@ tbody td{padding:11px 12px;font-size:13px;vertical-align:middle}
 .s-pend{background:var(--wl);color:var(--warn)}
 .s-ok{background:var(--gl);color:var(--green)}
 .s-ng{background:var(--rl);color:var(--red)}
+.s-sodan{background:#f3ecfb;color:#7b3fb5}
 .s-gray{background:var(--bg);color:var(--ts);border:1px solid var(--bd)}
 .s-summer{background:#fff0f7;color:#ff69b4}
 .action-row{display:flex;gap:6px}
@@ -134,7 +135,7 @@ html.law-y{ --blue:#43a047; --bl:#e8f5e9; --bld:#2e7d32; --blm:#66bb6a; }
 <body>
 <div id="gardenErrorView" style="display:none;min-height:100vh;display:none;align-items:center;justify-content:center;background:var(--bg,#f5f6fa);padding:24px">
   <div style="max-width:360px;text-align:center;background:#fff;border-radius:12px;padding:32px 24px;box-shadow:0 2px 12px rgba(0,0,0,.08)">
-    <div style="font-size:18px;font-weight:700;color:var(--t,#222);margin-bottom:12px">UQチェッカー｜園長承認</div>
+    <div style="font-size:18px;font-weight:700;color:var(--t,#222);margin-bottom:12px">UQチェッカー｜園長受付</div>
     <div style="font-size:14px;color:#c0392b;line-height:1.7">このURLからはアクセスできません。<br>園ごとに配布されている専用のリンクをご利用ください。</div>
     <div style="margin-top:10px;font-size:12px;color:#999">リンクが分からない場合は、本部にご確認ください。</div>
   </div>
@@ -142,29 +143,29 @@ html.law-y{ --blue:#43a047; --bl:#e8f5e9; --bld:#2e7d32; --blm:#66bb6a; }
 <div id="appRoot" style="display:none">
 <div class="topbar">
   <div>
-    <div class="topbar-title">UQチェッカー｜園長承認</div>
+    <div class="topbar-title">UQチェッカー｜園長受付</div>
     <div class="topbar-sub" id="hdSub">柴学園 有給管理システム</div>
   </div>
   <div class="topbar-right">
-    <span class="badge-pending" id="topPending">承認待ち 0件</span>
+    <span class="badge-pending" id="topPending">受付待ち 0件</span>
     <button class="refresh-btn" onclick="refreshAll()">🔄 更新</button>
   </div>
 </div>
 <div class="layout">
   <div class="sidebar">
     <div class="sidebar-label">メニュー</div>
-    <div class="sidebar-item active" onclick="showPage('pending',this)"><span class="icon">⏳</span>承認待ち<span class="pending-cnt" id="sidebarCnt">0</span></div>
+    <div class="sidebar-item active" onclick="showPage('pending',this)"><span class="icon">⏳</span>受付待ち<span class="pending-cnt" id="sidebarCnt">0</span></div>
     <div class="sidebar-item" onclick="showPage('all',this)"><span class="icon">📋</span>全申請履歴</div>
     <div class="sidebar-item" onclick="showPage('staff',this)"><span class="icon">👥</span>職員の残日数</div>
     <div class="sidebar-item" onclick="showPage('shime',this)"><span class="icon">📤</span>月次締め出力</div>
     <div class="sidebar-divider"></div>
     <div class="sidebar-label">設定</div>
-    <div class="sidebar-item" onclick="document.getElementById('approverModal').classList.add('open')"><span class="icon">⚙️</span>承認者名の設定</div>
+    <div class="sidebar-item" onclick="document.getElementById('approverModal').classList.add('open')"><span class="icon">⚙️</span>受付者名の設定</div>
   </div>
   <div class="main">
     <!-- 承認待ち -->
     <div id="page-pending" class="page active">
-      <div class="page-title">承認待ちの申請</div>
+      <div class="page-title">受付待ちの申請</div>
       <div class="alert-bar" id="alertBar">⚠️ <span id="alertText"></span></div>
       <div class="tbl-wrap">
         <table>
@@ -181,13 +182,13 @@ html.law-y{ --blue:#43a047; --bl:#e8f5e9; --bld:#2e7d32; --blm:#66bb6a; }
         <select class="filter-sel" id="histStatus" onchange="renderAll()">
           <option value="">全ステータス</option>
           <option value="申請中">申請中</option>
-          <option value="承認済">承認済</option>
-          <option value="却下">却下</option>
+          <option value="承認済">受付済</option>
+          <option value="却下">相談</option>
         </select>
       </div>
       <div class="tbl-wrap">
         <table>
-          <thead><tr><th>氏名</th><th>取得日</th><th>種別</th><th>申請日時</th><th>承認者</th><th>ステータス</th><th>編集</th></tr></thead>
+          <thead><tr><th>氏名</th><th>取得日</th><th>種別</th><th>申請日時</th><th>受付者</th><th>ステータス</th><th>編集</th></tr></thead>
           <tbody id="allBody"></tbody>
         </table>
       </div>
@@ -217,7 +218,7 @@ html.law-y{ --blue:#43a047; --bl:#e8f5e9; --bld:#2e7d32; --blm:#66bb6a; }
           <tbody id="shimeBody"></tbody>
         </table>
       </div>
-      <div class="shime-note">※ 承認済みの申請だけを集計しています（申請中は集計に入れず、Excelの明細に「申請中」として載せます。却下は載せません）。<br>
+      <div class="shime-note">※ 受付済みの申請だけを集計しています（申請中は集計に入れず、Excelの明細に「申請中」として載せます。「相談」になった申請は載せません）。<br>
       ※ Excelには「職員別集計」と「取得明細」の2枚のシートが入ります。時間休は「1日の所定時間」で日数に直して期間計に含めます（8時間勤務なら1時間＝0.125日）。</div>
     </div>
     <!-- 職員残日数 -->
@@ -264,7 +265,7 @@ html.law-y{ --blue:#43a047; --bl:#e8f5e9; --bld:#2e7d32; --blm:#66bb6a; }
       <label>時間休付与（日）<input class="modal-input" type="number" step="any" min="0" id="se_hourLeaveGrant"></label>
       <label>時間休取得済（日）<input class="modal-input" type="number" step="any" min="0" id="se_hourLeaveUsed"></label>
     </div>
-    <div class="se-sec" style="margin-top:14px">取得日の一覧（アプリから申請・承認されたもの）</div>
+    <div class="se-sec" style="margin-top:14px">取得日の一覧（アプリから申請・受付されたもの）</div>
     <div id="seTaken" class="se-taken"></div>
     <datalist id="seStatusList"><option value="育休中"><option value="産休中"><option value="休職中"></datalist>
     <div class="se-preview" id="sePreview"></div>
@@ -292,8 +293,8 @@ html.law-y{ --blue:#43a047; --bl:#e8f5e9; --bld:#2e7d32; --blm:#66bb6a; }
 <!-- 承認者設定モーダル -->
 <div class="modal-overlay" id="approverModal">
   <div class="modal">
-    <div class="modal-title">承認者名の設定</div>
-    <div class="modal-label">承認者名（园長のお名前）</div>
+    <div class="modal-title">受付者名の設定</div>
+    <div class="modal-label">受付者名（園長のお名前）</div>
     <input type="text" class="modal-input" id="approverInput" placeholder="例：園長 鈴木">
     <div class="modal-btns">
       <button class="modal-btn modal-btn-cancel" onclick="document.getElementById('approverModal').classList.remove('open')">キャンセル</button>
@@ -417,7 +418,7 @@ function saveApprover(){
   const v=document.getElementById('approverInput').value.trim()||'園長';
   lsSet('ym_approver',v);
   document.getElementById('approverModal').classList.remove('open');
-  alert('承認者名を「'+v+'」に設定しました');
+  alert('受付者名を「'+v+'」に設定しました');
 }
 try { document.getElementById('approverInput').value = getApprover(); } catch(e){ console.error('approverInput初期化失敗:', e); }
 
@@ -432,18 +433,21 @@ function showPage(name,el){
   if(name==='shime') renderShime();
 }
 
+// 表示上の呼び方（2026-10-14）：年次有給休暇は労働者の権利で「許可・却下」するものではないため、
+// 画面では「承認済→受付済」「却下→相談」と表示する。データ（スプレッドシート）の値は従来どおり 承認済／却下 のまま。
+function stLabel(st){ return st==='承認済' ? '受付済' : st==='却下' ? '相談' : (st||''); }
 function fmtDate(d){ const dt=new Date(d); return `${dt.getMonth()+1}/${dt.getDate()}`; }
 
 function renderPending(){
   const reqs = DB.getRequests().filter(r=>r.status==='申請中');
   const cnt = reqs.length;
-  document.getElementById('topPending').textContent = `承認待ち ${cnt}件`;
+  document.getElementById('topPending').textContent = `受付待ち ${cnt}件`;
   document.getElementById('sidebarCnt').textContent = cnt;
   const ab = document.getElementById('alertBar');
-  if(cnt>0){ ab.classList.add('show'); document.getElementById('alertText').textContent=`${cnt}件の申請が承認を待っています`; }
+  if(cnt>0){ ab.classList.add('show'); document.getElementById('alertText').textContent=`${cnt}件の申請が受付を待っています`; }
   else ab.classList.remove('show');
   const tbody = document.getElementById('pendingBody');
-  if(!reqs.length){ tbody.innerHTML=`<tr><td colspan="8" class="empty">承認待ちの申請はありません</td></tr>`; return; }
+  if(!reqs.length){ tbody.innerHTML=`<tr><td colspan="8" class="empty">受付待ちの申請はありません</td></tr>`; return; }
   tbody.innerHTML = reqs.map(r=>{
     const s = DB.getStaffById(r.staffId);
     const expDays = s ? DB.getExpireDays(s) : null;
@@ -459,8 +463,8 @@ function renderPending(){
       <td style="font-size:12px;color:var(--tm)">${r.createdAt}</td>
       <td style="font-size:12px;color:var(--ts)">${r.memo||'—'}</td>
       <td><div class="action-row">
-        <button class="abtn abtn-ok" onclick="directApprove('${r.id}', this)">✓ 承認</button>
-        <button class="abtn abtn-ng" onclick="openAction('${r.id}','reject')">✗ 却下</button>
+        <button class="abtn abtn-ok" onclick="directApprove('${r.id}', this)">✓ 受付</button>
+        <button class="abtn abtn-ng" onclick="openAction('${r.id}','reject')">💬 相談</button>
       </div></td>
     </tr>`;
   }).join('');
@@ -477,8 +481,8 @@ function renderAll(){
   const tbody=document.getElementById('allBody');
   if(!reqs.length){ tbody.innerHTML=`<tr><td colspan="7" class="empty">該当する申請がありません</td></tr>`; return; }
   tbody.innerHTML=reqs.map(r=>{
-    const cls=r.status==='承認済'?'s-ok':r.status==='却下'?'s-ng':'s-pend';
-    const catB2 = r.category==='夏期'?'<span class="sbadge" style="background:#fff0f7;color:#ff69b4;font-size:10px">☀️</span> ':r.category==='時間単位'?'<span class="sbadge" style="background:#eef3ff;color:#4169e1;font-size:10px">⏰ 時間休</span> ':''; return `<tr><td style="font-weight:500">${r.name}</td><td>${r.date}</td><td>${catB2}${r.type}（${r.days}日）</td><td style="font-size:12px;color:var(--tm)">${r.createdAt}</td><td style="font-size:12px">${r.approver||'—'}</td><td><span class="sbadge ${cls}">${r.status}</span></td><td><button class="abtn abtn-ok" style="white-space:nowrap" onclick="openReqEdit('${r.id}')">📅 日付</button></td></tr>`;
+    const cls=r.status==='承認済'?'s-ok':r.status==='却下'?'s-sodan':'s-pend';
+    const catB2 = r.category==='夏期'?'<span class="sbadge" style="background:#fff0f7;color:#ff69b4;font-size:10px">☀️</span> ':r.category==='時間単位'?'<span class="sbadge" style="background:#eef3ff;color:#4169e1;font-size:10px">⏰ 時間休</span> ':''; return `<tr><td style="font-weight:500">${r.name}</td><td>${r.date}</td><td>${catB2}${r.type}（${r.days}日）</td><td style="font-size:12px;color:var(--tm)">${r.createdAt}</td><td style="font-size:12px">${r.approver||'—'}</td><td><span class="sbadge ${cls}">${stLabel(r.status)}</span>${r.status==='却下'&&r.rejectedReason?`<div style="font-size:11px;color:var(--ts);margin-top:3px">${r.rejectedReason}</div>`:''}</td><td><button class="abtn abtn-ok" style="white-space:nowrap" onclick="openReqEdit('${r.id}')">📅 日付</button></td></tr>`;
   }).join('');
 }
 
@@ -604,12 +608,12 @@ function renderStaffTaken(s){
   const sum = {有給:0, 夏期:0, 時間単位:0};
   list.filter(r=>r.status==='承認済').forEach(r=>{ const c = r.category||'有給'; sum[c] = Math.round(((sum[c]||0) + (Number(r.days)||0))*1000)/1000; });
   const catLabel = c => c==='夏期' ? '☀️ 夏期' : c==='時間単位' ? '⏰ 時間休' : '📋 有給';
-  box.innerHTML = `<div class="sum">承認済みの合計：有給 ${sum['有給']}日 ／ 夏期 ${sum['夏期']}日 ／ 時間休 ${sum['時間単位']}日</div>`
+  box.innerHTML = `<div class="sum">受付済みの合計：有給 ${sum['有給']}日 ／ 夏期 ${sum['夏期']}日 ／ 時間休 ${sum['時間単位']}日</div>`
     + '<table>' + list.map(r=>`<tr>
         <td style="white-space:nowrap;font-weight:600">${showDate(r.date)||r.date}</td>
         <td>${catLabel(r.category)}</td>
         <td>${r.type}（${r.days}日）</td>
-        <td><span class="sbadge ${r.status==='承認済'?'s-ok':'s-pend'}">${r.status}</span></td>
+        <td><span class="sbadge ${r.status==='承認済'?'s-ok':'s-pend'}">${stLabel(r.status)}</span></td>
       </tr>`).join('') + '</table>';
 }
 function closeStaffEdit(){ document.getElementById('staffEditModal').classList.remove('open'); _seId=null; }
@@ -670,7 +674,7 @@ function openReqEdit(id){
     `<div class="modal-row"><span class="modal-key">氏名</span><span class="modal-val">${r.name}</span></div>`+
     `<div class="modal-row"><span class="modal-key">現在の取得日</span><span class="modal-val">${showDate(r.date)||r.date}</span></div>`+
     `<div class="modal-row"><span class="modal-key">種別</span><span class="modal-val">${r.type}（${r.days}日）</span></div>`+
-    `<div class="modal-row"><span class="modal-key">状態</span><span class="modal-val">${r.status}</span></div>`;
+    `<div class="modal-row"><span class="modal-key">状態</span><span class="modal-val">${stLabel(r.status)}</span></div>`;
   const el = document.getElementById('re_date');
   el.value = showDate(r.date); el.classList.remove('dt-err');
   document.getElementById('reqEditModal').classList.add('open');
@@ -717,17 +721,17 @@ function openAction(reqId, action){
   const req=DB.getRequests().find(r=>r.id===reqId);
   if(!req) return;
   const modal=document.getElementById('actionModal');
-  document.getElementById('modalTitle').textContent=action==='approve'?'✓ 承認の確認':'✗ 却下の確認';
+  document.getElementById('modalTitle').textContent=action==='approve'?'✓ 受付の確認':'💬 相談する';
   document.getElementById('modalBody').innerHTML=`
     <div class="modal-row"><span class="modal-key">申請者</span><span class="modal-val">${req.name}</span></div>
     <div class="modal-row"><span class="modal-key">取得希望日</span><span class="modal-val">${req.date}</span></div>
     <div class="modal-row"><span class="modal-key">種別</span><span class="modal-val">${req.type}（${req.days}日消化）</span></div>
     <div class="modal-row"><span class="modal-key">メモ</span><span class="modal-val">${req.memo||'なし'}</span></div>
-    ${action==='reject'?'<div class="modal-label">却下理由（任意）</div><input type="text" class="modal-input" id="rejectReason" placeholder="例：業務の都合により">':''}
+    ${action==='reject'?'<div class="modal-label">職員さんへの相談内容</div><textarea class="modal-input" id="rejectReason" rows="3" placeholder="例：この日は行事と重なり人手が足りません。〇日など別の日にできないかご相談させてください。"></textarea><div style="font-size:11px;color:var(--tm);margin-top:6px">※ 有給休暇は職員の権利です。別の日をお願いできるのは、休まれると園の運営が成り立たない場合に限られます。「忙しいから」だけの理由ではお願いできません。</div>':''}
   `;
   document.getElementById('modalBtns').innerHTML=`
     <button class="modal-btn modal-btn-cancel" onclick="document.getElementById('actionModal').classList.remove('open')">キャンセル</button>
-    <button class="modal-btn ${action==='approve'?'modal-btn-ok':'modal-btn-ng'}" onclick="execAction()">${action==='approve'?'承認する':'却下する'}</button>
+    <button class="modal-btn ${action==='approve'?'modal-btn-ok':'modal-btn-ng'}" onclick="execAction()">${action==='approve'?'受付する':'相談として送る'}</button>
   `;
   modal.classList.add('open');
 }
@@ -842,7 +846,7 @@ function renderShime(){
   document.getElementById('shimePeriod').innerHTML = `対象期間：<b>${fmtJp(c.from)} 〜 ${fmtJp(c.to)}</b>`;
   const pend = c.reqs.filter(r=>r.status==='申請中').length;
   const w = document.getElementById('shimeWarn');
-  if(pend){ w.style.display='block'; w.textContent = `⚠️ この期間に承認待ちの申請が${pend}件あります。締めの前に「承認待ち」から承認・却下を済ませてください（申請中は集計に入りません）。`; }
+  if(pend){ w.style.display='block'; w.textContent = `⚠️ この期間に受付待ちの申請が${pend}件あります。締めの前に「受付待ち」から受付・相談を済ませてください（申請中は集計に入りません）。`; }
   else w.style.display='none';
   const tbody = document.getElementById('shimeBody');
   if(!c.rows.length){ tbody.innerHTML = `<tr><td colspan="9" class="empty">${_staffLoaded?'この園の職員が登録されていません':'読み込み中...'}</td></tr>`; return; }
@@ -922,12 +926,12 @@ function buildShimeWorkbook(XL, c, gardenName, hojin){
   tr.eachCell({includeEmpty:true}, cell=>{ cell.font={name:FONT,size:12,bold:true}; cell.fill={type:'pattern',pattern:'solid',fgColor:{argb:'FFF2F2F2'}}; });
   [3,4,5,6].forEach(i=>tr.getCell(i).numFmt='0.###');
   const n1 = ws1.addRow([]); 
-  const n2 = ws1.addRow(['※ 承認済みの申請のみ集計。時間休は1日の所定時間で日数に直して期間計に含む（8時間勤務なら1時間＝0.125日）。申請中は「取得明細」シートを参照。']);
+  const n2 = ws1.addRow(['※ 受付済みの申請のみ集計。時間休は1日の所定時間で日数に直して期間計に含む（8時間勤務なら1時間＝0.125日）。申請中は「取得明細」シートを参照。']);
   n2.font = {name:FONT, size:12};
   // シート2：取得明細
   const ws2 = wb.addWorksheet('取得明細');
   setup(ws2, `有給休暇 取得明細（${c.y}年${c.m}月分）`,
-    ['氏名','取得日','曜日','区分','種別','日数','状態','承認者','承認日時','メモ'],
+    ['氏名','取得日','曜日','区分','種別','日数','状態','受付者','受付日時','メモ'],
     [18,13,7,10,14,8,10,14,19,30]);
   const order = {}; DB.getStaff().forEach((s,i)=>order[s.id]=i);
   const list = [...c.reqs].sort((a,b)=> ((order[a.staffId]??999)-(order[b.staffId]??999)) || String(a.date).localeCompare(String(b.date)));
@@ -939,7 +943,7 @@ function buildShimeWorkbook(XL, c, gardenName, hojin){
     const d = iso ? new Date(iso+'T00:00:00') : null;
     const cat = r.category==='夏期'?'夏期':r.category==='時間単位'?'時間休':'有給';
     const row = ws2.addRow([r.name, d?`${d.getFullYear()}/${d.getMonth()+1}/${d.getDate()}`:r.date, d?DOW_JP[d.getDay()]:'',
-      cat, r.type, Number(r.days)||0, r.status, r.approver||'', r.approvedAt||'', r.memo||'']);
+      cat, r.type, Number(r.days)||0, stLabel(r.status), r.approver||'', r.approvedAt||'', r.memo||'']);
     styleBody(row, [6]);
     row.getCell(6).numFmt='0.###';
     [2,3,4,7].forEach(i=>row.getCell(i).alignment={vertical:'middle',horizontal:'center'});
@@ -951,7 +955,7 @@ async function exportShimeXlsx(){
   const btn = document.getElementById('shimeXlsxBtn');
   const c = calcShime();
   const pend = c.reqs.filter(r=>r.status==='申請中').length;
-  if(pend && !confirm(`この期間に承認待ちの申請が${pend}件あります（集計には入りません）。\nこのまま出力しますか？`)) return;
+  if(pend && !confirm(`この期間に受付待ちの申請が${pend}件あります（集計には入りません）。\nこのまま出力しますか？`)) return;
   btn.disabled = true; btn.textContent = '作成中...';
   try{
     await loadExcelJS();

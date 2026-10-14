@@ -3,6 +3,10 @@
 // スプレッドシート：「UQchecker」（cryk0289@gmail.com）
 // スプレッドシートID: 197yLc-CxuIAomrtAoTPXY1cROu8hWfsxjCbmi7YGIno
 //
+// 2026-10-14 v3.3
+//  ・表示とメールの言葉を変更：「承認」→「受付」、「却下」→「相談」（年次有給休暇は職員の権利で、許可・却下するものではないため）
+//    ※スプレッドシートに保存する値（承認済／却下）は従来のまま。画面側で言い換えて表示する
+//
 // 2026-10-14 v3.2
 //  ・職員マスタ W列「1日の所定時間」を追加（空欄なら8時間）。短時間勤務の職員の時間休を正しく日数に直すため
 //  ・園長画面の「職員の編集」から W列も変更できるようにした
@@ -77,12 +81,12 @@ function doGet(e) {
     }
     if (action === 'approveRequest') {
       const req = updateRequestStatus(e.parameter.reqId, '承認済', e.parameter.approver, '');
-      if(req) sendMailToStaff(req, '承認');
+      if(req) sendMailToStaff(req, '受付');
       return response({ ok: true, data: req }, callback);
     }
     if (action === 'rejectRequest') {
       const req = updateRequestStatus(e.parameter.reqId, '却下', e.parameter.approver, e.parameter.reason || '');
-      if(req) sendMailToStaff(req, '却下');
+      if(req) sendMailToStaff(req, '相談');
       return response({ ok: true, data: req }, callback);
     }
     // 園長画面「職員の残日数一覧」からの変更（v3）
@@ -115,12 +119,12 @@ function doPost(e) {
     }
     if (action === 'approveRequest') {
       const req = updateRequestStatus(body.reqId, '承認済', body.approver, '');
-      if(req) sendMailToStaff(req, '承認');
+      if(req) sendMailToStaff(req, '受付');
       return response({ ok: true, data: req });
     }
     if (action === 'rejectRequest') {
       const req = updateRequestStatus(body.reqId, '却下', body.approver, body.reason || '');
-      if(req) sendMailToStaff(req, '却下');
+      if(req) sendMailToStaff(req, '相談');
       return response({ ok: true, data: req });
     }
     if (action === 'updateStaff') {
@@ -428,7 +432,7 @@ function sendMailToEncho(req) {
       `${staff.garden} 園長 様\n\n${req.name}さんから${cat}の申請が届きました。\n\n` +
       `■ 取得希望日：${req.date}\n■ 種別：${req.type}（${req.days}日/時間）\n` +
       `■ メモ：${req.memo||'なし'}\n■ 申請日時：${req.createdAt}\n\n` +
-      `園長画面から承認・却下をお願いします。\n\n──\nUQ checker`);
+      `園長画面から受付をお願いします（別の日をお願いしたい場合は「相談」を使ってください）。\n\n──\nUQ checker`);
   } catch(e) { Logger.log('メール送信エラー: '+e.message); }
 }
 
@@ -437,10 +441,12 @@ function sendMailToStaff(req, result) {
     const staff = getStaffById(req.staffId);
     if (!staff || !isMail(staff.email)) return;
     GmailApp.sendEmail(staff.email,
-      `【UQ checker】申請${result}のお知らせ - ${req.date}`,
-      `${req.name} さん\n\n${req.date}の有給申請が【${result}】されました。\n\n` +
-      `■ 取得希望日：${req.date}\n■ 種別：${req.type}\n■ 承認者：${req.approver}\n` +
-      (req.rejectedReason?`■ 却下理由：${req.rejectedReason}\n`:'') +
+      result==='相談' ? `【UQ checker】園長から相談があります - ${req.date}` : `【UQ checker】申請受付のお知らせ - ${req.date}`,
+      (result==='相談'
+        ? `${req.name} さん\n\n${req.date}の有給申請について、園長から相談があります。\n園長と話して、必要なら別の日で申請し直してください。\n\n`
+        : `${req.name} さん\n\n${req.date}の有給申請を受け付けました。\n\n`) +
+      `■ 取得希望日：${req.date}\n■ 種別：${req.type}\n■ 受付者：${req.approver}\n` +
+      (req.rejectedReason?`■ 相談内容：${req.rejectedReason}\n`:'') +
       `\n──\nUQ checker`);
   } catch(e) { Logger.log('メール送信エラー: '+e.message); }
 }
