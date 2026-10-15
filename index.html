@@ -8163,7 +8163,7 @@ applyLawTheme();renderHome();goHome();sdLog('ホーム');
      本部ダッシュボードから ?view=honbu 付きで開いたときだけ動く（判定は <head> の SD_HONBU_VIEW）。
      ・画面の一番上に「本部閲覧中」の帯と園の切り替えを出す
      ・給食／駐車場の記録、ご意見箱・紹介・メンタルヘルスの送信、News & Topicsの閲覧数・いいねは送らない（実データを汚さないため）
-     ・有給チェッカーは別ページで申請ができてしまうため、本部閲覧中は開かない
+     ・有給チェッカーは本部閲覧モード（見るだけ・申請は送らない）で開く
      ============================================================ -->
 <style>
   .hv-bar{position:relative;z-index:21;display:flex;align-items:center;gap:8px;flex-wrap:wrap;
@@ -8214,12 +8214,9 @@ applyLawTheme();renderHome();goHome();sdLog('ホーム');
   // News & Topics：閲覧数・いいねを記録しない
   window.nsPost = function(){ return Promise.reject(new Error('honbu view')); };
   window.nsToggleLike = function(ev){ if(ev) ev.stopPropagation(); blocked('いいね'); };
-  // 有給チェッカー：本部閲覧中は開かない（別ページで申請ができてしまうため）
-  var _goLink = window.goLink;
-  window.goLink = function(url, title){
-    if(typeof uqUrl==='function' && url === uqUrl()){ alert('有給チェッカーは、本部閲覧中は開けません。\n（有給の状況は園長ダッシュボード側で確認してください）'); return; }
-    return _goLink.apply(this, arguments);
-  };
+  // 有給チェッカー：本部閲覧モードで開く（職員を選んで見るだけ・申請は送らない。仕組みは uqcheck/staff_standalone.html 側）
+  var _uqUrl = window.uqUrl;
+  window.uqUrl = function(){ return _uqUrl() + '&view=honbu'; };
 })();
 </script>
 </body>
