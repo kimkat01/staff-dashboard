@@ -248,6 +248,11 @@ main{padding:16px}
 table.sg{border-collapse:separate;border-spacing:0;font-size:11px;}
 table.sg th,table.sg td{padding:0;}
 table.sg thead th{position:sticky;top:0;background:#f6f3ee;z-index:2;height:34px;min-width:34px;border-bottom:1px solid var(--line);font-weight:800;color:var(--ink-soft);font-variant-numeric:tabular-nums;}
+table.sg thead th .mo{font-size:10px;color:var(--brand);font-weight:800}
+table.sg thead th.mstart,table.sg tbody td.mstart{border-left:2px solid var(--brand)}
+.sg-period{display:flex;align-items:center;gap:8px;margin:4px 2px 10px;padding:9px 12px;border-radius:12px;background:var(--brand-soft);color:var(--ink);font-size:15px;font-weight:800;line-height:1.35}
+.sg-period small{font-size:11.5px;font-weight:700;color:var(--ink-soft)}
+.sg-period-ic{font-size:18px}
 table.sg thead th .wk{display:block;font-size:9px;font-weight:700;color:var(--off-ink)}
 table.sg thead th.sun,table.sg tbody td.sun{background:#fbf3f3}
 table.sg thead th.now,table.sg tbody td.now{background:var(--brand-soft) !important;}
@@ -8252,23 +8257,36 @@ function allHTML(){
     <span><i style="background:var(--early)"></i>早番</span><span><i style="background:var(--mid)"></i>日勤（中番）</span>
     <span><i style="background:var(--late)"></i>遅番</span><span><i style="background:var(--leave)"></i>有休・夏休</span>
     <span><i style="background:var(--train)"></i>研修</span><span><i style="background:var(--off)"></i>休</span></div>`;
+  /* 何月のシフトかわかるように（2026-10-15 職員からの指摘）
+     ・表の上に「2026年9月16日（水）〜10月15日（木）」の期間を出す
+     ・日付の見出しは、最初の日と月が変わる日だけ「9/16」「10/1」のように月を付ける */
+  const mOf=d=>d.month||(+d.iso.slice(5,7));
+  let periodBar="";
+  if(dates.length){
+    const f=dates[0],l=dates[dates.length-1],fy=+f.iso.slice(0,4),ly=+l.iso.slice(0,4);
+    const fs=fy+"年"+mOf(f)+"月"+f.d+"日（"+f.dow+"）";
+    const ls=(ly!==fy?ly+"年":"")+mOf(l)+"月"+l.d+"日（"+l.dow+"）";
+    periodBar=`<div class="sg-period"><span class="sg-period-ic">📅</span><span>${fs} 〜 ${ls}<br><small>のシフトです</small></span></div>`;
+  }
   let head=`<tr><th class="namecol">職員</th>`;
-  dates.forEach(d=>{const now=d.iso===today?"now":"",sc=d.dow==="日"?"sun":"";
-    head+=`<th class="${now} ${sc}">${d.d}<span class="wk">${d.dow}</span></th>`;});head+=`</tr>`;
+  dates.forEach((d,i)=>{const now=d.iso===today?"now":"",sc=d.dow==="日"?"sun":"";
+    const newMonth=i===0||mOf(d)!==mOf(dates[i-1]);
+    const lab=newMonth?`<span class="mo">${mOf(d)}/</span>${d.d}`:d.d;
+    head+=`<th class="${now} ${sc} ${newMonth&&i>0?'mstart':''}">${lab}<span class="wk">${d.dow}</span></th>`;});head+=`</tr>`;
   let body="";
   staff.forEach((s,i)=>{const me=i===current?"me":"";
     if(s.absent){/* 産休など長期不在：名前の横に表示し、シフト欄は空欄 */
       body+=`<tr class="${me}"><td class="namecol">${s.name}<span style="font-size:10px;color:var(--off-ink);margin-left:4px">（${s.absent}）</span></td>`;
-      dates.forEach(d=>{const now=d.iso===today?"now":"",sc=d.dow==="日"?"sun":"";body+=`<td class="${now} ${sc}"></td>`;});
+      dates.forEach((d,j)=>{const now=d.iso===today?"now":"",sc=(d.dow==="日"?"sun":"")+(j>0&&mOf(d)!==mOf(dates[j-1])?" mstart":"");body+=`<td class="${now} ${sc}"></td>`;});
       body+=`</tr>`;return;}
     body+=`<tr class="${me}"><td class="namecol">${s.name}</td>`;
     const map={};s.shifts.forEach(x=>map[x.iso]=x);
-    dates.forEach(d=>{const sh=map[d.iso],ct=sh?stateCat(sh):"公休",cc=CAT[ct],now=d.iso===today?"now":"",sc=d.dow==="日"?"sun":"";
+    dates.forEach((d,j)=>{const sh=map[d.iso],ct=sh?stateCat(sh):"公休",cc=CAT[ct],now=d.iso===today?"now":"",sc=(d.dow==="日"?"sun":"")+(j>0&&mOf(d)!==mOf(dates[j-1])?" mstart":"");
       let txt="・",cls="cell-off";
       if(sh&&(sh.state==="work"||sh.state==="training")){cls=cc.cls;txt=sh.code;}
       else if(sh&&sh.state==="leave"){cls="cell-leave";txt="有";}
       body+=`<td class="${now} ${sc}"><span class="c ${cls}">${txt}</span></td>`;});body+=`</tr>`;});
-  return legend+`<div class="gridwrap"><div class="gridscroll"><table class="sg"><thead>${head}</thead><tbody>${body}</tbody></table></div></div>
+  return periodBar+legend+`<div class="gridwrap"><div class="gridscroll"><table class="sg"><thead>${head}</thead><tbody>${body}</tbody></table></div></div>
     <p class="foot">よこにスクロールできます。あなたの行は枠、今日は緑の列。マス内は略号（早番C／日勤A など）。</p>`;
 }
 
