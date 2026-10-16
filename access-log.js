@@ -8,6 +8,8 @@
    ・画面の動きを止めないよう、送りっぱなし（結果は待たない）
    ・同じ人が同じツールを続けて開いたときは、短い間は1回だけ記録する
    ・LOG_URL が空のあいだは何もしない
+   ・メニューの飾り（「NEW」「製作中」）はツール名から外して記録する
+     （付けたり外したりしても同じツールが2行に分かれないように）
    ============================================================ */
 (function () {
   var LOG_URL = 'https://script.google.com/macros/s/AKfycbxtFnYXdUs1XW5nIEoLmbJXo7HlGe7z4r-Uftuxv-tZq-CNF1vOk3JKzQXOUC7h-cAMSw/exec';   // ← GAS「アクセスログ」のウェブアプリ /exec のURL
@@ -23,7 +25,19 @@
     return false;
   }
 
+  // ツール名の後ろに付いた飾り（NEW・製作中）を外す
+  function cleanTool(t) {
+    t = String(t || '').replace(/\s+/g, ' ').trim();
+    var prev;
+    do {
+      prev = t;
+      t = t.replace(/\s*(NEW|製作中)$/i, '').trim();
+    } while (t !== prev);
+    return t;
+  }
+
   function send(rec) {
+    if (rec) rec.tool = cleanTool(rec.tool);
     if (!LOG_URL || !rec || !rec.tool || !rec.loginId || !rec.dash) return;
     var key = 'shiodome_log__' + rec.dash + '|' + rec.loginId + '|' + rec.tool;
     if (throttled(key, rec.tool === 'ホーム' ? THROTTLE_HOME_MS : THROTTLE_MS)) return;
