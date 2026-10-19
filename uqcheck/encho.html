@@ -65,6 +65,9 @@ tbody td{padding:11px 12px;font-size:13px;vertical-align:middle}
 .s-ok{background:var(--gl);color:var(--green)}
 .s-ng{background:var(--rl);color:var(--red)}
 .s-sodan{background:#f3ecfb;color:#7b3fb5}
+.s-cancel{background:#f0f0f0;color:#888}
+tr.row-canceled td{color:var(--tm)}
+tr.row-canceled td:nth-child(2){text-decoration:line-through}
 .s-gray{background:var(--bg);color:var(--ts);border:1px solid var(--bd)}
 .s-summer{background:#fff0f7;color:#ff69b4}
 .action-row{display:flex;gap:6px}
@@ -184,6 +187,7 @@ html.law-y{ --blue:#43a047; --bl:#e8f5e9; --bld:#2e7d32; --blm:#66bb6a; }
           <option value="申請中">申請中</option>
           <option value="承認済">受付済</option>
           <option value="却下">相談</option>
+          <option value="取消">取消</option>
         </select>
       </div>
       <div class="tbl-wrap">
@@ -392,6 +396,8 @@ const DEMO_API = {
   // 職員マスタの値を園長が変更する（GAS側に updateStaff の追記が必要）
   async updateRequestDate(reqId, date, editor){ try{ return await this.request({action:'updateRequestDate',reqId,date,garden:MY_GARDEN,editor:editor||''}); }catch(e){ return {ok:false,error:String(e&&e.message||e)}; } },
   async updateStaff(id, data, editor){ try{ return await this.request({action:'updateStaff',id,garden:MY_GARDEN,editor:editor||'',data:JSON.stringify(data)}); }catch(e){ return {ok:false,error:String(e&&e.message||e)}; } },
+  // 申請の取消（2026-10-19・GAS v3.5）。園長は受付済・申請中どちらも取消できる（過去日も可）
+  async cancelRequest(reqId, editor){ try{ return await this.request({action:'cancelRequest',reqId,garden:MY_GARDEN,by:'encho',editor:editor||''}); }catch(e){ return {ok:false,error:String(e&&e.message||e)}; } },
 };
 
 // デモ専用GASから最新データを取ってきてローカルキャッシュに反映する。
@@ -481,8 +487,12 @@ function renderAll(){
   const tbody=document.getElementById('allBody');
   if(!reqs.length){ tbody.innerHTML=`<tr><td colspan="7" class="empty">該当する申請がありません</td></tr>`; return; }
   tbody.innerHTML=reqs.map(r=>{
-    const cls=r.status==='承認済'?'s-ok':r.status==='却下'?'s-sodan':'s-pend';
-    const catB2 = r.category==='夏期'?'<span class="sbadge" style="background:#fff0f7;color:#ff69b4;font-size:10px">☀️</span> ':r.category==='時間単位'?'<span class="sbadge" style="background:#eef3ff;color:#4169e1;font-size:10px">⏰ 時間休</span> ':''; return `<tr><td style="font-weight:500">${r.name}</td><td>${r.date}</td><td>${catB2}${r.type}（${r.days}日）</td><td style="font-size:12px;color:var(--tm)">${r.createdAt}</td><td style="font-size:12px">${r.approver||'—'}</td><td><span class="sbadge ${cls}">${stLabel(r.status)}</span>${r.status==='却下'&&r.rejectedReason?`<div style="font-size:11px;color:var(--ts);margin-top:3px">${r.rejectedReason}</div>`:''}</td><td><button class="abtn abtn-ok" style="white-space:nowrap" onclick="openReqEdit('${r.id}')">📅 日付</button></td></tr>`;
+    const cls=r.status==='承認済'?'s-ok':r.status==='却下'?'s-sodan':r.status==='取消'?'s-cancel':'s-pend';
+    const canC = (r.status==='承認済' || r.status==='申請中');
+    const editBtns = r.status==='取消'
+      ? `<span style="font-size:11px;color:var(--tm)">${r.rejectedReason==='取消（本人）'?'本人が取消':'園長が取消'}</span>`
+      : `<div class="action-row"><button class="abtn abtn-ok" style="white-space:nowrap" onclick="openReqEdit('${r.id}')">📅 日付</button>${canC?`<button class="abtn abtn-ng" style="white-space:nowrap" onclick="enchoCancel('${r.id}', this)">✕ 取消</button>`:''}</div>`;
+    const catB2 = r.category==='夏期'?'<span class="sbadge" style="background:#fff0f7;color:#ff69b4;font-size:10px">☀️</span> ':r.category==='時間単位'?'<span class="sbadge" style="background:#eef3ff;color:#4169e1;font-size:10px">⏰ 時間休</span> ':''; return `<tr${r.status==='取消'?' class="row-canceled"':''}><td style="font-weight:500">${r.name}</td><td>${r.date}</td><td>${catB2}${r.type}（${r.days}日）</td><td style="font-size:12px;color:var(--tm)">${r.createdAt}</td><td style="font-size:12px">${r.approver||'—'}</td><td><span class="sbadge ${cls}">${stLabel(r.status)}</span>${r.status==='却下'&&r.rejectedReason?`<div style="font-size:11px;color:var(--ts);margin-top:3px">${r.rejectedReason}</div>`:''}</td><td>${editBtns}</td></tr>`;
   }).join('');
 }
 
@@ -702,6 +712,38 @@ async function saveReqEdit(){
   if(t){ t.date = iso; DB.saveRequests(reqs); }
   closeReqEdit();
   renderAll(); renderPending();
+  syncDemo();
+}
+
+// ============================================================
+// 申請の取消（2026-10-19追加・全園共通）
+// ・受付済・申請中の申請を取り消す（行は消さず、ステータスが「取消」になる）
+// ・受付済だった分は、GAS（v3.5）が職員マスタの取得済み日数を元に戻す
+// ・職員本人にメールでお知らせ（メールアドレスが登録されている場合）
+// ============================================================
+let _enchoCanceling = false;
+async function enchoCancel(reqId, btn){
+  if(_enchoCanceling) return;
+  const r = DB.getRequests().find(x=>x.id===reqId);
+  if(!r) return;
+  const msg = `${r.name} さんの ${r.date} ${r.type}（${r.days}日）の申請を取り消します。\n`
+    + (r.status==='承認済' ? '受付済みの申請です。取り消すと取得済み日数が元に戻ります。\n' : '')
+    + 'よろしいですか？';
+  if(!confirm(msg)) return;
+  _enchoCanceling = true;
+  if(btn){ btn.disabled = true; btn.textContent = '取消中...'; }
+  const res = await DEMO_API.cancelRequest(reqId, getApprover());
+  _enchoCanceling = false;
+  if(!res || !res.ok){
+    const e = (res && res.error) ? res.error : '通信に失敗しました';
+    alert('取り消せませんでした。\n' + (String(e).indexOf('Unknown action')>=0 ? 'サーバー（GAS）側の更新がまだ済んでいません。本部にご連絡ください。' : e));
+    if(btn){ btn.disabled = false; btn.textContent = '✕ 取消'; }
+    return;
+  }
+  const reqs = DB.getRequests();
+  const t = reqs.find(x=>x.id===reqId);
+  if(t){ if(res.data) Object.assign(t, res.data); else t.status='取消'; DB.saveRequests(reqs); }
+  refreshAll();
   syncDemo();
 }
 

@@ -143,6 +143,12 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Hiragino Sans','Yu Gothic UI'
 .s-sodan{background:#f3ecfb;color:#7b3fb5}
 .s-pend{background:#fff8e6;color:#a05a00}
 .s-summer{background:#fff0f7;color:#ff69b4}
+.s-cancel{background:#f0f0f0;color:#888}
+/* 申請の取消（2026-10-19） */
+.hist-item.canceled .h-date{color:#aaa;text-decoration:line-through}
+.h-right{display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex-shrink:0;margin-left:8px}
+.h-cancel-btn{border:1px solid #e0b4b4;background:#fff;color:#b83232;border-radius:100px;padding:4px 12px;font-size:11px;font-weight:600;font-family:inherit;cursor:pointer;white-space:nowrap}
+.h-cancel-btn:disabled{opacity:.4;cursor:not-allowed}
 
 /* マイページ */
 .my-section{background:#fff;border-radius:16px;overflow:hidden;margin-bottom:12px;box-shadow:0 3px 8px rgba(0,0,0,0.14)}
@@ -478,6 +484,12 @@ const API = {
   async rejectRequest(reqId, approver, reason) {
     try {
       return await this.jsonp({action:'rejectRequest', reqId, approver, reason});
+    } catch(e) { return {ok:false, error:e.message}; }
+  },
+  // 申請の取消（2026-10-19・GAS v3.5）
+  async cancelRequest(reqId, staffId, garden, editor) {
+    try {
+      return await this.jsonp({action:'cancelRequest', reqId, staffId, garden, by:'staff', editor: editor||''});
     } catch(e) { return {ok:false, error:e.message}; }
   },
 };
@@ -1101,16 +1113,65 @@ function doCalc(){
 // 表示上の呼び方（2026-10-14）：年次有給休暇は労働者の権利で「許可・却下」するものではないため、
 // 画面では「承認済→受付済」「却下→相談」と表示する。データ（スプレッドシート）の値は従来どおり 承認済／却下 のまま。
 function stLabel(st){ return st==='承認済' ? '受付済' : st==='却下' ? '相談' : (st||''); }
+
+// 申請の取消（2026-10-19）
+//  ・申請中の申請は、いつでも取り消せる
+//  ・受付済の申請は、取得日が今日以降なら取り消せる（過去日の受付済は園長に依頼。給与・締めに関わるため）
+//  ・取り消すとステータスは「取消」になり、受付済だった分は残日数が戻る（GAS v3.5 が職員マスタを戻す）
+function todayIso(){ const n=new Date(); return `${n.getFullYear()}-${pad2(n.getMonth()+1)}-${pad2(n.getDate())}`; }
+function canCancel(r){
+  if(r.status==='申請中') return true;
+  if(r.status==='承認済') return String(r.date||'') >= todayIso();
+  return false;
+}
+let _canceling = false;
+async function cancelMyRequest(reqId, btn){
+  if(!me || _canceling) return;
+  const r = DB.getRequests().find(x=>x.id===reqId);
+  if(!r) return;
+  if(!canCancel(r)){ showToast('過去の日付で受付済みの申請は、園長にご相談ください'); return; }
+  const cat = r.category==='夏期'?'夏季休暇':r.category==='時間単位'?'時間休':'有給';
+  const msg = `${r.date} ${r.type||''}（${cat}）の申請を取り消します。\n`
+    + (r.status==='承認済' ? '受付済みの申請です。取り消すと残日数が戻り、園長にお知らせが届きます。\n' : '')
+    + 'よろしいですか？';
+  if(!confirm(msg)) return;
+  _canceling = true;
+  if(btn){ btn.disabled = true; btn.textContent = '取消中...'; }
+  const s = getLatestMe();
+  const res = await API.cancelRequest(reqId, me.id, MY_GARDEN, s ? s.name : '');
+  _canceling = false;
+  if(!res || !res.ok){
+    const e = (res && res.error) ? String(res.error) : '通信に失敗しました';
+    showToast(e.indexOf('Unknown action')>=0 ? '取消の準備がまだできていません（本部にご連絡ください）' : '取り消せませんでした：' + e);
+    if(btn){ btn.disabled = false; btn.textContent = '取消'; }
+    return;
+  }
+  // この端末の表示にすぐ反映（このあと syncProd でスプレッドシートの最新値に揃う）
+  const reqs = DB.getRequests();
+  const t = reqs.find(x=>x.id===reqId);
+  if(t){
+    if(res.data) Object.assign(t, res.data); else t.status = '取消';
+    DB.saveRequests(reqs);
+  }
+  renderHistory();
+  showToast('申請を取り消しました');
+  await syncProd();
+}
+
 async function renderHistory(){
   if(!me) return;
   const el = document.getElementById('histList');
-  // ★デモ固定：ローカルのダミーデータから履歴を表示（GASへは接続しない）
   const reqs = DB.getRequests().filter(r=>r.staffId===me.id);
   if(!reqs.length){ el.innerHTML='<div style="text-align:center;color:#aaa;font-size:13px;padding:40px 0">申請履歴はありません</div>'; return; }
   el.innerHTML = reqs.map(r=>{
-    const cls = r.status==='承認済'?(r.category==='夏期'?'s-summer':'s-ok'):r.status==='却下'?'s-sodan':'s-pend';
+    const isCancel = r.status==='取消';
+    const cls = r.status==='承認済'?(r.category==='夏期'?'s-summer':'s-ok'):r.status==='却下'?'s-sodan':isCancel?'s-cancel':'s-pend';
     const cat = r.category==='夏期'?'☀️ 夏季':r.category==='時間単位'?'⏰ 時間休':'📋 有給';
-    return `<div class="hist-item"><div><div class="h-date">${r.date} ${r.type||''}</div><div class="h-sub">${cat} ／ ${r.createdAt}</div>${r.status==='却下'?`<div class="h-sub" style="color:#7b3fb5">💬 園長から相談があります${r.rejectedReason?'：'+r.rejectedReason:''}（園長と話して、必要なら別の日で申請し直してください）</div>`:''}</div><span class="sbadge ${cls}">${stLabel(r.status)}</span></div>`;
+    const sodan = r.status==='却下'?`<div class="h-sub" style="color:#7b3fb5">💬 園長から相談があります${r.rejectedReason?'：'+r.rejectedReason:''}（園長と話して、必要なら別の日で申請し直してください）</div>`:'';
+    const cancelNote = isCancel?`<div class="h-sub">${r.approvedAt?r.approvedAt+' に':''}${r.rejectedReason==='取消（園長）'?'園長が':''}取り消しました</div>`:'';
+    const pastOk = r.status==='承認済' && !canCancel(r) ? '<div class="h-sub">取消は園長にご相談ください</div>' : '';
+    const btn = canCancel(r) ? `<button class="h-cancel-btn" onclick="cancelMyRequest('${r.id}', this)">取消</button>` : '';
+    return `<div class="hist-item${isCancel?' canceled':''}"><div><div class="h-date">${r.date} ${r.type||''}</div><div class="h-sub">${cat} ／ ${r.createdAt}</div>${sodan}${cancelNote}${pastOk}</div><div class="h-right"><span class="sbadge ${cls}">${stLabel(r.status)}</span>${btn}</div></div>`;
   }).join('');
 }
 
@@ -1412,6 +1473,8 @@ async function submitApply(){
 
   // 申請ボタン：送らない
   window.submitApply = function(){ showToast('本部閲覧中のため、申請は送られません'); };
+  // 取消ボタン：本部閲覧中は取り消さない
+  window.cancelMyRequest = function(){ showToast('本部閲覧中のため、取消はできません'); };
   var btn = document.getElementById('subBtn');
   if(btn){ btn.textContent = '本部閲覧中のため申請できません'; btn.style.opacity = '.55'; }
 

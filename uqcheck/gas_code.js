@@ -1,7 +1,24 @@
 // ============================================================
-// UQ checker - Google Apps Script バックエンド v3（全園共通）
+// UQ checker - Google Apps Script バックエンド v3.5（全園共通）
 // スプレッドシート：「UQchecker」（cryk0289@gmail.com）
 // スプレッドシートID: 197yLc-CxuIAomrtAoTPXY1cROu8hWfsxjCbmi7YGIno
+//
+// 2026-10-19 v3.5
+//  ・申請の「取消」を追加（cancelRequest）。ステータスは「取消」になる（行は消さずに残す）
+//    - 職員本人：申請中の申請はいつでも取消できる。受付済（承認済）の申請は「取得日が今日以降」なら取消できる
+//      （過去日の受付済は給与・締めに関わるため、園長画面からのみ取消）
+//    - 園長：受付済・申請中どちらも取消できる（過去日も可）
+//    - 受付済を取消したときは、職員マスタの取得済み日数（有給／夏季／時間休）を元に戻す
+//    - 取消は「変更履歴」シートに記録し、園長（職員本人が取消したとき）または職員（園長が取消したとき）にメールで知らせる
+//    - 他の園の申請・他の職員の申請は取消できない
+//
+// 2026-10-14 v3.4
+//  ・二重登録防止（つくば園：1回押しただけで2件・4件登録される不具合の対策）
+//  ・同じ職員・同じ日・同じ種類の申請が「申請中」か「受付済」で既にあれば、新しく登録しない（二重登録防止）
+//    ※「相談」「取消」になった申請は対象外（同じ日でもう一度申請し直せる）
+//  ・申請の登録中は他の登録を待たせる（ほぼ同時に届いた同じ申請が両方入らないように）
+//  ・申請IDが同じ秒にかぶっても重ならないよう、かぶったときは末尾に -2, -3 … を付ける
+//  ・二重だった申請は園長へのメールも送らない
 //
 // 2026-10-14 v3.3
 //  ・表示とメールの言葉を変更：「承認」→「受付」、「却下」→「相談」（年次有給休暇は職員の権利で、許可・却下するものではないため）
@@ -76,6 +93,7 @@ function doGet(e) {
     if (action === 'addRequest') {
       const data = JSON.parse(e.parameter.data);
       const req = addRequest(data);
+      if (req.duplicate) return response({ ok: true, duplicate: true, data: req }, callback);
       sendMailToEncho(req);
       return response({ ok: true, data: req }, callback);
     }
@@ -100,6 +118,12 @@ function doGet(e) {
       const result = updateRequestDate(e.parameter.reqId, e.parameter.garden, e.parameter.editor, e.parameter.date);
       return response(result, callback);
     }
+    // 申請の取消（v3.5）：職員本人（by=staff）または園長（by=encho）
+    if (action === 'cancelRequest') {
+      const result = cancelRequest(e.parameter.reqId, e.parameter.garden, e.parameter.staffId,
+                                   e.parameter.by, e.parameter.editor);
+      return response(result, callback);
+    }
 
     return response({ ok: false, error: 'Unknown action' }, callback);
   } catch(err) {
@@ -114,6 +138,7 @@ function doPost(e) {
     const action = body.action;
     if (action === 'addRequest') {
       const req = addRequest(body.data);
+      if (req.duplicate) return response({ ok: true, duplicate: true, data: req });
       sendMailToEncho(req);
       return response({ ok: true, data: req });
     }
@@ -132,6 +157,9 @@ function doPost(e) {
     }
     if (action === 'updateRequestDate') {
       return response(updateRequestDate(body.reqId, body.garden, body.editor, body.date));
+    }
+    if (action === 'cancelRequest') {
+      return response(cancelRequest(body.reqId, body.garden, body.staffId, body.by, body.editor));
     }
     return response({ ok: false, error: 'Unknown action' });
   } catch(err) {
@@ -358,17 +386,113 @@ function rowToRequest(row) {
 }
 
 function addRequest(data) {
-  const sheet = SS.getSheetByName(SHEET_REQUESTS);
-  const now = new Date();
-  const id = 'REQ' + Utilities.formatDate(now, 'Asia/Tokyo', 'yyyyMMddHHmmss');
-  const ts = Utilities.formatDate(now, 'Asia/Tokyo', 'yyyy-MM-dd HH:mm');
-  const staff = getStaffById(data.staffId);
-  const garden = staff ? staff.garden : (data.garden || '');
-  sheet.appendRow([id,data.staffId,data.name,garden,data.date,data.type,data.days,
-    data.category||'有給',data.memo||'','申請中','','','',ts]);
-  return {id,staffId:data.staffId,name:data.name,garden,date:data.date,type:data.type,
-    days:data.days,category:data.category||'有給',memo:data.memo||'',
-    status:'申請中',approver:'',approvedAt:'',rejectedReason:'',createdAt:ts};
+  const lock = LockService.getScriptLock();
+  lock.waitLock(20000);
+  try {
+    const sheet = SS.getSheetByName(SHEET_REQUESTS);
+    const rows = sheet.getDataRange().getValues();
+    const category = data.category || '有給';
+
+    // 同じ申請が「申請中」か「承認済（受付済）」で既にあれば登録しない（v3.4）
+    for (let i = 1; i < rows.length; i++) {
+      const r = rows[i];
+      if (r[0] === '') continue;
+      if (String(r[1]) !== String(data.staffId)) continue;
+      if (formatDate(r[4]) !== String(data.date)) continue;
+      if (String(r[7] || '有給') !== String(category)) continue;
+      if (String(r[5]) !== String(data.type)) continue;
+      if (r[9] === '申請中' || r[9] === '承認済') {
+        const dup = rowToRequest(r);
+        dup.duplicate = true;
+        return dup;
+      }
+    }
+
+    const now = new Date();
+    const base = 'REQ' + Utilities.formatDate(now, 'Asia/Tokyo', 'yyyyMMddHHmmss');
+    const ids = {};
+    for (let i = 1; i < rows.length; i++) ids[String(rows[i][0])] = true;
+    let id = base, n = 2;
+    while (ids[id]) { id = base + '-' + n; n++; }
+
+    const ts = Utilities.formatDate(now, 'Asia/Tokyo', 'yyyy-MM-dd HH:mm');
+    const staff = getStaffById(data.staffId);
+    const garden = staff ? staff.garden : (data.garden || '');
+    sheet.appendRow([id,data.staffId,data.name,garden,data.date,data.type,data.days,
+      category,data.memo||'','申請中','','','',ts]);
+    SpreadsheetApp.flush();   // 次の登録が来る前に確実に書き込む
+    return {id,staffId:data.staffId,name:data.name,garden,date:data.date,type:data.type,
+      days:data.days,category:category,memo:data.memo||'',
+      status:'申請中',approver:'',approvedAt:'',rejectedReason:'',createdAt:ts};
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+// ------------------------------------------------------------
+// 申請の取消（v3.5）
+//  by = 'staff'（職員本人）／'encho'（園長）
+//  ・行は消さず、ステータス（J列）を「取消」にする。K列＝取消した人、L列＝取消日時、M列＝「取消（本人）」等
+//  ・受付済（承認済）だった申請は、職員マスタの取得済み日数を元に戻す
+// ------------------------------------------------------------
+function cancelRequest(reqId, garden, staffId, by, editor) {
+  const isStaff = (by !== 'encho');
+  const lock = LockService.getScriptLock();
+  lock.waitLock(20000);
+  let req = null, prevStatus = '', notify = '';
+  try {
+    const sheet = SS.getSheetByName(SHEET_REQUESTS);
+    const rows = sheet.getDataRange().getValues();
+    let r = -1;
+    for (let i = 1; i < rows.length; i++) {
+      if (String(rows[i][0]) === String(reqId)) { r = i; break; }
+    }
+    if (r < 0) return { ok: false, error: '申請が見つかりません：' + reqId };
+    const row = rows[r];
+    // 他の園の申請は取消できない（申請ログのD列＝園名で確認）
+    if (String(row[3]) !== String(garden || '')) {
+      return { ok: false, error: 'この園の申請ではないため取消できません' };
+    }
+    // 職員本人の取消は、自分の申請だけ
+    if (isStaff && String(row[1]) !== String(staffId || '')) {
+      return { ok: false, error: 'ご本人の申請ではないため取消できません' };
+    }
+    prevStatus = String(row[9] || '');
+    if (prevStatus === '取消') {
+      return { ok: true, changed: 0, data: rowToRequest(row) };   // すでに取消済み（二度押し）
+    }
+    if (prevStatus !== '申請中' && prevStatus !== '承認済') {
+      return { ok: false, error: '「' + (prevStatus === '却下' ? '相談' : prevStatus) + '」の申請は取消できません' };
+    }
+    // 職員本人：過去日の受付済は取消できない（園長に依頼）
+    if (isStaff && prevStatus === '承認済') {
+      const today = Utilities.formatDate(new Date(), 'Asia/Tokyo', 'yyyy-MM-dd');
+      if (formatDate(row[4]) < today) {
+        return { ok: false, error: '過去の日付で受付済みの申請は、ご自分では取消できません。園長にご相談ください' };
+      }
+    }
+
+    const who = editor || (isStaff ? String(row[2]) : '園長');
+    const now = Utilities.formatDate(new Date(), 'Asia/Tokyo', 'yyyy-MM-dd HH:mm');
+    sheet.getRange(r + 1, 10).setValue('取消');
+    sheet.getRange(r + 1, 11).setValue(who);
+    sheet.getRange(r + 1, 12).setValue(now);
+    sheet.getRange(r + 1, 13).setValue(isStaff ? '取消（本人）' : '取消（園長）');
+    // 受付済だった分は、取得済み日数を元に戻す
+    if (prevStatus === '承認済') {
+      updateStaffUsed(row[1], -Number(row[6]), row[7]);
+    }
+    SpreadsheetApp.flush();
+    writeEditLog([[new Date(), garden, row[1], row[2],
+                   '申請の取消（' + reqId + '・' + formatDate(row[4]) + ' ' + row[5] + '）',
+                   prevStatus === '承認済' ? '受付済' : '申請中', '取消', who]]);
+    req = rowToRequest(sheet.getRange(r + 1, 1, 1, 14).getValues()[0]);
+    notify = isStaff ? 'encho' : 'staff';
+  } finally {
+    lock.releaseLock();
+  }
+  if (req) sendCancelMail(req, prevStatus, notify);
+  return { ok: true, changed: 1, prevStatus: prevStatus, data: req };
 }
 
 function updateRequestStatus(reqId, status, approver, reason) {
@@ -401,7 +525,8 @@ function updateRequestStatus(reqId, status, approver, reason) {
 function updateStaffUsed(staffId, days, category) {
   const sheet = SS.getSheetByName(SHEET_STAFF);
   const rows = sheet.getDataRange().getValues();
-  const add = (v) => parseFloat(((Number(v)||0) + days).toFixed(3));
+  // 取消（daysがマイナス）のときも0未満にはしない（v3.5）
+  const add = (v) => Math.max(0, parseFloat(((Number(v)||0) + days).toFixed(3)));
   for (let i = 1; i < rows.length; i++) {
     if (rows[i][0] === staffId) {
       if (category === '夏期') {
@@ -448,5 +573,30 @@ function sendMailToStaff(req, result) {
       `■ 取得希望日：${req.date}\n■ 種別：${req.type}\n■ 受付者：${req.approver}\n` +
       (req.rejectedReason?`■ 相談内容：${req.rejectedReason}\n`:'') +
       `\n──\nUQ checker`);
+  } catch(e) { Logger.log('メール送信エラー: '+e.message); }
+}
+
+// 取消のお知らせ（v3.5）
+//  notify = 'encho'：職員本人が取消した → 園長へ
+//  notify = 'staff'：園長が取消した → 職員へ
+function sendCancelMail(req, prevStatus, notify) {
+  try {
+    const staff = getStaffById(req.staffId);
+    if (!staff) return;
+    const before = prevStatus === '承認済' ? '受付済' : '申請中';
+    const body = `■ 取得日：${req.date}\n■ 種別：${req.type}（${req.days}日）\n■ 取消前の状態：${before}\n` +
+                 `■ 取消した人：${req.approver}\n■ 取消日時：${req.approvedAt}\n` +
+                 (prevStatus === '承認済' ? '\n受付済みだったため、取得済み日数を元に戻しました（残日数が戻ります）。\n' : '');
+    if (notify === 'encho') {
+      if (!isMail(staff.enchoEmail)) return;
+      GmailApp.sendEmail(staff.enchoEmail,
+        `【UQ checker】申請の取消 - ${req.name} (${req.date})`,
+        `${staff.garden} 園長 様\n\n${req.name}さんが有給申請を取り消しました。\n\n` + body + `\n──\nUQ checker`);
+    } else {
+      if (!isMail(staff.email)) return;
+      GmailApp.sendEmail(staff.email,
+        `【UQ checker】申請取消のお知らせ - ${req.date}`,
+        `${req.name} さん\n\n${req.date}の有給申請を園長が取り消しました。\n\n` + body + `\n──\nUQ checker`);
+    }
   } catch(e) { Logger.log('メール送信エラー: '+e.message); }
 }
