@@ -425,6 +425,7 @@ html.law-y .date-chip-x{color:#81c784}
 </div>
 <div class="toast" id="toast"></div>
 
+<script src="../access-log.js"></script>
 <script src="../docs/manuals.js"></script>
 <script src="../gardens.js"></script>
 <script>
@@ -1344,6 +1345,8 @@ async function submitApply(){
       const reqs = DB.getRequests();
       if(!reqs.some(r=>r.id===res.data.id)){ reqs.unshift(res.data); DB.saveRequests(reqs); }
       okCount++;
+      // 利用状況：有給を申請した（2026-10-21）
+      try{ if(window.ShiodomeLog) ShiodomeLog.post('職員', '有給チェッカー', MY_GARDEN); }catch(e){}
     } else {
       ngCount++;
     }

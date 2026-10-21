@@ -310,6 +310,7 @@ try{ var _lg=(typeof gardenFromUrl==='function')?gardenFromUrl():null;
   if(_lg && /^Y/.test(_lg.code||'')) document.documentElement.classList.add('law-y'); }catch(e){}
 </script>
 <script src="_shared.js?v=5"></script>
+<script src="../access-log.js"></script>
 <script>
 // ★ 園の決め方（2026-09 改修）：URLの ?garden=園名 をそのまま使う。
 //   ・職員マスタ（スプレッドシート）のQ列「園名」、申請ログのD列「園名」が一致するものだけを表示する
@@ -713,6 +714,7 @@ async function directApprove(reqId, btn){
   DB.approveRequest(reqId, approver);
   refreshAll();
   await DEMO_API.approveRequest(reqId, approver);
+  uqLogPost();
   syncDemo();
 }
 
@@ -750,8 +752,11 @@ async function execAction(){
 
   if(currentAction==='approve') await DEMO_API.approveRequest(currentReqId, approver);
   else await DEMO_API.rejectRequest(currentReqId, approver, reason);
+  uqLogPost();
   syncDemo();
 }
+// 利用状況：園長が有給の申請を受付・相談した（2026-10-21）
+function uqLogPost(){ try{ if(window.ShiodomeLog) ShiodomeLog.post('園長', '有給チェッカー', MY_GARDEN); }catch(e){} }
 
 function refreshAll(){
   renderPending();

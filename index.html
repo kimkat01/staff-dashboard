@@ -7353,6 +7353,7 @@ function omeyasuSubmit(){
     .then(function(res){
       btn.disabled=false;
       if(res&&res.ok){
+        sdLog('ご意見箱','投稿');
         omLastCode=res.code;
         if(res.code)omAddLocalCode(res.code,omIdentityMode==='named');
         document.getElementById('omFormCard').className='ocard ohidden';
@@ -7731,6 +7732,7 @@ function tnIgSubmit(){
   tnIgPostGas({action:'add',url:url,theme:String(TN_F.theme).trim(),cat:TN_F.cat,ages:ages,note:String(TN_F.note||'').trim()}).then(function(d){
     TN_F.busy=false;
     if(!d||!d.ok){TN_F.err=(d&&d.error)||'のせられませんでした。時間をおいてもう一度お試しください。';tnRender();return;}
+    sdLog('となりの保育室','投稿');
     if(d.post){TN_IG_REMOTE=[d.post].concat(TN_IG_REMOTE.filter(function(p){return p.id!==d.post.id;}));try{localStorage.setItem(TN_IG_CACHE_KEY,JSON.stringify(TN_IG_REMOTE));}catch(e){}}
     alert('のせました。');
     if(d.post)tnOpenInsta(d.post.id);else tnToList();
@@ -8198,11 +8200,12 @@ function goManual(){
 }
 
 /* 利用状況（アクセスログ・2026-10）：ログイン中の人が開いたツールを本部に記録する（中身は access-log.js） */
-function sdLog(tool){
+/* 2026-10-21：送信・投稿したときは sdLog('ツール名','投稿') で「投稿」として記録する */
+function sdLog(tool,act){
   try{
     var s=getPinSession();
     if(!s||!s.loginId||!window.ShiodomeLog) return;
-    ShiodomeLog.send({dash:'職員',garden:s.garden||gardenName(),loginId:s.loginId,name:s.name||'',tool:tool});
+    ShiodomeLog.send({dash:'職員',garden:s.garden||gardenName(),loginId:s.loginId,name:s.name||'',tool:tool,act:act||'閲覧'});
   }catch(e){}
 }
 
@@ -8367,6 +8370,7 @@ function toggleKP(topic){
       +"&meal="+(KP_STATE.meal?1:0)+"&park="+(KP_STATE.park?1:0)
       +"&_="+Date.now();
     _kpPing(url);
+    sdLog('シフト管理','投稿');   /* 給食・駐車場ボタンを押した */
     if(note){
       note.textContent='保存しました（'+label+'）';
       setTimeout(()=>{if(note)note.textContent='';},1500);
