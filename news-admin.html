@@ -144,39 +144,32 @@ details.link .inner{padding:0 12px 12px;display:grid;gap:10px}
 .nspost.other:hover{background:#faf9f7}
 .nscur{display:inline-block;font-size:11px;font-weight:800;color:#fff;background:var(--law);border-radius:999px;padding:1px 9px;margin-bottom:4px}
 .pv-note{font-size:12px;color:var(--ink-soft);text-align:center;padding:0 14px 14px}
-.nspost{display:flex;gap:11px;padding:14px;margin:12px;border:1px solid var(--line);border-radius:16px;background:var(--card);box-shadow:var(--shadow);text-align:left}
-.nsav{flex:0 0 auto;width:40px;height:40px;border-radius:50%;display:grid;place-items:center;color:#fff;font-weight:800;font-size:16px}
-.nsav svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
-.nsav.hq{background:var(--law);overflow:hidden}
-.nsav.hq img{width:100%;height:100%;object-fit:cover;display:block} .nsav.garden{background:var(--brand)}
-.nsbody-col{flex:1;min-width:0}
-.nspin{display:inline-flex;align-items:center;gap:4px;font-size:11.5px;color:var(--ink-soft);font-weight:700;margin-bottom:3px}
-.nspin svg{width:12px;height:12px;fill:currentColor;stroke:none}
-.nshead{display:flex;align-items:center;gap:5px;flex-wrap:wrap;font-size:13.5px;line-height:1.3}
-.nsname{font-weight:800}
-.nsbadge{font-size:10.5px;font-weight:800;padding:1px 7px;border-radius:999px}
-.nsbadge.hq{background:var(--late-bg);color:var(--late-ink)} .nsbadge.garden{background:var(--brand-soft);color:var(--brand)}
-.nsdot,.nstime{color:var(--ink-soft)} .nstime{font-size:12.5px}
-.nsunread-dot{width:8px;height:8px;border-radius:50%;background:var(--late);margin-left:auto;flex:0 0 auto}
-.nstitle{font-size:14.5px;font-weight:800;margin:5px 0 2px;line-height:1.5}
-.nstext{font-size:14px;line-height:1.7;white-space:pre-wrap;word-break:break-word}
-.nstext.clamp{display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden}
-.nsmore{color:var(--late-ink);font-size:13px;font-weight:700;margin-top:3px}
-.nsmedia{display:flex;flex-wrap:wrap;gap:4px;margin-top:10px;border-radius:14px;overflow:hidden}
-.nsmedia img{flex:1 1 46%;min-width:0;height:150px;object-fit:cover;background:var(--paper);display:block}
-.nsmedia.one img{flex:1 1 100%;height:190px}
-.nslink{display:block;margin-top:10px;border:1px solid var(--line);border-radius:14px;overflow:hidden}
-.nslk-body{padding:11px 13px}
+/* 職員側「お知らせ」と同じ紙面風の見た目（2026-10-23） */
+.pscroll{--ns-ink:#1f2a52;--ns-imp:#8c2f2f;--ns-mincho:"Hiragino Mincho ProN","Yu Mincho","YuMincho","Noto Serif JP","Noto Serif CJK JP","BIZ UDPMincho",serif;background:var(--card)}
+.nspost{display:block;padding:15px 16px 13px;border-bottom:1px solid var(--line);background:var(--card);text-align:left}
+.nspost.pinned{background:#fbf9f4;box-shadow:inset 3px 0 0 var(--ns-imp)}
+.nsmeta{display:flex;align-items:center;gap:7px;flex-wrap:wrap;font-size:11.5px;color:var(--ink-soft)}
+.nstag{display:inline-block;font-size:10.5px;font-weight:700;letter-spacing:.06em;padding:1px 7px;border:1px solid currentColor;line-height:1.6}
+.nstag.hq{color:var(--ns-ink)} .nstag.garden{color:var(--brand)}
+.nstag.imp{color:#fff;background:var(--ns-imp);border-color:var(--ns-imp)}
+.nsunread{margin-left:auto;font-size:10.5px;font-weight:700;color:var(--ns-imp);letter-spacing:.1em}
+.nstitle{font-family:var(--ns-mincho);font-size:16px;font-weight:700;color:var(--ns-ink);margin:8px 0 5px;line-height:1.6}
+.nstext{font-size:13px;color:#4a4740;line-height:1.85;white-space:pre-wrap;word-break:break-word}
+.nstext.clamp{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.nsmore{color:var(--ns-ink);font-size:12px;font-weight:700;margin-top:5px}
+.nsmedia{display:flex;flex-wrap:wrap;gap:3px;margin-top:10px;overflow:hidden}
+.nsmedia img{flex:1 1 46%;min-width:0;height:130px;object-fit:cover;background:var(--paper);display:block}
+.nsmedia.one img{flex:1 1 100%;height:180px}
+.nslink{display:block;margin-top:10px;border:1px solid var(--line);border-left:3px solid var(--ns-ink);overflow:hidden;background:#fcfbf8}
+.nslk-body{padding:10px 12px}
 .nslk-site{font-size:11.5px;color:var(--ink-soft);margin-bottom:3px}
-.nslk-title{font-size:13.5px;font-weight:800;line-height:1.5}
+.nslk-title{font-size:13px;font-weight:700;line-height:1.5}
 .nslk-desc{font-size:12px;color:var(--ink-soft);line-height:1.6;margin-top:3px}
-.nsdetail{padding:15px 16px;background:var(--card)}
-.nsd-head{display:flex;gap:11px;align-items:center;margin-bottom:12px}
-.nsd-name{font-weight:800;font-size:15px}
-.nsd-sub{font-size:12.5px;color:var(--ink-soft);margin-top:2px;display:flex;align-items:center;gap:5px}
-.nsd-title{font-size:18px;font-weight:800;line-height:1.55;margin:2px 0 8px}
-.nsd-text{font-size:15px;line-height:1.9;white-space:pre-wrap;word-break:break-word}
-.nsd-date{font-size:12.5px;color:var(--ink-soft);margin-top:14px;padding-top:12px;border-top:1px solid var(--line)}
+.nsdetail{padding:20px 18px 26px;background:var(--card)}
+.nsd-title{font-family:var(--ns-mincho);font-size:20px;font-weight:700;color:var(--ns-ink);line-height:1.55;margin:11px 0 0;padding-bottom:12px;border-bottom:1px solid var(--ns-ink)}
+.nsd-from{font-size:12px;color:var(--ink-soft);text-align:right;margin:7px 0 16px}
+.nsd-text{font-size:14.5px;line-height:2;white-space:pre-wrap;word-break:break-word}
+.nsd-date{font-size:12px;color:var(--ink-soft);margin-top:18px;padding-top:11px;border-top:1px solid var(--line);text-align:right}
 
 .toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%);background:#2b2a28;color:#fff;font-weight:700;font-size:14px;padding:11px 20px;border-radius:999px;box-shadow:var(--shadow);z-index:100;opacity:0;transition:opacity .2s;pointer-events:none}
 .toast.on{opacity:1}
@@ -319,7 +312,7 @@ details.link .inner{padding:0 12px 12px;display:grid;gap:10px}
       </div>
     </div>
     <div class="phone">
-      <div class="pbar">News &amp; Topics</div>
+      <div class="pbar">お知らせ</div>
       <div class="pscroll" id="pvBox"></div>
     </div>
     <div class="pv-note">公開中の記事を職員と同じ順番で表示しています（記事をクリックすると編集できます）。<br>閲覧数・いいねの数は、記事一覧と編集画面に表示しています。</div>
@@ -644,9 +637,9 @@ function naPvMode(m){naPv=m;$('pvList').className=m==='list'?'on':'';$('pvDetail
 /* 1件ぶんのカード（職員ダッシュボードと同じ見た目） */
 function naCard(p,mode,cur){
   var garden=p.garden||'園名';
-  var name=p.scope==='garden'?esc(garden):'しおどめグループ 本部';
-  var badge=p.scope==='garden'?'<span class="nsbadge garden">園</span>':'<span class="nsbadge hq">本部</span>';
-  var av=p.scope==='garden'?'<div class="nsav garden">'+esc(garden.slice(0,1))+'</div>':'<div class="nsav hq"><img src="icons/news-hq.png" alt="本部"></div>';
+  var from=p.scope==='garden'?esc(garden):'しおどめグループ 本部';
+  var tag=p.scope==='garden'?'<span class="nstag garden">'+esc(garden)+'</span>':'<span class="nstag hq">本部</span>';
+  var imp=p.important?'<span class="nstag imp">重要</span>':'';
   var imgs=p.images||[];
   var media=imgs.length?'<div class="nsmedia'+(imgs.length===1?' one':'')+'">'+imgs.map(function(u){return '<img src="'+esc(u)+'" alt="">';}).join('')+'</div>':'';
   var link='';
@@ -656,21 +649,19 @@ function naCard(p,mode,cur){
   var title=p.title?esc(p.title):'<span style="color:#b8b0a3">（タイトル）</span>';
   var body=bodyTxt?esc(bodyTxt):'<span style="color:#b8b0a3">（本文）</span>';
   if(mode==='detail'){
-    return '<div class="nsdetail"><div class="nsd-head">'+av+'<div><div class="nsd-name">'+name+'</div>'+
-      '<div class="nsd-sub">'+badge+'<span>·</span><span>'+fmtShort(p.date)+'</span></div></div></div>'+
-      (p.important?'<div class="nspin">'+NA_PIN+'固定されたお知らせ</div>':'')+
-      '<div class="nsd-title">'+title+'</div><div class="nsd-text">'+body+'</div>'+media+link+
-      '<div class="nsd-date">'+fmtLong(p.date)+'</div></div>';
+    return '<div class="nsdetail"><div class="nsmeta">'+imp+tag+'<span>'+fmtLong(p.date)+'</span></div>'+
+      '<div class="nsd-title">'+title+'</div><div class="nsd-from">発信：'+from+'</div>'+
+      '<div class="nsd-text">'+body+'</div>'+media+link+
+      '<div class="nsd-date">'+fmtLong(p.date)+'　'+from+'</div></div>';
   }
   var long=bodyTxt.length>90||bodyTxt.split('\n').length>4;
   var click=(!cur&&p.id)?' onclick="naEdit(\''+esc(p.id)+'\')" title="クリックで編集"':'';
-  return '<div class="nspost'+(cur?' cur':' other')+'"'+click+'>'+av+'<div class="nsbody-col">'+
+  return '<div class="nspost'+(cur?' cur':' other')+(p.important?' pinned':'')+'"'+click+'>'+
     (cur?'<div class="nscur">'+(naCurId?'編集中':'作成中')+'</div>':'')+
-    (p.important?'<div class="nspin">'+NA_PIN+'固定</div>':'')+
-    '<div class="nshead"><span class="nsname">'+name+'</span>'+badge+'<span class="nsdot">·</span><span class="nstime">'+fmtShort(p.date)+'</span><span class="nsunread-dot"></span></div>'+
+    '<div class="nsmeta">'+imp+tag+'<span>'+fmtLong(p.date)+'</span><span class="nsunread">未読</span></div>'+
     '<div class="nstitle">'+title+'</div>'+
-    '<div class="nstext'+(long?' clamp':'')+'">'+body+'</div>'+(long?'<div class="nsmore">続きを読む</div>':'')+
-    media+link+'</div></div>';
+    '<div class="nstext'+(long?' clamp':'')+'">'+body+'</div>'+(long?'<div class="nsmore">全文を読む ›</div>':'')+
+    media+link+'</div>';
 }
 function naPreview(){
   var p=naCollect();
