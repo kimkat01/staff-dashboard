@@ -1,0 +1,633 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>しおどめひろば</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=BIZ+UDPGothic:wght@400;700&family=Zen+Maru+Gothic:wght@500;700&display=swap">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<style>
+/* Layout: 上部ヘッダー / 左に3Dの部屋（斜め上からのカメラが自分を追従）・右に会話パネル。860px未満で縦積み */
+:root{
+  --bg:#eef3f1; --surface:#ffffff; --ink:#1f2b2a; --muted:#596a66; --line:#d3dfdb;
+  --accent:#2f7d6d; --accent-ink:#ffffff; --accent-soft:#d6ebe5; --warm:#d98f22;
+  --sky:#dde8e4; --wall:#eef1ec; --wall-side:#e2e8e3; --floor:#f2ede2; --window:#cfe6f2;
+  --zone-talk:#d9e8f6; --zone-board:#f7e6c4; --zone-rest:#e4dcf2; --zone-consult:#d6eedb;
+  --furn:#c4a47c; --cork:#c99b62; --plant:#5f9c6e; --pot:#d58a5f; --sofa:#8fc3b6; --bubble:#ffffff; --bubble-ink:#1f2b2a;
+  --display:"Zen Maru Gothic","Hiragino Maru Gothic ProN","Meiryo",sans-serif;
+  --body:"BIZ UDPGothic","Hiragino Kaku Gothic ProN","Meiryo",sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#131a19; --surface:#1c2624; --ink:#e3ebe8; --muted:#9fb1ac; --line:#2e3c39;
+  --accent:#5fbfa8; --accent-ink:#0f1a18; --accent-soft:#1e3a33; --warm:#f0b85a;
+  --sky:#0f1514; --wall:#3a4644; --wall-side:#323d3b; --floor:#3a4240; --window:#2c4656;
+  --zone-talk:#2c4560; --zone-board:#5a4a2a; --zone-rest:#43395a; --zone-consult:#2d4c37;
+  --furn:#8a6e52; --cork:#94713f; --plant:#4f8a5e; --pot:#9a6142; --sofa:#4f7d72; --bubble:#2a3634; --bubble-ink:#e3ebe8; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#131a19; --surface:#1c2624; --ink:#e3ebe8; --muted:#9fb1ac; --line:#2e3c39;
+  --accent:#5fbfa8; --accent-ink:#0f1a18; --accent-soft:#1e3a33; --warm:#f0b85a;
+  --sky:#0f1514; --wall:#3a4644; --wall-side:#323d3b; --floor:#3a4240; --window:#2c4656;
+  --zone-talk:#2c4560; --zone-board:#5a4a2a; --zone-rest:#43395a; --zone-consult:#2d4c37;
+  --furn:#8a6e52; --cork:#94713f; --plant:#4f8a5e; --pot:#9a6142; --sofa:#4f7d72; --bubble:#2a3634; --bubble-ink:#e3ebe8; color-scheme:dark}
+
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.6}
+[hidden]{display:none!important}
+.wrap{max-width:1280px;margin:0 auto;padding-block:16px 32px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:grid;gap:14px}
+header{display:flex;flex-wrap:wrap;align-items:center;gap:10px 16px}
+.brand{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin-right:auto}
+.brand h1{font-family:var(--display);font-size:26px;margin:0;letter-spacing:.04em;text-wrap:balance}
+.brand span{color:var(--muted);font-size:13px}
+.chip{display:inline-flex;align-items:center;gap:6px;padding:4px 12px;border-radius:999px;background:var(--surface);border:1px solid var(--line);font-size:13px;white-space:nowrap}
+.chip b{font-weight:700;color:var(--accent)}
+.demo{background:var(--accent-soft);border-radius:10px;padding:8px 14px;font-size:13px;color:var(--ink)}
+.main{display:grid;grid-template-columns:minmax(0,1fr) 360px;gap:14px;align-items:start}
+@media (max-width:860px){.main{grid-template-columns:minmax(0,1fr)}
+  .panel .talk{order:-1}
+  #log{height:150px}
+  .hint .pc{display:none}
+}
+@media (min-width:861px){.hint .sp{display:none}}
+.stage{min-width:0;display:grid;gap:8px}
+.stage-box{position:relative;isolation:isolate;border-radius:14px;overflow:hidden;border:1px solid var(--line);background:var(--sky)}
+#map{width:100%;display:block;touch-action:manipulation;cursor:pointer}
+#map:focus-visible{outline:3px solid var(--accent);outline-offset:-3px}
+#overlay{position:absolute;inset:0;pointer-events:none;overflow:hidden}
+.ent{position:absolute;left:0;top:0;display:flex;flex-direction:column;align-items:center;gap:8px;will-change:transform}
+.tag{font-size:12px;font-weight:700;padding:1px 9px;border-radius:999px;background:var(--surface);color:var(--ink);border:1px solid var(--line);white-space:nowrap}
+.tag.self{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.bub{position:relative;background:var(--bubble);color:var(--bubble-ink);font-size:14px;line-height:1.45;padding:6px 11px;border-radius:12px;max-width:190px;width:max-content;text-align:center;box-shadow:0 4px 12px rgba(0,0,0,.14);overflow-wrap:anywhere}
+.bub::after{content:"";position:absolute;left:50%;bottom:-7px;margin-left:-7px;border:7px solid transparent;border-bottom:0;border-top-color:var(--bubble)}
+.bub.far{opacity:.6}
+.nogl{padding:40px 20px;text-align:center;color:var(--muted)}
+.hint{font-size:13px;color:var(--muted);margin:0}
+.panel{display:grid;gap:12px;min-width:0}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px;display:grid;gap:10px;min-width:0}
+.card h2{font-family:var(--display);font-size:16px;margin:0;display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.card h2 small{font-family:var(--body);font-size:12px;color:var(--muted);font-weight:400}
+.near{display:flex;flex-wrap:wrap;gap:6px;min-height:28px}
+.near .chip{font-size:12px}
+.near .none{font-size:13px;color:var(--muted)}
+#log{height:210px;overflow-y:auto;display:flex;flex-direction:column;gap:6px;font-size:14px;padding-right:4px}
+.msg{display:grid;gap:1px}
+.msg .who{font-size:12px;color:var(--muted)}
+.msg .txt{background:var(--bg);border-radius:10px;padding:6px 10px;width:fit-content;max-width:100%;overflow-wrap:anywhere}
+.msg.self{justify-items:end}
+.msg.self .txt{background:var(--accent);color:var(--accent-ink)}
+.msg.sys .txt{background:transparent;color:var(--muted);font-size:12px;padding:0}
+.row{display:flex;gap:8px}
+input[type=text],textarea{flex:1;min-width:0;font:inherit;font-size:16px;padding:9px 12px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--ink)}
+textarea{resize:vertical;min-height:64px}
+input:focus-visible,textarea:focus-visible,button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+button{font:inherit;font-size:14px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--ink);padding:8px 14px;cursor:pointer}
+button.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);font-weight:700}
+button:disabled{opacity:.45;cursor:not-allowed}
+.emotes{display:flex;gap:6px;flex-wrap:wrap}
+.emotes button{padding:4px 10px;font-size:18px;line-height:1.3}
+.rule{font-size:12px;color:var(--muted);margin:0}
+.notes{display:grid;gap:8px;max-height:240px;overflow-y:auto}
+.note{background:var(--zone-board);border-radius:8px;padding:8px 10px;display:flex;gap:8px;align-items:start;justify-content:space-between;font-size:14px}
+.note p{margin:0;overflow-wrap:anywhere;min-width:0}
+.note button{padding:2px 8px;font-size:12px;white-space:nowrap;font-variant-numeric:tabular-nums}
+.board-card.active{border-color:var(--warm);box-shadow:0 0 0 2px color-mix(in srgb,var(--warm) 35%,transparent)}
+.status{font-size:12px;color:var(--muted);margin:0}
+
+#entry{position:fixed;inset:0;background:color-mix(in srgb,var(--bg) 88%,transparent);display:grid;place-items:center;z-index:20;padding:20px max(16px,env(safe-area-inset-right,0px)) 20px max(16px,env(safe-area-inset-left,0px));overflow-y:auto}
+#entry[hidden]{display:none}
+.entry-box{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:22px;max-width:460px;width:100%;display:grid;gap:14px;box-shadow:0 18px 50px rgba(0,0,0,.12)}
+.entry-box h2{font-family:var(--display);margin:0;font-size:22px}
+.entry-box p{margin:0;font-size:14px;color:var(--muted)}
+.label{font-size:13px;font-weight:700}
+.animals,.colors{display:flex;flex-wrap:wrap;gap:8px}
+.animals button{font-size:26px;width:52px;height:52px;padding:0;border-radius:50%}
+.colors button{width:34px;height:34px;padding:0;border-radius:50%}
+.animals button[aria-pressed=true],.colors button[aria-pressed=true]{outline:3px solid var(--accent);outline-offset:2px}
+.namebox{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.namebox output{font-family:var(--display);font-size:20px;font-weight:700}
+.promise{background:var(--accent-soft);border-radius:10px;padding:10px 12px;font-size:13px;display:grid;gap:2px}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header>
+    <div class="brand"><h1>しおどめひろば</h1><span>職員の匿名ひろば</span></div>
+    <span class="chip">いまいる場所 <b id="zone-now">ろうか</b></span>
+    <span class="chip">ひろばにいる人 <b id="count">6</b>人</span>
+  </header>
+  <div class="demo">デモ版です。ほかのアバターはサンプルの動きで、まだ実際の職員とはつながっていません。書いた内容はこの画面の中だけで、どこにも保存・送信されません。</div>
+
+  <div class="main">
+    <div class="stage">
+      <div class="stage-box" id="stage-box">
+        <canvas id="map" tabindex="0" aria-label="ひろばの部屋。矢印キーで移動、クリックでその場所へ移動"></canvas>
+        <div id="overlay"></div>
+      </div>
+      <p class="hint"><span class="pc">矢印キー・WASDで移動（↑で奥へ、↓で手前へ）／床をクリックするとその場所まで歩きます。</span><span class="sp">床をタップすると、その場所まで歩きます。</span>足もとの点線の輪の中にいる人の言葉だけが読めます。</p>
+    </div>
+
+    <aside class="panel">
+      <section class="card">
+        <h2>近くにいる人 <small>足もとの輪の中</small></h2>
+        <div class="near" id="near"></div>
+      </section>
+
+      <section class="card talk">
+        <h2>会話 <small>近くの人の言葉だけ届きます</small></h2>
+        <div id="log" aria-live="polite"></div>
+        <form class="row" id="say-form" autocomplete="off">
+          <input type="text" id="say" maxlength="60" placeholder="近くの人に話しかける（60字まで）">
+          <button class="primary" type="submit">話す</button>
+        </form>
+        <div class="emotes" aria-label="リアクション">
+          <button type="button" data-e="👍">👍</button>
+          <button type="button" data-e="😊">😊</button>
+          <button type="button" data-e="🤔">🤔</button>
+          <button type="button" data-e="💦">💦</button>
+          <button type="button" data-e="🙏">🙏</button>
+        </div>
+        <p class="rule">ルール：特定の人の名前、園児の情報、園が特定できる書き方はしないでください。</p>
+      </section>
+
+      <section class="card board-card" id="board-card">
+        <h2>本音ボード <small id="board-state">ボードの前で貼れます</small></h2>
+        <div class="notes" id="notes"></div>
+        <textarea id="note-input" maxlength="80" placeholder="ふだん言いにくいことを、匿名で（80字まで）"></textarea>
+        <button class="primary" id="note-btn" type="button" disabled>ボードに貼る</button>
+        <p class="status" id="note-status">奥の壁にある「本音ボード」の前まで歩くと貼れるようになります。</p>
+      </section>
+    </aside>
+  </div>
+</div>
+
+<div id="entry">
+  <div class="entry-box" role="dialog" aria-modal="true" aria-labelledby="entry-title">
+    <h2 id="entry-title">ひろばに入る</h2>
+    <p>アバターと服の色を選んでください。表示名は自動でつくられます。</p>
+    <div class="label">アバター</div>
+    <div class="animals" id="animals"></div>
+    <div class="label">服の色</div>
+    <div class="colors" id="colors"></div>
+    <div class="label">表示名</div>
+    <div class="namebox"><output id="name-out"></output><button type="button" id="reroll">別の名前にする</button></div>
+    <div class="promise">
+      <strong>このひろばで表示されないもの</strong>
+      <span>本名・職員番号・所属の園・役職は、ほかの人には一切表示されません。</span>
+    </div>
+    <button class="primary" id="enter-btn" type="button">ひろばに入る</button>
+  </div>
+</div>
+
+<script>
+(function(){
+const W=960,H=600,R=16,HEAR=150,SPEED=190,WALL=120;
+const ANIMALS=[["🐱","ねこ"],["🐶","いぬ"],["🐰","うさぎ"],["🐻","くま"],["🐼","ぱんだ"],["🐥","ひよこ"],["🦊","きつね"],["🐨","こあら"]];
+// 動物ごとの顔のつくり（毛色・耳の形・口まわり・鼻）
+const FUR=[
+  {fur:"#f2c48d",ear:"cone",muz:"#fff6ea",nose:"#e98a9a"},
+  {fur:"#c98f5a",ear:"floppy",earC:"#8a5a35",muz:"#f3dcc0",nose:"#3a2a22"},
+  {fur:"#f6f3ee",ear:"long",inner:"#f4b6c2",muz:"#ffffff",nose:"#e98a9a"},
+  {fur:"#8b5e3c",ear:"round",muz:"#dcb58e",nose:"#2b1d14"},
+  {fur:"#f7f7f2",ear:"round",earC:"#262626",patch:"#262626",muz:"#ffffff",nose:"#262626"},
+  {fur:"#ffd84d",ear:"none",beak:"#f39a2b",tuft:true},
+  {fur:"#e8873a",ear:"cone",muz:"#fff6ea",nose:"#2b1d14"},
+  {fur:"#a3a9b1",ear:"big",inner:"#e6e8eb",nose:"#2f3236",bigNose:true}
+];
+const COLORS=["#e8846b","#f2c14e","#6dbb8a","#5aa2d6","#9b86d6","#e889ac"];
+const ADJ=["そよかぜ","ひだまり","こもれび","あさつゆ","ゆうやけ","わたぐも","どんぐり","さくら","ほしぞら","にじいろ","みずたま","こはる"];
+const pick=a=>a[Math.floor(Math.random()*a.length)];
+const rnd=(a,b)=>a+Math.random()*(b-a);
+
+const ZONES=[
+  {id:"talk",name:"談話ラウンジ",x:40,y:40,w:420,h:250,c:"--zone-talk"},
+  {id:"board",name:"本音ボード",x:500,y:40,w:420,h:250,c:"--zone-board"},
+  {id:"rest",name:"休憩コーナー",x:40,y:330,w:420,h:230,c:"--zone-rest"},
+  {id:"consult",name:"相談コーナー",x:500,y:330,w:420,h:230,c:"--zone-consult"}
+];
+const CYL=[ {x:150,y:140,r:26,h:28},{x:330,y:140,r:26,h:28},{x:240,y:225,r:26,h:28},
+  {x:170,y:450,r:22,h:22},{x:610,y:430,r:22,h:28},{x:820,y:430,r:22,h:28} ];
+const PLANTS=[ {x:430,y:355,r:13},{x:62,y:540,r:13},{x:900,y:540,r:13},{x:485,y:60,r:13} ];
+const BOXES=[ {x:600,y:200,w:220,h:22,ht:18,k:"furn"},{x:80,y:350,w:180,h:30,ht:20,k:"sofa"},
+  {x:300,y:510,w:130,h:30,ht:20,k:"sofa"},{x:705,y:350,w:12,h:130,ht:70,k:"wall"} ];
+
+function blocked(x,y){
+  if(x<R||y<R||x>W-R||y>H-R) return true;
+  for(const c of CYL){ if(Math.hypot(x-c.x,y-c.y)<c.r+R) return true; }
+  for(const p of PLANTS){ if(Math.hypot(x-p.x,y-p.y)<p.r+R) return true; }
+  for(const r of BOXES){ const cx=Math.max(r.x,Math.min(x,r.x+r.w)), cy=Math.max(r.y,Math.min(y,r.y+r.h)); if(Math.hypot(x-cx,y-cy)<R) return true; }
+  return false;
+}
+function zoneAt(x,y){ for(const z of ZONES){ if(x>=z.x&&x<=z.x+z.w&&y>=z.y&&y<=z.y+z.h) return z; } return null; }
+function freePoint(z){ for(let i=0;i<60;i++){ const x=rnd(z.x+30,z.x+z.w-30), y=rnd(z.y+40,z.y+z.h-25); if(!blocked(x,y)) return {x,y}; } return {x:480,y:310}; }
+function inFrontOfBoard(x,y){ return x>=520&&x<=900&&y<=170; }
+
+const LINES=[
+ "行事前の残業、みんなどうしてる？","書類の書式が園ごとに違って迷う…","休憩、今日はちゃんと取れた！",
+ "新人さんへの声かけ、もう少し時間がほしい","シフトの希望、もっと出しやすいといいな","保護者対応で落ち込んだ日の切り替え方、知りたい",
+ "研修、オンラインだと参加しやすい","製作物の準備を持ち帰るのがつらい","最近、職員室の雰囲気が良くなった気がする",
+ "有休、気をつかわずに取れたらいいのに","ほかの園のやり方も聞いてみたい","ICTの入力、慣れるまで大変"
+];
+const REPLIES=["わかります…","それ、うちでもあります","話してくれてありがとう","いいですね！","同じこと考えてました","少し気が楽になりました"];
+
+// ---------- 人の状態 ----------
+const me={x:480,y:310,a:0,color:COLORS[0],name:"",self:true,bubble:null,tx:null,ty:null,walk:0,moving:false,face:0};
+const bots=[];
+for(let i=0;i<5;i++){
+  const a=(i+2)%ANIMALS.length, z=ZONES[i%4], p=freePoint(z);
+  bots.push({x:p.x,y:p.y,a,color:COLORS[(i+3)%COLORS.length],name:pick(ADJ)+"の"+ANIMALS[a][1],bubble:null,
+    tx:null,ty:null,wait:rnd(1,4),nextSay:rnd(3,10)+i*2.5,walk:Math.random()*6,moving:false,face:Math.random()*6});
+}
+const notes=[
+  {t:"会議が勤務時間外になるのをやめてほしい",l:7},
+  {t:"他の園の先生と、年齢ごとの遊びのアイデアを交換したい",l:4},
+  {t:"困ったときに相談できる人が園の外にもいると安心",l:9},
+  {t:"お昼の休憩を子どもから離れて取れる日がもっと増えてほしい",l:12}
+];
+const keys={};
+const entryEl=document.getElementById("entry");
+const css=getComputedStyle(document.documentElement);
+const tk=n=>css.getPropertyValue(n).trim();
+
+// ---------- 会話ログ・ボード ----------
+const logEl=document.getElementById("log");
+function addLog(who,text,self,sys){
+  const d=document.createElement("div"); d.className="msg"+(self?" self":"")+(sys?" sys":"");
+  if(who){ const w=document.createElement("div"); w.className="who"; w.textContent=who; d.appendChild(w); }
+  const t=document.createElement("div"); t.className="txt"; t.textContent=text; d.appendChild(t);
+  logEl.appendChild(d); while(logEl.children.length>60) logEl.firstChild.remove();
+  logEl.scrollTop=logEl.scrollHeight;
+}
+function say(ent,text){ ent.bubble={text,until:performance.now()+6500}; }
+function near(a,b){ return Math.hypot(a.x-b.x,a.y-b.y)<=HEAR; }
+document.getElementById("say-form").addEventListener("submit",e=>{
+  e.preventDefault(); const inp=document.getElementById("say"); const v=inp.value.trim(); if(!v) return;
+  playerSays(v); inp.value="";
+});
+document.querySelectorAll(".emotes button").forEach(b=>b.onclick=()=>playerSays(b.dataset.e));
+function playerSays(v){
+  if(!entryEl.hidden) return;
+  say(me,v); addLog(me.name+"（あなた）",v,true);
+  const listeners=bots.filter(b=>near(b,me));
+  if(!listeners.length){ addLog(null,"近くに誰もいないので、この言葉は誰にも届いていません。",false,true); return; }
+  const r=pick(listeners); setTimeout(()=>{ const t=pick(REPLIES); say(r,t); if(near(r,me)) addLog(r.name,t,false); },1400+Math.random()*1200);
+}
+const notesEl=document.getElementById("notes"), noteBtn=document.getElementById("note-btn"), noteInput=document.getElementById("note-input"), noteStatus=document.getElementById("note-status");
+let onNotesChanged=()=>{};
+function renderNotes(){
+  notesEl.innerHTML="";
+  notes.slice().reverse().forEach(n=>{
+    const d=document.createElement("div"); d.className="note";
+    const p=document.createElement("p"); p.textContent=n.t;
+    const b=document.createElement("button"); b.type="button"; b.textContent="わかる "+n.l; b.setAttribute("aria-label","わかる、"+n.l+"件");
+    b.onclick=()=>{ if(!n.me){n.l++;n.me=true;} renderNotes(); };
+    d.append(p,b); notesEl.appendChild(d);
+  });
+  onNotesChanged();
+}
+noteBtn.onclick=()=>{ const v=noteInput.value.trim(); if(!v){ noteStatus.textContent="内容を入力してください。"; return; }
+  notes.push({t:v,l:0}); noteInput.value=""; renderNotes(); noteStatus.textContent="ボードに貼りました（デモのため、この画面の中だけです）。"; };
+renderNotes();
+
+// ---------- 3D表示 ----------
+const canvas=document.getElementById("map"), box=document.getElementById("stage-box"), overlay=document.getElementById("overlay");
+let renderer;
+try{ if(typeof THREE==="undefined") throw 0; renderer=new THREE.WebGLRenderer({canvas,antialias:true}); }
+catch(e){ box.innerHTML='<p class="nogl">この端末・ブラウザでは3D表示ができません。別のブラウザ（Chrome・Edge）でお試しください。</p>'; return; }
+renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,2));
+renderer.shadowMap.enabled=true; renderer.shadowMap.type=THREE.PCFSoftShadowMap;
+
+const scene=new THREE.Scene();
+const camera=new THREE.OrthographicCamera(-1,1,1,-1,1,5000);
+const camTarget=new THREE.Vector3(me.x,20,me.y);
+const CAM_OFF=new THREE.Vector3(700,700,700);
+
+const hemi=new THREE.HemisphereLight(0xffffff,0x9aa8b0,0.85); scene.add(hemi);
+const sun=new THREE.DirectionalLight(0xffffff,0.7);
+sun.position.set(W/2-260,720,H/2+420); sun.target.position.set(W/2,0,H/2); scene.add(sun,sun.target);
+sun.castShadow=true; sun.shadow.mapSize.set(2048,2048);
+Object.assign(sun.shadow.camera,{left:-700,right:700,top:700,bottom:-700,near:10,far:2200});
+sun.shadow.bias=-0.0006;
+
+// テーマ（明るい/暗い）に合わせて色を付け替える材質
+const themed=[];
+const WHITE=new THREE.Color(1,1,1), BLACK=new THREE.Color(0,0,0);
+function tcol(token,f){ const c=new THREE.Color(tk(token)||"#888888"); if(f>0) c.lerp(WHITE,f); else if(f<0) c.lerp(BLACK,-f); return c; }
+function tm(token,f,opts){ const m=new THREE.MeshStandardMaterial(Object.assign({roughness:.88,metalness:0},opts||{})); themed.push([m,token,f||0]); m.color.copy(tcol(token,f||0)); return m; }
+function mesh(geo,mat,x,y,z,opt){ const m=new THREE.Mesh(geo,mat); m.position.set(x,y,z); m.castShadow=!(opt&&opt.noCast); m.receiveShadow=true; return m; }
+
+// 部屋
+const room=new THREE.Group(); scene.add(room);
+room.add(mesh(new THREE.BoxGeometry(W,14,H),tm("--floor"),W/2,-7,H/2,{noCast:true}));
+{ // 床の目地
+  const pts=[]; for(let x=0;x<=W;x+=40){ pts.push(x,0.3,0,x,0.3,H); } for(let y=0;y<=H;y+=40){ pts.push(0,0.3,y,W,0.3,y); }
+  const g=new THREE.BufferGeometry(); g.setAttribute("position",new THREE.Float32BufferAttribute(pts,3));
+  const lm=new THREE.LineBasicMaterial({transparent:true,opacity:.5}); themed.push([lm,"--line",0]); lm.color.copy(tcol("--line",0));
+  room.add(new THREE.LineSegments(g,lm));
+}
+room.add(mesh(new THREE.BoxGeometry(W+10,WALL+14,10),tm("--wall"),W/2-5,(WALL-14)/2,-5));
+room.add(mesh(new THREE.BoxGeometry(10,WALL+14,H),tm("--wall-side"),-5,(WALL-14)/2,H/2));
+room.add(mesh(new THREE.BoxGeometry(W,3,2),tm("--line"),W/2,30,1,{noCast:true}));
+room.add(mesh(new THREE.BoxGeometry(2,3,H),tm("--line"),1,30,H/2,{noCast:true}));
+[[60,260],[300,440]].forEach(([a,b])=>room.add(mesh(new THREE.BoxGeometry(b-a,50,3),tm("--window",0,{roughness:.3}),(a+b)/2,82,1,{noCast:true})));
+[[120,300],[360,520]].forEach(([a,b])=>room.add(mesh(new THREE.BoxGeometry(3,50,b-a),tm("--window",0,{roughness:.3}),1,82,(a+b)/2,{noCast:true})));
+// 本音ボード
+room.add(mesh(new THREE.BoxGeometry(352,82,3),tm("--cork",-0.35),715,73,1.5,{noCast:true}));
+room.add(mesh(new THREE.BoxGeometry(340,70,3),tm("--cork"),715,73,3,{noCast:true}));
+const noteGroup=new THREE.Group(); room.add(noteGroup);
+const NOTE_COLORS=["#fff3a8","#ffd6e0","#cdeefd","#d8f5c9"];
+onNotesChanged=()=>{
+  while(noteGroup.children.length) noteGroup.remove(noteGroup.children[0]);
+  notes.slice(-12).forEach((n,i)=>{
+    const m=mesh(new THREE.BoxGeometry(40,30,1.2),new THREE.MeshStandardMaterial({color:NOTE_COLORS[i%4],roughness:.9}),545+30+(i%6)*54,95-Math.floor(i/6)*36,5,{noCast:true});
+    m.rotation.z=((i*37)%9-4)*Math.PI/180; noteGroup.add(m);
+    const pin=mesh(new THREE.SphereGeometry(2.2,8,8),new THREE.MeshStandardMaterial({color:"#d0473c"}),m.position.x,m.position.y+11,6.5,{noCast:true}); noteGroup.add(pin);
+  });
+};
+onNotesChanged();
+
+// エリアのじゅうたん
+const rugEdges=[];
+ZONES.forEach(z=>{
+  room.add(mesh(new THREE.BoxGeometry(z.w,3,z.h),tm(z.c),z.x+z.w/2,1.5,z.y+z.h/2,{noCast:true}));
+  const eg=new THREE.EdgesGeometry(new THREE.BoxGeometry(z.w,3,z.h));
+  const el=new THREE.LineSegments(eg,new THREE.LineBasicMaterial({color:0xffffff})); el.position.set(z.x+z.w/2,1.6,z.y+z.h/2); el.visible=false;
+  room.add(el); rugEdges.push(el);
+});
+
+// 文字（床のエリア名・ボードの見出し）
+const labels=[];
+function makeLabel(text,px){
+  const c=document.createElement("canvas"), g=c.getContext("2d"); const font="700 "+(px*3)+"px "+'"Zen Maru Gothic","Hiragino Maru Gothic ProN","Meiryo",sans-serif';
+  g.font=font; const w=Math.ceil(g.measureText(text).width)+12; c.width=w; c.height=Math.ceil(px*3.8);
+  g.font=font; g.fillStyle=tk("--muted"); g.textBaseline="middle"; g.fillText(text,6,c.height/2);
+  const tex=new THREE.CanvasTexture(c); tex.anisotropy=renderer.capabilities.getMaxAnisotropy();
+  return new THREE.Mesh(new THREE.PlaneGeometry(w/3,c.height/3),new THREE.MeshBasicMaterial({map:tex,transparent:true,depthWrite:false}));
+}
+function buildLabels(){
+  labels.forEach(l=>{ room.remove(l); l.material.map.dispose(); l.material.dispose(); l.geometry.dispose(); }); labels.length=0;
+  ZONES.forEach(z=>{ const m=makeLabel(z.name,22); m.rotation.x=-Math.PI/2; const w=m.geometry.parameters.width;
+    m.position.set(z.x+18+w/2,3.3,z.y+26); room.add(m); labels.push(m); });
+  const b=makeLabel("本音ボード",16); b.position.set(715,124,3); room.add(b); labels.push(b);
+}
+
+// 家具
+CYL.forEach(c=>{
+  room.add(mesh(new THREE.CylinderGeometry(c.r*.2,c.r*.28,c.h-5,12),tm("--furn",-0.15),c.x,(c.h-5)/2,c.y));
+  room.add(mesh(new THREE.CylinderGeometry(c.r,c.r,5,28),tm("--furn",0.12),c.x,c.h-2.5,c.y));
+});
+PLANTS.forEach(p=>{
+  room.add(mesh(new THREE.CylinderGeometry(p.r*.85,p.r*.65,16,14),tm("--pot"),p.x,8,p.y));
+  const leaf=tm("--plant",0,{flatShading:true});
+  room.add(mesh(new THREE.IcosahedronGeometry(p.r*1.35,1),leaf,p.x,32,p.y));
+  room.add(mesh(new THREE.IcosahedronGeometry(p.r*.95,1),tm("--plant",0.15,{flatShading:true}),p.x-4,44,p.y+3));
+});
+BOXES.forEach(b=>{
+  if(b.k==="sofa"){
+    room.add(mesh(new THREE.BoxGeometry(b.w,b.ht,b.h-6),tm("--sofa"),b.x+b.w/2,b.ht/2,b.y+6+(b.h-6)/2));
+    room.add(mesh(new THREE.BoxGeometry(b.w,b.ht+18,9),tm("--sofa",-0.12),b.x+b.w/2,(b.ht+18)/2,b.y+4.5));
+    [b.x+5,b.x+b.w-5].forEach(ax=>room.add(mesh(new THREE.BoxGeometry(10,b.ht+8,b.h),tm("--sofa",-0.06),ax,(b.ht+8)/2,b.y+b.h/2)));
+  } else if(b.k==="wall"){
+    room.add(mesh(new THREE.BoxGeometry(b.w,b.ht,b.h),tm("--wall-side",-0.05),b.x+b.w/2,b.ht/2,b.y+b.h/2));
+  } else {
+    room.add(mesh(new THREE.BoxGeometry(b.w,6,b.h),tm("--furn",0.1),b.x+b.w/2,b.ht-3,b.y+b.h/2));
+    [[b.x+12,b.y+b.h/2],[b.x+b.w-12,b.y+b.h/2]].forEach(([lx,lz])=>room.add(mesh(new THREE.BoxGeometry(8,b.ht-6,b.h-6),tm("--furn",-0.15),lx,(b.ht-6)/2,lz)));
+  }
+});
+
+// 聞こえる範囲の輪・目的地の印
+const hearGroup=new THREE.Group(); scene.add(hearGroup);
+const ringPts=[]; for(let i=0;i<=96;i++){ const t=i/96*Math.PI*2; ringPts.push(new THREE.Vector3(Math.cos(t)*HEAR,0,Math.sin(t)*HEAR)); }
+const hearLineMat=new THREE.LineDashedMaterial({dashSize:12,gapSize:9,transparent:true,opacity:.85});
+const hearLine=new THREE.Line(new THREE.BufferGeometry().setFromPoints(ringPts),hearLineMat); hearLine.computeLineDistances(); hearLine.position.y=3.7;
+const hearDiscMat=new THREE.MeshBasicMaterial({transparent:true,opacity:.08,depthWrite:false});
+const hearDisc=new THREE.Mesh(new THREE.CircleGeometry(HEAR,64),hearDiscMat); hearDisc.rotation.x=-Math.PI/2; hearDisc.position.y=3.6;
+hearGroup.add(hearLine,hearDisc);
+const destMat=new THREE.MeshBasicMaterial({side:THREE.DoubleSide});
+const dest=new THREE.Mesh(new THREE.RingGeometry(7,10.5,28),destMat); dest.rotation.x=-Math.PI/2; dest.visible=false; scene.add(dest);
+
+// ---------- 3Dアバター ----------
+const matCache={};
+function mat(color){ return matCache[color]||(matCache[color]=new THREE.MeshStandardMaterial({color,roughness:.62,metalness:0})); }
+const SPH=new THREE.SphereGeometry(1,24,18);
+function sph(parent,r,color,x,y,z,sx,sy,sz,rz){
+  const m=new THREE.Mesh(SPH,mat(color)); m.scale.set(r*(sx||1),r*(sy||1),r*(sz||1)); m.position.set(x,y,z); if(rz) m.rotation.z=rz;
+  m.castShadow=true; parent.add(m); return m;
+}
+function darker(hex,f){ return "#"+new THREE.Color(hex).lerp(BLACK,f).getHexString(); }
+function buildAvatar(ent){
+  if(ent.g) scene.remove(ent.g);
+  const F=FUR[ent.a], g=new THREE.Group(), rig=new THREE.Group(); g.add(rig);
+  // 足
+  ent.footL=sph(g,5,darker(ent.color,.45),-5.5,4,1,1,.6,1.35);
+  ent.footR=sph(g,5,darker(ent.color,.45),5.5,4,1,1,.6,1.35);
+  // 体（服）と手
+  sph(rig,13,ent.color,0,22,0,1,1.1,.92);
+  sph(rig,6,"#ffffff",0,31,7.5,1.6,.35,.6);           // えり
+  ent.armL=sph(rig,4.6,F.fur,-12.8,21,2.5);
+  ent.armR=sph(rig,4.6,F.fur,12.8,21,2.5);
+  // 頭
+  const head=new THREE.Group(); head.position.y=46; rig.add(head); ent.head=head;
+  sph(head,15.5,F.fur,0,0,0);
+  if(F.muz) sph(head,6.2,F.muz,0,-3.8,11.4,1.15,.78,.62);
+  if(F.patch){ sph(head,3.9,F.patch,-5.9,2,12,1,1.3,.5,.35); sph(head,3.9,F.patch,5.9,2,12,1,1.3,.5,-.35); }
+  [-1,1].forEach(s=>{
+    sph(head,2.2,F.patch?"#ffffff":"#1d1d1d",s*5.6,2.4,13.6);
+    if(F.patch) sph(head,1.3,"#1d1d1d",s*5.6,2.4,15.4);
+    sph(head,.75,"#ffffff",s*5.6+.7,3.3,15.6);
+    sph(head,2.4,"#f6a5b0",s*9.6,-2.6,11.6,1,.55,.4);  // ほっぺ
+  });
+  if(F.beak){ const bk=new THREE.Mesh(new THREE.ConeGeometry(3.4,7,10),mat(F.beak)); bk.rotation.x=Math.PI/2; bk.position.set(0,-2,17.5); bk.castShadow=true; head.add(bk); }
+  else if(F.bigNose) sph(head,3.6,F.nose,0,-1.5,14.8,1.15,1.05,.75);
+  else sph(head,1.9,F.nose,0,-1.6,16.2);
+  if(F.tuft){ sph(head,2.6,F.fur,0,16.5,0,.6,1.5,.6); sph(head,2,F.fur,2.6,15.6,0,.6,1.3,.6,-.5); }
+  const ec=F.earC||F.fur;
+  if(F.ear==="cone"){ [-1,1].forEach(s=>{ const e=new THREE.Mesh(new THREE.ConeGeometry(5.4,11.5,12),mat(ec)); e.position.set(s*8.6,13.8,0); e.rotation.z=-s*.38; e.castShadow=true; head.add(e);
+      const i=new THREE.Mesh(new THREE.ConeGeometry(3,6.5,10),mat("#f4b6c2")); i.position.set(s*8.4,13,2.8); i.rotation.z=-s*.38; head.add(i); }); }
+  if(F.ear==="round"){ [-1,1].forEach(s=>sph(head,5.4,ec,s*11.2,12.5,0,1,1,.6)); }
+  if(F.ear==="long"){ [-1,1].forEach(s=>{ sph(head,4.3,F.fur,s*5.8,23.5,-1,1,3,.6,-s*.12); sph(head,2.2,F.inner,s*5.8,23.5,1.4,1,2.6,.3,-s*.12); }); }
+  if(F.ear==="floppy"){ [-1,1].forEach(s=>sph(head,5.6,ec,s*15,-.5,0,.65,1.55,.7,s*.32)); }
+  if(F.ear==="big"){ [-1,1].forEach(s=>{ sph(head,8.6,F.fur,s*14.6,10.5,-1,1,1,.5); sph(head,5,F.inner,s*14.8,10.5,1.6,1,1,.3); }); }
+  // 足もとの輪（自分＝緑、近くの人＝オレンジ）
+  ent.ringMat=new THREE.MeshBasicMaterial({transparent:true,opacity:.9,side:THREE.DoubleSide,depthWrite:false});
+  ent.ring=new THREE.Mesh(new THREE.RingGeometry(15,17.5,36),ent.ringMat); ent.ring.rotation.x=-Math.PI/2; ent.ring.position.y=3.8; g.add(ent.ring);
+  ent.g=g; ent.rig=rig; g.scale.setScalar(1.3); g.position.set(ent.x,0,ent.y); g.rotation.y=ent.face; scene.add(g);
+}
+// 名札と吹き出し（HTMLで重ねて表示）
+function buildOverlay(ent){
+  if(ent.el) ent.el.remove();
+  const el=document.createElement("div"); el.className="ent";
+  const bub=document.createElement("div"); bub.className="bub"; bub.hidden=true;
+  const tag=document.createElement("div"); tag.className="tag"+(ent.self?" self":""); tag.textContent=ent.self?"あなた":ent.name;
+  el.append(bub,tag); overlay.appendChild(el); ent.el=el; ent.bubEl=bub; ent.shown="";
+}
+bots.forEach(b=>{ buildAvatar(b); buildOverlay(b); });
+buildAvatar(me); me.g.visible=false;
+
+function applyTheme(){
+  themed.forEach(([m,t,f])=>m.color.copy(tcol(t,f)));
+  scene.background=new THREE.Color(tk("--sky"));
+  const dark=css.getPropertyValue("color-scheme").includes("dark");
+  hemi.intensity=dark?.5:.58; sun.intensity=dark?.42:.5;
+  hearLineMat.color.set(tk("--accent")); hearDiscMat.color.set(tk("--accent")); destMat.color.set(tk("--accent"));
+  rugEdges.forEach(e=>e.material.color.set(tk("--accent")));
+  buildLabels();
+}
+applyTheme();
+if(document.fonts&&document.fonts.ready) document.fonts.ready.then(applyTheme);
+window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change",()=>setTimeout(applyTheme,0));
+new MutationObserver(()=>setTimeout(applyTheme,0)).observe(document.documentElement,{attributes:true,attributeFilter:["data-theme"]});
+
+// ---------- 入場画面 ----------
+const animalsEl=document.getElementById("animals"), colorsEl=document.getElementById("colors"), nameOut=document.getElementById("name-out");
+let selA=0, selC=0, adj=pick(ADJ);
+function renderEntry(){
+  animalsEl.innerHTML=""; colorsEl.innerHTML="";
+  ANIMALS.forEach((a,i)=>{ const b=document.createElement("button"); b.type="button"; b.textContent=a[0]; b.setAttribute("aria-label",a[1]); b.setAttribute("aria-pressed",i===selA);
+    b.onclick=()=>{selA=i;renderEntry();}; animalsEl.appendChild(b); });
+  COLORS.forEach((c,i)=>{ const b=document.createElement("button"); b.type="button"; b.style.background=c; b.setAttribute("aria-label","服の色"+(i+1)); b.setAttribute("aria-pressed",i===selC);
+    b.onclick=()=>{selC=i;renderEntry();}; colorsEl.appendChild(b); });
+  nameOut.textContent=adj+"の"+ANIMALS[selA][1];
+}
+document.getElementById("reroll").onclick=()=>{ let n; do{n=pick(ADJ);}while(n===adj); adj=n; renderEntry(); };
+document.getElementById("enter-btn").onclick=()=>{
+  me.a=selA; me.color=COLORS[selC]; me.name=adj+"の"+ANIMALS[selA][1];
+  buildAvatar(me); buildOverlay(me);
+  entryEl.hidden=true; canvas.focus();
+  addLog(null,me.name+" としてひろばに入りました。",false,true);
+};
+renderEntry();
+
+// ---------- サイズとカメラ ----------
+let cssW=0, cssH=0, k=1;
+function resize(){
+  cssW=box.clientWidth;
+  k=Math.min(1.6,Math.max(1,cssW/720));
+  cssH=Math.round(Math.min(620,Math.max(360,Math.min(cssW*0.68,window.innerHeight*0.68))));
+  canvas.style.height=cssH+"px";
+  renderer.setSize(cssW,cssH,false);
+  const w=cssW/k, h=cssH/k;
+  Object.assign(camera,{left:-w/2,right:w/2,top:h/2,bottom:-h/2}); camera.updateProjectionMatrix();
+}
+new ResizeObserver(resize).observe(box); resize();
+
+// ---------- 操作 ----------
+const ray=new THREE.Raycaster(), ndc=new THREE.Vector2(), floorPlane=new THREE.Plane(new THREE.Vector3(0,1,0),0), hit=new THREE.Vector3();
+canvas.addEventListener("pointerdown",e=>{
+  if(!entryEl.hidden) return;
+  const r=canvas.getBoundingClientRect();
+  ndc.set(((e.clientX-r.left)/r.width)*2-1, -((e.clientY-r.top)/r.height)*2+1);
+  ray.setFromCamera(ndc,camera);
+  if(ray.ray.intersectPlane(floorPlane,hit)){ me.tx=Math.max(R,Math.min(W-R,hit.x)); me.ty=Math.max(R,Math.min(H-R,hit.z)); }
+});
+window.addEventListener("keydown",e=>{
+  const tag=document.activeElement&&document.activeElement.tagName;
+  if(tag==="INPUT"||tag==="TEXTAREA"||!entryEl.hidden) return;
+  const kk=e.key.toLowerCase();
+  if(["arrowup","arrowdown","arrowleft","arrowright","w","a","s","d"].includes(kk)){ keys[kk]=true; me.tx=null; e.preventDefault(); }
+});
+window.addEventListener("keyup",e=>{ keys[e.key.toLowerCase()]=false; });
+
+function step(ent,dx,dy){
+  const bx=ent.x,by=ent.y;
+  if(!blocked(ent.x+dx,ent.y)) ent.x+=dx;
+  if(!blocked(ent.x,ent.y+dy)) ent.y+=dy;
+  return Math.hypot(ent.x-bx,ent.y-by);
+}
+function moveToward(ent,speed,dt){
+  const dx=ent.tx-ent.x, dy=ent.ty-ent.y, d=Math.hypot(dx,dy);
+  if(d<4){ ent.tx=null; return 0; }
+  const m=Math.min(d,speed*dt), moved=step(ent,dx/d*m,dy/d*m);
+  if(moved<0.05) ent.tx=null;
+  return moved;
+}
+function turnTo(ent,ang,dt){ let d=ang-ent.face; d=Math.atan2(Math.sin(d),Math.cos(d)); ent.face+=d*Math.min(1,dt*10); }
+
+let lastZone="", lastNearKey="";
+function update(dt){
+  const up=keys.arrowup||keys.w, dn=keys.arrowdown||keys.s, lf=keys.arrowleft||keys.a, rt=keys.arrowright||keys.d;
+  let kx=0,ky=0;
+  if(up){kx-=1;ky-=1;} if(dn){kx+=1;ky+=1;} if(lf){kx-=1;ky+=1;} if(rt){kx+=1;ky-=1;}
+  const bx=me.x,by=me.y; let moved=0;
+  if(entryEl.hidden){
+    if(kx||ky){ const l=Math.hypot(kx,ky); moved=step(me,kx/l*SPEED*dt,ky/l*SPEED*dt); }
+    else if(me.tx!==null) moved=moveToward(me,SPEED,dt);
+  }
+  me.moving=moved>0.05; if(me.moving){ me.walk+=dt*13; turnTo(me,Math.atan2(me.x-bx,me.y-by),dt); }
+
+  for(const b of bots){
+    const ox=b.x,oy=b.y; let bm=0;
+    if(b.tx===null){ b.wait-=dt; if(b.wait<=0){ const p=freePoint(pick(ZONES)); b.tx=p.x; b.ty=p.y; } }
+    else { bm=moveToward(b,70,dt); if(b.tx===null) b.wait=rnd(3,8); }
+    b.moving=bm>0.05; if(b.moving){ b.walk+=dt*9; turnTo(b,Math.atan2(b.x-ox,b.y-oy),dt); }
+    else if(near(b,me)&&entryEl.hidden) turnTo(b,Math.atan2(me.x-b.x,me.y-b.y),dt*0.5); // 近くの人はこちらを向く
+    b.nextSay-=dt;
+    if(b.nextSay<=0){ b.nextSay=rnd(9,18); const t=pick(LINES); say(b,t); if(near(b,me)&&entryEl.hidden) addLog(b.name,t,false); }
+  }
+
+  const z=zoneAt(me.x,me.y), zn=z?z.name:"ろうか", atBoard=inFrontOfBoard(me.x,me.y);
+  const zkey=zn+(atBoard?"*":"");
+  if(zkey!==lastZone){ lastZone=zkey; document.getElementById("zone-now").textContent=atBoard?"本音ボードの前":zn;
+    noteBtn.disabled=!atBoard;
+    document.getElementById("board-card").classList.toggle("active",atBoard);
+    document.getElementById("board-state").textContent=atBoard?"いま貼れます":"ボードの前で貼れます";
+    noteStatus.textContent=atBoard?"ここで書いた内容は名前なしで貼られます。":"奥の壁にある「本音ボード」の前まで歩くと貼れるようになります。";
+    ZONES.forEach((zz,i)=>rugEdges[i].visible=(zz===z));
+  }
+  const ns=bots.filter(b=>near(b,me)); const key=ns.map(b=>b.name).join("|");
+  if(key!==lastNearKey){ lastNearKey=key; const el=document.getElementById("near"); el.innerHTML="";
+    if(!ns.length){ const p=document.createElement("span"); p.className="none"; p.textContent="近くには誰もいません。ほかの人のそばまで歩いてみましょう。"; el.appendChild(p); }
+    ns.forEach(b=>{ const c=document.createElement("span"); c.className="chip"; c.textContent=ANIMALS[b.a][0]+" "+b.name; el.appendChild(c); });
+  }
+}
+
+// ---------- 描画 ----------
+const v3=new THREE.Vector3();
+function pose(ent,now){
+  const g=ent.g; g.position.set(ent.x,0,ent.y); g.rotation.y=ent.face;
+  const s=ent.moving?Math.sin(ent.walk):0;
+  ent.rig.position.y=ent.moving?Math.abs(s)*3.2:Math.sin(now/600+ent.x)*0.6;
+  ent.rig.rotation.z=s*0.05;
+  ent.footL.position.z=1+s*5; ent.footR.position.z=1-s*5;
+  ent.footL.position.y=4+Math.max(0,s)*2.5; ent.footR.position.y=4+Math.max(0,-s)*2.5;
+  ent.armL.position.z=2.5-s*3; ent.armR.position.z=2.5+s*3;
+  ent.head.rotation.z=ent.moving?0:Math.sin(now/900+ent.y)*0.05;
+}
+function placeOverlay(ent,now){
+  v3.set(ent.x,(ent.rig.position.y+(FUR[ent.a].ear==="long"?92:80))*1.3,ent.y).project(camera);
+  const sx=(v3.x+1)/2*cssW, sy=(1-v3.y)/2*cssH;
+  ent.el.style.transform="translate("+sx.toFixed(1)+"px,"+sy.toFixed(1)+"px) translate(-50%,-100%)";
+  ent.el.style.zIndex=String(Math.round(ent.x+ent.y));
+  const active=ent.bubble&&now<ent.bubble.until;
+  const hear=ent.self||near(ent,me);
+  const want=active?(hear?ent.bubble.text:"…")+(hear?"":"|far"):"";
+  if(want!==ent.shown){ ent.shown=want;
+    if(!active){ ent.bubEl.hidden=true; }
+    else { ent.bubEl.hidden=false; ent.bubEl.textContent=hear?ent.bubble.text:"…"; ent.bubEl.classList.toggle("far",!hear); }
+  }
+}
+function render(now){
+  const accent=tk("--accent"), warm=tk("--warm");
+  [...bots,me].forEach(e=>{ if(!e.g.visible) return; pose(e,now);
+    const isNear=!e.self&&near(e,me)&&entryEl.hidden;
+    e.ring.visible=e.self||isNear; e.ringMat.color.set(e.self?accent:warm);
+  });
+  hearGroup.position.set(me.x,0,me.y); hearGroup.visible=entryEl.hidden;
+  dest.visible=me.tx!==null; if(dest.visible) dest.position.set(me.tx,3.9,me.ty);
+
+  const goal=entryEl.hidden?new THREE.Vector3(me.x,20,me.y):new THREE.Vector3(W/2,20,H/2);
+  camTarget.lerp(goal,0.08);
+  camera.position.copy(camTarget).add(CAM_OFF); camera.lookAt(camTarget);
+  renderer.render(scene,camera);
+  bots.forEach(b=>placeOverlay(b,now)); if(me.el) placeOverlay(me,now);
+}
+
+let last=performance.now();
+function loop(now){ const dt=Math.min(0.05,(now-last)/1000); last=now; update(dt); render(now); requestAnimationFrame(loop); }
+requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>
