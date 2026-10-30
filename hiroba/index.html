@@ -12,26 +12,26 @@
 <style>
 /* Layout: 上部ヘッダー / 左に3Dの部屋（斜め上からのカメラが自分を追従）・右に会話パネル。860px未満で縦積み */
 :root{
-  --bg:#eef3f1; --surface:#ffffff; --ink:#1f2b2a; --muted:#596a66; --line:#d3dfdb;
-  --accent:#2f7d6d; --accent-ink:#ffffff; --accent-soft:#d6ebe5; --warm:#d98f22;
-  --sky:#dde8e4; --wall:#eef1ec; --wall-side:#e2e8e3; --floor:#f2ede2; --window:#cfe6f2;
-  --zone-talk:#d9e8f6; --zone-board:#f7e6c4; --zone-rest:#e4dcf2; --zone-consult:#d6eedb;
-  --furn:#c4a47c; --cork:#c99b62; --plant:#5f9c6e; --pot:#d58a5f; --sofa:#8fc3b6; --bubble:#ffffff; --bubble-ink:#1f2b2a;
+  --bg:#eef2fa; --surface:#ffffff; --ink:#1b2340; --muted:#56607c; --line:#d5dcec;
+  --accent:#4169e2; --accent-ink:#ffffff; --accent-soft:#e1e8fb; --warm:#e0922a;
+  --sky:#dbe4f4; --wall:#eef2f9; --wall-side:#e0e6f2; --floor:#f3f4f8; --window:#cfe0f7;
+  --zone-talk:#d6e3fb; --zone-board:#f7e6c4; --zone-rest:#e2e0f7; --zone-consult:#d5eef3;
+  --furn:#c4a47c; --cork:#c99b62; --plant:#5f9c6e; --pot:#d58a5f; --sofa:#8eacea; --bubble:#ffffff; --bubble-ink:#1b2340;
   --display:"Zen Maru Gothic","Hiragino Maru Gothic ProN","Meiryo",sans-serif;
   --body:"BIZ UDPGothic","Hiragino Kaku Gothic ProN","Meiryo",sans-serif;
 }
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
-  --bg:#131a19; --surface:#1c2624; --ink:#e3ebe8; --muted:#9fb1ac; --line:#2e3c39;
-  --accent:#5fbfa8; --accent-ink:#0f1a18; --accent-soft:#1e3a33; --warm:#f0b85a;
-  --sky:#0f1514; --wall:#3a4644; --wall-side:#323d3b; --floor:#3a4240; --window:#2c4656;
-  --zone-talk:#2c4560; --zone-board:#5a4a2a; --zone-rest:#43395a; --zone-consult:#2d4c37;
-  --furn:#8a6e52; --cork:#94713f; --plant:#4f8a5e; --pot:#9a6142; --sofa:#4f7d72; --bubble:#2a3634; --bubble-ink:#e3ebe8; color-scheme:dark}}
+  --bg:#10141e; --surface:#191f2e; --ink:#e4e9f5; --muted:#9ba6c2; --line:#2a3249;
+  --accent:#7d9cf2; --accent-ink:#0e1530; --accent-soft:#1e2a4d; --warm:#f0b85a;
+  --sky:#0d111a; --wall:#363e54; --wall-side:#2f364b; --floor:#383e50; --window:#2b4170;
+  --zone-talk:#273d6b; --zone-board:#5a4a2a; --zone-rest:#3b365f; --zone-consult:#244955;
+  --furn:#8a6e52; --cork:#94713f; --plant:#4f8a5e; --pot:#9a6142; --sofa:#3f5c9a; --bubble:#232a3c; --bubble-ink:#e4e9f5; color-scheme:dark}}
 :root[data-theme="dark"]{
-  --bg:#131a19; --surface:#1c2624; --ink:#e3ebe8; --muted:#9fb1ac; --line:#2e3c39;
-  --accent:#5fbfa8; --accent-ink:#0f1a18; --accent-soft:#1e3a33; --warm:#f0b85a;
-  --sky:#0f1514; --wall:#3a4644; --wall-side:#323d3b; --floor:#3a4240; --window:#2c4656;
-  --zone-talk:#2c4560; --zone-board:#5a4a2a; --zone-rest:#43395a; --zone-consult:#2d4c37;
-  --furn:#8a6e52; --cork:#94713f; --plant:#4f8a5e; --pot:#9a6142; --sofa:#4f7d72; --bubble:#2a3634; --bubble-ink:#e3ebe8; color-scheme:dark}
+  --bg:#10141e; --surface:#191f2e; --ink:#e4e9f5; --muted:#9ba6c2; --line:#2a3249;
+  --accent:#7d9cf2; --accent-ink:#0e1530; --accent-soft:#1e2a4d; --warm:#f0b85a;
+  --sky:#0d111a; --wall:#363e54; --wall-side:#2f364b; --floor:#383e50; --window:#2b4170;
+  --zone-talk:#273d6b; --zone-board:#5a4a2a; --zone-rest:#3b365f; --zone-consult:#244955;
+  --furn:#8a6e52; --cork:#94713f; --plant:#4f8a5e; --pot:#9a6142; --sofa:#3f5c9a; --bubble:#232a3c; --bubble-ink:#e4e9f5; color-scheme:dark}
 
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.6}
@@ -309,7 +309,7 @@ const camera=new THREE.OrthographicCamera(-1,1,1,-1,1,5000);
 const camTarget=new THREE.Vector3(me.x,20,me.y);
 const CAM_OFF=new THREE.Vector3(700,700,700);
 
-const hemi=new THREE.HemisphereLight(0xffffff,0x9aa8b0,0.85); scene.add(hemi);
+const hemi=new THREE.HemisphereLight(0xffffff,0x9aa4bc,0.85); scene.add(hemi);
 const sun=new THREE.DirectionalLight(0xffffff,0.7);
 sun.position.set(W/2-260,720,H/2+420); sun.target.position.set(W/2,0,H/2); scene.add(sun,sun.target);
 sun.castShadow=true; sun.shadow.mapSize.set(2048,2048);
