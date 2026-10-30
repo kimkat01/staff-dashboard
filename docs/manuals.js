@@ -45,7 +45,6 @@ var MANUALS = {
      職員ダッシュボードには出ない。 */
   common: [
     { label:"法人規程", enchoOnly:true, law:"s", docs:[
-      { title:"管理規程（法人）", file:"kanri-kitei.pdf" },
       { title:"経理規程（法人）", file:"keiri-kitei.pdf" }
     ]},
     /* カスタマーハラスメント防止マニュアル：法人ごとに版が違うので law で出し分け（2026-10-01作成版） */
