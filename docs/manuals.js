@@ -26,7 +26,8 @@ var GARDEN_FOLDERS = {
   "ふれあいしおどめ保育園八潮": "fureai_yashio",
   "しおどめ保育園八潮駅北": "yashio_ekikita",
   "しおどめ保育園越谷":     "koshigaya",
-  "しおどめ保育園小規模認可": "shokibo_ninka"
+  "しおどめ保育園小規模認可": "shokibo_ninka",
+  "八潮しおどめ保育園":     "yashio_shiodome"
 };
 
 /* 園のダッシュボードが別のリポジトリにある園だけ、PDF内検索の「Home」の戻り先を書く。
@@ -64,6 +65,14 @@ var MANUALS = {
       { title:"給与規程（正規職員）",   file:"seiki-kyuyo-kitei.pdf" },
       { title:"育児介護休業規程",       file:"ikuji-kaigo-kyugyo-kitei.pdf" },
       { title:"就業規則（パート職員）", file:"part-shugyo-kisoku.pdf" }
+    ]}
+  ],
+  yashio_shiodome: [
+    { label:"規約・マニュアル", docs:[
+      { title:"就業規則（正規職員）",   file:"seiki-shugyo-kisoku.pdf" },
+      { title:"給与規程（正規職員）",   file:"seiki-kyuyo-kitei.pdf" },
+      { title:"就業規則（パート職員）", file:"part-shugyo-kisoku.pdf" },
+      { title:"育児介護休業規程",       file:"ikuji-kaigo-kyugyo-kitei.pdf" }
     ]}
   ],
   moriya_shiodome: [
