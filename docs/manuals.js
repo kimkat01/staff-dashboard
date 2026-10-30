@@ -116,8 +116,10 @@ var MANUALS = {
   ],
   edogawa_chuo: [
     { label:"規約・マニュアル", docs:[
-      { title:"就業規則（正規職員）",         file:"seiki-shugyo-kisoku.pdf" },
-      { title:"就業規則・給与規程（パート職員）", file:"part-shugyo-kisoku.pdf" }
+      { title:"就業規則（正規職員）",   file:"seiki-shugyo-kisoku.pdf" },
+      { title:"給与規程（正規職員）",   file:"seiki-kyuyo-kitei.pdf" },
+      { title:"就業規則（パート職員）", file:"part-shugyo-kisoku.pdf" },
+      { title:"育児介護休業規程",       file:"ikuji-kaigo-kyugyo-kitei.pdf" }
     ]}
   ],
   yashio_ekikita: [
