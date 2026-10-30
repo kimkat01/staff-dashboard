@@ -51,6 +51,10 @@ header{display:flex;flex-wrap:wrap;align-items:center;gap:10px 16px}
   .hint .pc{display:none}
 }
 @media (min-width:861px){.hint .sp{display:none}}
+.talk-slot{display:grid;gap:8px}
+.talk-slot:empty{display:none}
+.talk-slot .row{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:8px}
+body.typing .talk-slot .emotes,body.typing .hint{display:none}
 .stage{min-width:0;display:grid;gap:8px}
 .stage-box{position:relative;isolation:isolate;border-radius:14px;overflow:hidden;border:1px solid var(--line);background:var(--sky)}
 #map{width:100%;display:block;touch-action:manipulation;cursor:pointer}
@@ -126,6 +130,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
         <canvas id="map" tabindex="0" aria-label="ひろばの部屋。矢印キーで移動、クリックでその場所へ移動"></canvas>
         <div id="overlay"></div>
       </div>
+      <div class="talk-slot" id="talk-slot"></div>
       <p class="hint"><span class="pc">矢印キー・WASDで移動（↑で奥へ、↓で手前へ）／床をクリックするとその場所まで歩きます。</span><span class="sp">床をタップすると、その場所まで歩きます。</span>足もとの点線の輪の中にいる人の言葉だけが読めます。</p>
     </div>
 
@@ -142,7 +147,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
           <input type="text" id="say" maxlength="60" placeholder="近くの人に話しかける（60字まで）">
           <button class="primary" type="submit">話す</button>
         </form>
-        <div class="emotes" aria-label="リアクション">
+        <div class="emotes" id="emotes" aria-label="リアクション">
           <button type="button" data-e="👍">👍</button>
           <button type="button" data-e="😊">😊</button>
           <button type="button" data-e="🤔">🤔</button>
@@ -292,7 +297,7 @@ noteBtn.onclick=()=>{ const v=noteInput.value.trim(); if(!v){ noteStatus.textCon
 renderNotes();
 
 // ---------- 3D表示 ----------
-const canvas=document.getElementById("map"), box=document.getElementById("stage-box"), overlay=document.getElementById("overlay");
+const canvas=document.getElementById("map"), box=document.getElementById("stage-box"), overlay=document.getElementById("overlay"), talkSlot=document.getElementById("talk-slot");
 let renderer;
 try{ if(typeof THREE==="undefined") throw 0; renderer=new THREE.WebGLRenderer({canvas,antialias:true}); }
 catch(e){ box.innerHTML='<p class="nogl">この端末・ブラウザでは3D表示ができません。別のブラウザ（Chrome・Edge）でお試しください。</p>'; return; }
@@ -505,13 +510,49 @@ let cssW=0, cssH=0, k=1;
 function resize(){
   cssW=box.clientWidth;
   k=Math.min(1.6,Math.max(1,cssW/720));
-  cssH=Math.round(Math.min(620,Math.max(360,Math.min(cssW*0.68,window.innerHeight*0.68))));
+  const vv=window.visualViewport;
+  if(document.body.classList.contains("typing")&&vv){
+    // 入力中は、キーボードを除いた画面の高さに地図と入力欄をおさめる
+    const bar=talkSlot.getBoundingClientRect().height||56;
+    cssH=Math.max(180,Math.round(vv.height-bar-14));
+  } else {
+    cssH=Math.round(Math.min(620,Math.max(360,Math.min(cssW*0.68,window.innerHeight*0.68))));
+  }
   canvas.style.height=cssH+"px";
   renderer.setSize(cssW,cssH,false);
   const w=cssW/k, h=cssH/k;
   Object.assign(camera,{left:-w/2,right:w/2,top:h/2,bottom:-h/2}); camera.updateProjectionMatrix();
 }
 new ResizeObserver(resize).observe(box); resize();
+
+// ---------- スマホ：入力欄を地図の直下へ移し、入力中も地図が見えるようにする ----------
+const sayForm=document.getElementById("say-form"), emotesEl=document.getElementById("emotes"), sayInput=document.getElementById("say");
+const formHome=sayForm.parentNode, formNext=emotesEl.nextSibling;
+const mq=window.matchMedia("(max-width:860px)");
+function placeTalk(){
+  if(mq.matches){ if(sayForm.parentNode!==talkSlot){ talkSlot.append(sayForm,emotesEl); } }
+  else if(sayForm.parentNode!==formHome){ formHome.insertBefore(sayForm,formNext); formHome.insertBefore(emotesEl,formNext); }
+}
+mq.addEventListener("change",()=>{ placeTalk(); resize(); });
+placeTalk();
+function fitTyping(){
+  if(!document.body.classList.contains("typing")) return;
+  resize();
+  const vv=window.visualViewport, top=box.getBoundingClientRect().top+window.scrollY;
+  window.scrollTo({top:Math.max(0,top-6-(vv?0:0)),behavior:"auto"});
+}
+sayInput.addEventListener("focus",()=>{
+  if(!mq.matches) return;
+  document.body.classList.add("typing");
+  [60,300,600].forEach(t=>setTimeout(fitTyping,t));
+});
+sayInput.addEventListener("blur",()=>{
+  document.body.classList.remove("typing");
+  setTimeout(resize,50);
+});
+if(window.visualViewport){
+  window.visualViewport.addEventListener("resize",()=>{ if(document.body.classList.contains("typing")) fitTyping(); });
+}
 
 // ---------- 操作 ----------
 const ray=new THREE.Raycaster(), ndc=new THREE.Vector2(), floorPlane=new THREE.Plane(new THREE.Vector3(0,1,0),0), hit=new THREE.Vector3();
