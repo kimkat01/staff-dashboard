@@ -43,6 +43,12 @@ header{display:flex;flex-wrap:wrap;align-items:center;gap:10px 16px}
 .brand span{color:var(--muted);font-size:13px}
 .chip{display:inline-flex;align-items:center;gap:6px;padding:4px 12px;border-radius:999px;background:var(--surface);border:1px solid var(--line);font-size:13px;white-space:nowrap}
 .chip b{font-weight:700;color:var(--accent)}
+.homebtn{display:inline-flex;align-items:center;gap:6px;padding:5px 14px;border-radius:999px;background:var(--accent);color:var(--accent-ink);font-weight:700;font-size:14px;text-decoration:none;white-space:nowrap}
+.homebtn svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+.homebtn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.closed{max-width:520px;margin:12vh auto 0;background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:24px;display:grid;gap:8px;text-align:center}
+.closed h2{font-family:var(--display);margin:0;font-size:20px}
+.closed p{margin:0;color:var(--muted);font-size:14px}
 .demo{background:var(--accent-soft);border-radius:10px;padding:8px 14px;font-size:13px;color:var(--ink)}
 .main{display:grid;grid-template-columns:minmax(0,1fr) 360px;gap:14px;align-items:start}
 @media (max-width:860px){.main{grid-template-columns:minmax(0,1fr)}
@@ -121,8 +127,9 @@ button:disabled{opacity:.45;cursor:not-allowed}
     <div class="brand"><h1>しおどめひろば</h1><span>職員の匿名ひろば</span></div>
     <span class="chip">いまいる場所 <b id="zone-now">ろうか</b></span>
     <span class="chip">ひろばにいる人 <b id="count">6</b>人</span>
+    <a class="homebtn" id="homebtn" href="#" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/></svg>Home</a>
   </header>
-  <div class="demo">デモ版です。ほかのアバターはサンプルの動きで、まだ実際の職員とはつながっていません。書いた内容はこの画面の中だけで、どこにも保存・送信されません。</div>
+  <div class="demo">試作版です（いまは本部の方だけが見られます）。ほかのアバターはサンプルの動きで、まだ実際の職員とはつながっていません。書いた内容はこの画面の中だけで、どこにも保存・送信されません。</div>
 
   <div class="main">
     <div class="stage">
@@ -188,6 +195,29 @@ button:disabled{opacity:.45;cursor:not-allowed}
 
 <script>
 (function(){
+// ---------- 試作版の公開範囲（2026-10-31）----------
+// GitHub Pages では、本部の人（同じブラウザで本部ダッシュボードを7日以内に開いた人、または本部アカウントでログインした人）だけが開ける。
+// 職員に公開するときは HIROBA_OPEN を true にする。
+const HIROBA_OPEN=false;
+function honbuOk(){
+  try{
+    const hv=Number(localStorage.getItem("sd_honbu_viewer")||0);
+    if(hv&&Date.now()-hv<7*24*60*60*1000) return true;
+    const t=JSON.parse(localStorage.getItem("sd_honbu_token")||"null");
+    if(t&&t.token) return true;
+  }catch(e){}
+  return false;
+}
+// 戻り先（ANSHIN KUN）が渡されていれば Home ボタンを出す
+try{
+  const home=new URLSearchParams(location.search).get("home")||"";
+  if(/^https:\/\/kimkat01\.github\.io\//.test(home)){ const hb=document.getElementById("homebtn"); hb.href=home; hb.hidden=false; }
+}catch(e){}
+if(!HIROBA_OPEN && /github\.io$/.test(location.hostname) && !honbuOk()){
+  document.getElementById("entry").hidden=true;
+  document.querySelector(".wrap").innerHTML='<div class="closed"><h2>しおどめひろば</h2><p>ただいま試作中のため、まだ公開していません。</p><p>公開したら、ANSHIN KUN のホームからご案内します。</p></div>';
+  return;
+}
 const W=960,H=600,R=16,HEAR=150,SPEED=190,WALL=120;
 const ANIMALS=[["🐱","ねこ"],["🐶","いぬ"],["🐰","うさぎ"],["🐻","くま"],["🐼","ぱんだ"],["🐥","ひよこ"],["🦊","きつね"],["🐨","こあら"]];
 // 動物ごとの顔のつくり（毛色・耳の形・口まわり・鼻）
