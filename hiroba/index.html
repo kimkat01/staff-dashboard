@@ -204,7 +204,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
 const HIROBA_OPEN=false;
 // 通信用GASのURL（…/exec）。空のときは、サンプルのアバターだけのデモとして動く。
 // ?gas=… を付けて開くと、そのURLで試せる（設置直後の確認用）。
-const HIROBA_GAS_DEFAULT="";
+const HIROBA_GAS_DEFAULT="https://script.google.com/macros/s/AKfycbwinrl4ff1pVRE-zgsGZ3WdSWfGcFHeRVoSb2GtpAwwIG0ziTu1FrctQPkzfBq71f54/exec";  // GAS「しおどめひろば 通信」（cryk0289）
 const HIROBA_GAS=(function(){ try{ const q=new URLSearchParams(location.search).get("gas")||""; if(/^https:\/\/script\.google\.com\/macros\/s\/[\w-]+\/exec$/.test(q)) return q; }catch(e){} return HIROBA_GAS_DEFAULT; })();
 const ONLINE=!!HIROBA_GAS;
 function honbuOk(){
