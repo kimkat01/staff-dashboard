@@ -44,6 +44,7 @@ header{display:flex;flex-wrap:wrap;align-items:center;gap:10px 16px}
 .chip{display:inline-flex;align-items:center;gap:6px;padding:4px 12px;border-radius:999px;background:var(--surface);border:1px solid var(--line);font-size:13px;white-space:nowrap}
 .chip b{font-weight:700;color:var(--accent)}
 .homebtn{display:inline-flex;align-items:center;gap:6px;padding:5px 14px;border-radius:999px;background:var(--accent);color:var(--accent-ink);font-weight:700;font-size:14px;text-decoration:none;white-space:nowrap}
+.homebtn[hidden]{display:none}
 .homebtn svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
 .homebtn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .closed{max-width:520px;margin:12vh auto 0;background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:24px;display:grid;gap:8px;text-align:center}
@@ -129,7 +130,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
     <span class="chip">ひろばにいる人 <b id="count">6</b>人</span>
     <a class="homebtn" id="homebtn" href="#" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/></svg>Home</a>
   </header>
-  <div class="demo">試作版です（いまは本部の方だけが見られます）。ほかのアバターはサンプルの動きで、まだ実際の職員とはつながっていません。書いた内容はこの画面の中だけで、どこにも保存・送信されません。</div>
+  <div class="demo">試作版です（いまは本部の方だけが見られます）。ほかのアバターはサンプルで、まだ実際の職員とはつながっていません。書いた内容はこの画面の中だけで、どこにも保存・送信されません。</div>
 
   <div class="main">
     <div class="stage">
@@ -271,9 +272,11 @@ const REPLIES=["わかります…","それ、うちでもあります","話し�
 const me={x:480,y:310,a:0,color:COLORS[0],name:"",self:true,bubble:null,tx:null,ty:null,walk:0,moving:false,face:0};
 const bots=[];
 for(let i=0;i<5;i++){
-  const a=(i+2)%ANIMALS.length, z=ZONES[i%4], p=freePoint(z);
+  // 自分以外のアバターは決まった場所に立ったまま（歩き回らない）
+  const SPOTS=[{x:240,y:150,f:0.6},{x:700,y:150,f:-0.5},{x:350,y:420,f:0.9},{x:760,y:500,f:-0.9},{x:110,y:250,f:0.3}];
+  const a=(i+2)%ANIMALS.length, p=blocked(SPOTS[i].x,SPOTS[i].y)?freePoint(ZONES[i%4]):SPOTS[i];
   bots.push({x:p.x,y:p.y,a,color:COLORS[(i+3)%COLORS.length],name:pick(ADJ)+"の"+ANIMALS[a][1],bubble:null,
-    tx:null,ty:null,wait:rnd(1,4),nextSay:rnd(3,10)+i*2.5,walk:Math.random()*6,moving:false,face:Math.random()*6});
+    tx:null,ty:null,wait:0,nextSay:rnd(3,10)+i*2.5,walk:0,moving:false,face:SPOTS[i].f});
 }
 const notes=[
   {t:"会議が勤務時間外になるのをやめてほしい",l:7},
@@ -630,8 +633,7 @@ function update(dt){
 
   for(const b of bots){
     const ox=b.x,oy=b.y; let bm=0;
-    if(b.tx===null){ b.wait-=dt; if(b.wait<=0){ const p=freePoint(pick(ZONES)); b.tx=p.x; b.ty=p.y; } }
-    else { bm=moveToward(b,70,dt); if(b.tx===null) b.wait=rnd(3,8); }
+    // 自分以外のアバターは歩かない（その場に立ったまま）
     b.moving=bm>0.05; if(b.moving){ b.walk+=dt*9; turnTo(b,Math.atan2(b.x-ox,b.y-oy),dt); }
     else if(near(b,me)&&entryEl.hidden) turnTo(b,Math.atan2(me.x-b.x,me.y-b.y),dt*0.5); // 近くの人はこちらを向く
     b.nextSay-=dt;
