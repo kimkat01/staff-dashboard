@@ -355,6 +355,7 @@ const myId=(function(){ try{ let v=sessionStorage.getItem("hiroba_id"); if(!v){ 
 // だれが入ったか（本部の記録用）。本部の人は本部ダッシュボードの通行証、職員は ANSHIN KUN のログイン情報を送る。
 // ほかの参加者には送られない（GASが本部用の記録にだけ使う）
 function myWho(){
+  try{ const m=JSON.parse(localStorage.getItem("hiroba_mon_auth")||"null"); if(m&&m.token&&m.exp>Date.now()) return {kind:"honbuLogin",token:m.token}; }catch(e){}
   try{ const t=JSON.parse(localStorage.getItem("honbu_token")||"null"); if(t&&t.token&&t.exp>Date.now()) return {kind:"honbu",token:t.token}; }catch(e){}
   try{ const w=JSON.parse(localStorage.getItem("hiroba_who")||"null"); if(w&&w.name) return {kind:"staff",garden:w.garden||"",loginId:w.loginId||"",name:w.name}; }catch(e){}
   return {kind:"unknown"};
