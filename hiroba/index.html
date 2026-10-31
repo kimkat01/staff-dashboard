@@ -45,6 +45,8 @@ header{display:flex;flex-wrap:wrap;align-items:center;gap:10px 16px}
 .chip b{font-weight:700;color:var(--accent)}
 .homebtn{display:inline-flex;align-items:center;gap:6px;padding:5px 14px;border-radius:999px;background:var(--accent);color:var(--accent-ink);font-weight:700;font-size:14px;text-decoration:none;white-space:nowrap}
 .homebtn[hidden]{display:none}
+.conn{display:inline-block;margin-left:8px;padding:0 8px;border-radius:999px;background:var(--surface);color:var(--accent);font-weight:700;font-size:12px}
+.conn.bad{color:#c0392b}
 .homebtn svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
 .homebtn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .closed{max-width:520px;margin:12vh auto 0;background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:24px;display:grid;gap:8px;text-align:center}
@@ -130,7 +132,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
     <span class="chip">ひろばにいる人 <b id="count">6</b>人</span>
     <a class="homebtn" id="homebtn" href="#" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/></svg>Home</a>
   </header>
-  <div class="demo">試作版です（いまは本部の方だけが見られます）。ほかのアバターはサンプルで、まだ実際の職員とはつながっていません。書いた内容はこの画面の中だけで、どこにも保存・送信されません。</div>
+  <div class="demo" id="demo-note">試作版です（いまは本部の方だけが見られます）。ほかのアバターはサンプルで、まだ実際の職員とはつながっていません。書いた内容はこの画面の中だけで、どこにも保存・送信されません。</div>
 
   <div class="main">
     <div class="stage">
@@ -200,6 +202,11 @@ button:disabled{opacity:.45;cursor:not-allowed}
 // GitHub Pages では、本部の人（同じブラウザで本部ダッシュボードを7日以内に開いた人、または本部アカウントでログインした人）だけが開ける。
 // 職員に公開するときは HIROBA_OPEN を true にする。
 const HIROBA_OPEN=false;
+// 通信用GASのURL（…/exec）。空のときは、サンプルのアバターだけのデモとして動く。
+// ?gas=… を付けて開くと、そのURLで試せる（設置直後の確認用）。
+const HIROBA_GAS_DEFAULT="";
+const HIROBA_GAS=(function(){ try{ const q=new URLSearchParams(location.search).get("gas")||""; if(/^https:\/\/script\.google\.com\/macros\/s\/[\w-]+\/exec$/.test(q)) return q; }catch(e){} return HIROBA_GAS_DEFAULT; })();
+const ONLINE=!!HIROBA_GAS;
 function honbuOk(){
   try{
     const hv=Number(localStorage.getItem("sd_honbu_viewer")||0);
@@ -220,6 +227,10 @@ if(!HIROBA_OPEN && /github\.io$/.test(location.hostname) && !honbuOk()){
   return;
 }
 const W=960,H=600,R=16,HEAR=150,SPEED=190,WALL=120;
+if(ONLINE){
+  document.getElementById("demo-note").innerHTML='試作版です（いまは本部の方だけが見られます）。ここに入っている人と、実際に会話できます。<span class="conn" id="conn">つないでいます…</span><br>吹き出しの言葉は保存されず、1分ほどで消えます。本音ボードの書き込みは、名前なしで保存されます。';
+  document.getElementById("count").textContent="1";
+}
 const ANIMALS=[["🐱","ねこ"],["🐶","いぬ"],["🐰","うさぎ"],["🐻","くま"],["🐼","ぱんだ"],["🐥","ひよこ"],["🦊","きつね"],["🐨","こあら"]];
 // 動物ごとの顔のつくり（毛色・耳の形・口まわり・鼻）
 const FUR=[
@@ -271,14 +282,14 @@ const REPLIES=["わかります…","それ、うちでもあります","話し�
 // ---------- 人の状態 ----------
 const me={x:480,y:310,a:0,color:COLORS[0],name:"",self:true,bubble:null,tx:null,ty:null,walk:0,moving:false,face:0};
 const bots=[];
-for(let i=0;i<5;i++){
+for(let i=0;i<(ONLINE?0:5);i++){
   // 自分以外のアバターは決まった場所に立ったまま（歩き回らない）
   const SPOTS=[{x:240,y:150,f:0.6},{x:700,y:150,f:-0.5},{x:350,y:420,f:0.9},{x:760,y:500,f:-0.9},{x:110,y:250,f:0.3}];
   const a=(i+2)%ANIMALS.length, p=blocked(SPOTS[i].x,SPOTS[i].y)?freePoint(ZONES[i%4]):SPOTS[i];
   bots.push({x:p.x,y:p.y,a,color:COLORS[(i+3)%COLORS.length],name:pick(ADJ)+"の"+ANIMALS[a][1],bubble:null,
     tx:null,ty:null,wait:0,nextSay:rnd(3,10)+i*2.5,walk:0,moving:false,face:SPOTS[i].f});
 }
-const notes=[
+const notes=ONLINE?[]:[
   {t:"会議が勤務時間外になるのをやめてほしい",l:7},
   {t:"他の園の先生と、年齢ごとの遊びのアイデアを交換したい",l:4},
   {t:"困ったときに相談できる人が園の外にもいると安心",l:9},
@@ -308,25 +319,53 @@ document.querySelectorAll(".emotes button").forEach(b=>b.onclick=()=>playerSays(
 function playerSays(v){
   if(!entryEl.hidden) return;
   say(me,v); addLog(me.name+"（あなた）",v,true);
+  if(ONLINE) outbox.push(v);
   const listeners=bots.filter(b=>near(b,me));
   if(!listeners.length){ addLog(null,"近くに誰もいないので、この言葉は誰にも届いていません。",false,true); return; }
+  if(ONLINE) return;
   const r=pick(listeners); setTimeout(()=>{ const t=pick(REPLIES); say(r,t); if(near(r,me)) addLog(r.name,t,false); },1400+Math.random()*1200);
 }
 const notesEl=document.getElementById("notes"), noteBtn=document.getElementById("note-btn"), noteInput=document.getElementById("note-input"), noteStatus=document.getElementById("note-status");
 let onNotesChanged=()=>{};
 function renderNotes(){
   notesEl.innerHTML="";
+  if(!notes.length){ const e=document.createElement("p"); e.className="status"; e.textContent=ONLINE&&notesVer<0?"読み込み中…":"まだ書き込みはありません。"; notesEl.appendChild(e); }
   notes.slice().reverse().forEach(n=>{
     const d=document.createElement("div"); d.className="note";
     const p=document.createElement("p"); p.textContent=n.t;
     const b=document.createElement("button"); b.type="button"; b.textContent="わかる "+n.l; b.setAttribute("aria-label","わかる、"+n.l+"件");
-    b.onclick=()=>{ if(!n.me){n.l++;n.me=true;} renderNotes(); };
+    b.onclick=()=>{ if(n.me) return; n.l++; n.me=true; myLikes.add(n.id); renderNotes(); if(ONLINE&&n.id) gasPost({action:"like",id:n.id}).then(applyNotes).catch(()=>{}); };
     d.append(p,b); notesEl.appendChild(d);
   });
   onNotesChanged();
 }
 noteBtn.onclick=()=>{ const v=noteInput.value.trim(); if(!v){ noteStatus.textContent="内容を入力してください。"; return; }
-  notes.push({t:v,l:0}); noteInput.value=""; renderNotes(); noteStatus.textContent="ボードに貼りました（デモのため、この画面の中だけです）。"; };
+  if(!ONLINE){ notes.push({t:v,l:0}); noteInput.value=""; renderNotes(); noteStatus.textContent="ボードに貼りました（デモのため、この画面の中だけです）。"; return; }
+  noteBtn.disabled=true; noteStatus.textContent="貼っています…";
+  gasPost({action:"note",text:v}).then(d=>{ if(!d||!d.ok) throw 0; applyNotes(d); noteInput.value=""; noteStatus.textContent="ボードに貼りました。名前は保存されません。"; })
+    .catch(()=>{ noteStatus.textContent="送れませんでした。通信状態を確かめて、もう一度押してください。"; })
+    .finally(()=>{ noteBtn.disabled=!inFrontOfBoard(me.x,me.y); });
+};
+
+// ---------- 通信（GAS） ----------
+let notesVer=-1, lastSeq=-1, syncing=false, connOk=null;
+const outbox=[], myLikes=new Set();
+const myId=(function(){ try{ let v=sessionStorage.getItem("hiroba_id"); if(!v){ v=Math.random().toString(36).slice(2,12); sessionStorage.setItem("hiroba_id",v); } return v; }catch(e){ return Math.random().toString(36).slice(2,12); } })();
+function gasPost(body){
+  return fetch(HIROBA_GAS,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify(body)}).then(r=>r.json());
+}
+function applyNotes(d){
+  if(!d||!Array.isArray(d.notes)) return;
+  notesVer=d.nv;
+  notes.length=0; d.notes.forEach(n=>notes.push({id:n.id,t:n.t,l:n.l,me:myLikes.has(n.id)}));
+  renderNotes();
+}
+function setConn(ok){
+  if(ok===connOk) return; connOk=ok;
+  const el=document.getElementById("conn"); if(!el) return;
+  el.textContent=ok?"つながっています":"つながりません（再接続中）";
+  el.classList.toggle("bad",!ok);
+}
 renderNotes();
 
 // ---------- 3D表示 ----------
@@ -518,6 +557,62 @@ if(document.fonts&&document.fonts.ready) document.fonts.ready.then(applyTheme);
 window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change",()=>setTimeout(applyTheme,0));
 new MutationObserver(()=>setTimeout(applyTheme,0)).observe(document.documentElement,{attributes:true,attributeFilter:["data-theme"]});
 
+
+// ---------- 通信のくり返し（約1秒ごとに自分の位置と言葉を送り、ほかの人の様子を受け取る） ----------
+function syncOnce(){
+  if(syncing) return Promise.resolve();
+  syncing=true;
+  const says=outbox.splice(0,5);
+  const body={action:"sync",id:myId,name:me.name,a:me.a,color:me.color,x:Math.round(me.x),y:Math.round(me.y),f:Number(me.face.toFixed(2)),says,since:lastSeq,nv:notesVer};
+  return gasPost(body).then(d=>{
+    if(!d||!d.ok) throw new Error(d&&d.message||"error");
+    setConn(true);
+    const first=lastSeq<0;
+    // ほかの人
+    const seen=new Set();
+    (d.players||[]).forEach(p=>{
+      if(p.id===myId) return; seen.add(p.id);
+      let o=bots.find(b=>b.id===p.id);
+      if(!o){
+        o={id:p.id,remote:true,x:p.x,y:p.y,a:p.a|0,color:p.color,name:p.name||"だれか",bubble:null,tx:null,ty:null,walk:0,moving:false,face:p.f||0,f:p.f||0};
+        bots.push(o); buildAvatar(o); buildOverlay(o);
+        if(!first) addLog(null,o.name+" さんがひろばに入りました。",false,true);
+      } else {
+        if(o.a!==(p.a|0)||o.color!==p.color){ o.a=p.a|0; o.color=p.color; buildAvatar(o); }
+        if(o.name!==p.name&&p.name){ o.name=p.name; buildOverlay(o); }
+        o.tx=p.x; o.ty=p.y; o.f=p.f;
+      }
+    });
+    for(let i=bots.length-1;i>=0;i--){
+      const b=bots[i];
+      if(b.remote&&!seen.has(b.id)){
+        scene.remove(b.g); if(b.el) b.el.remove(); bots.splice(i,1);
+        addLog(null,b.name+" さんがひろばを出ました。",false,true);
+      }
+    }
+    // 言葉
+    (d.msgs||[]).forEach(m=>{
+      if(m.id===myId) return;
+      const o=bots.find(b=>b.id===m.id); if(!o) return;
+      say(o,m.text);
+      if(near(o,me)) addLog(o.name,m.text,false);
+    });
+    lastSeq=Math.max(lastSeq,d.seq||0,0);
+    if(d.notes) applyNotes(d);
+  }).catch(()=>{
+    setConn(false);
+  }).finally(()=>{ syncing=false; });
+}
+function syncLoop(){
+  syncOnce().then(()=>{ setTimeout(syncLoop, document.hidden?5000:(connOk===false?3000:900)); });
+}
+function startOnline(){
+  if(!ONLINE) return;
+  syncLoop();
+  const bye=()=>{ try{ navigator.sendBeacon(HIROBA_GAS,new Blob([JSON.stringify({action:"leave",id:myId})],{type:"text/plain;charset=utf-8"})); }catch(e){} };
+  window.addEventListener("pagehide",bye);
+}
+
 // ---------- 入場画面 ----------
 const animalsEl=document.getElementById("animals"), colorsEl=document.getElementById("colors"), nameOut=document.getElementById("name-out");
 let selA=0, selC=0, adj=pick(ADJ);
@@ -532,9 +627,13 @@ function renderEntry(){
 document.getElementById("reroll").onclick=()=>{ let n; do{n=pick(ADJ);}while(n===adj); adj=n; renderEntry(); };
 document.getElementById("enter-btn").onclick=()=>{
   me.a=selA; me.color=COLORS[selC]; me.name=adj+"の"+ANIMALS[selA][1];
+  // 入る位置は中央付近で少しずらす（ほかの人と重ならないように）
+  for(let i=0;i<40;i++){ const x=480+rnd(-80,80), y=310+rnd(-55,55); if(!blocked(x,y)&&!bots.some(o=>Math.hypot(o.x-x,o.y-y)<40)){ me.x=x; me.y=y; break; } }
+  camTarget.set(me.x,20,me.y);
   buildAvatar(me); buildOverlay(me);
   entryEl.hidden=true; canvas.focus();
   addLog(null,me.name+" としてひろばに入りました。",false,true);
+  startOnline();
 };
 renderEntry();
 
@@ -633,9 +732,17 @@ function update(dt){
 
   for(const b of bots){
     const ox=b.x,oy=b.y; let bm=0;
-    // 自分以外のアバターは歩かない（その場に立ったまま）
+    // サンプルのアバターは歩かない。通信でつながった相手は、届いた位置までなめらかに歩かせる
+    if(b.remote&&b.tx!==null){
+      const dx=b.tx-b.x, dy=b.ty-b.y, d=Math.hypot(dx,dy);
+      if(d>260){ b.x=b.tx; b.y=b.ty; b.tx=null; }
+      else if(d<1.5){ b.tx=null; }
+      else { const m=Math.min(d,SPEED*1.15*dt); b.x+=dx/d*m; b.y+=dy/d*m; bm=m; }
+    }
+    if(b.remote&&b.tx===null&&typeof b.f==="number") turnTo(b,b.f,dt*0.6);
     b.moving=bm>0.05; if(b.moving){ b.walk+=dt*9; turnTo(b,Math.atan2(b.x-ox,b.y-oy),dt); }
     else if(near(b,me)&&entryEl.hidden) turnTo(b,Math.atan2(me.x-b.x,me.y-b.y),dt*0.5); // 近くの人はこちらを向く
+    if(b.remote) continue;
     b.nextSay-=dt;
     if(b.nextSay<=0){ b.nextSay=rnd(9,18); const t=pick(LINES); say(b,t); if(near(b,me)&&entryEl.hidden) addLog(b.name,t,false); }
   }
@@ -649,6 +756,7 @@ function update(dt){
     noteStatus.textContent=atBoard?"ここで書いた内容は名前なしで貼られます。":"奥の壁にある「本音ボード」の前まで歩くと貼れるようになります。";
     ZONES.forEach((zz,i)=>rugEdges[i].visible=(zz===z));
   }
+  if(ONLINE){ const cnt=document.getElementById("count"); const c=String(bots.length+(entryEl.hidden?1:0)); if(cnt.textContent!==c) cnt.textContent=c; }
   const ns=bots.filter(b=>near(b,me)); const key=ns.map(b=>b.name).join("|");
   if(key!==lastNearKey){ lastNearKey=key; const el=document.getElementById("near"); el.innerHTML="";
     if(!ns.length){ const p=document.createElement("span"); p.className="none"; p.textContent="近くには誰もいません。ほかの人のそばまで歩いてみましょう。"; el.appendChild(p); }
