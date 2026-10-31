@@ -189,8 +189,9 @@ button:disabled{opacity:.45;cursor:not-allowed}
     <div class="label">表示名</div>
     <div class="namebox"><output id="name-out"></output><button type="button" id="reroll">別の名前にする</button></div>
     <div class="promise">
-      <strong>このひろばで表示されないもの</strong>
-      <span>本名・職員番号・所属の園・役職は、ほかの人には一切表示されません。</span>
+      <strong>ほかの参加者に見えるのは、アバターと表示名だけです</strong>
+      <span>本名・所属の園・役職は、ほかの参加者には表示されません。</span>
+      <span>本部は、だれが・いつ・どのアバターで入ったかを確認できます。会話の内容は記録しません。</span>
     </div>
     <button class="primary" id="enter-btn" type="button">ひろばに入る</button>
   </div>
@@ -351,6 +352,13 @@ noteBtn.onclick=()=>{ const v=noteInput.value.trim(); if(!v){ noteStatus.textCon
 let notesVer=-1, lastSeq=-1, syncing=false, connOk=null;
 const outbox=[], myLikes=new Set();
 const myId=(function(){ try{ let v=sessionStorage.getItem("hiroba_id"); if(!v){ v=Math.random().toString(36).slice(2,12); sessionStorage.setItem("hiroba_id",v); } return v; }catch(e){ return Math.random().toString(36).slice(2,12); } })();
+// だれが入ったか（本部の記録用）。本部の人は本部ダッシュボードの通行証、職員は ANSHIN KUN のログイン情報を送る。
+// ほかの参加者には送られない（GASが本部用の記録にだけ使う）
+function myWho(){
+  try{ const t=JSON.parse(localStorage.getItem("honbu_token")||"null"); if(t&&t.token&&t.exp>Date.now()) return {kind:"honbu",token:t.token}; }catch(e){}
+  try{ const w=JSON.parse(localStorage.getItem("hiroba_who")||"null"); if(w&&w.name) return {kind:"staff",garden:w.garden||"",loginId:w.loginId||"",name:w.name}; }catch(e){}
+  return {kind:"unknown"};
+}
 function gasPost(body){
   return fetch(HIROBA_GAS,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify(body)}).then(r=>r.json());
 }
@@ -563,7 +571,7 @@ function syncOnce(){
   if(syncing) return Promise.resolve();
   syncing=true;
   const says=outbox.splice(0,5);
-  const body={action:"sync",id:myId,name:me.name,a:me.a,color:me.color,x:Math.round(me.x),y:Math.round(me.y),f:Number(me.face.toFixed(2)),says,since:lastSeq,nv:notesVer};
+  const body={action:"sync",id:myId,name:me.name,a:me.a,color:me.color,x:Math.round(me.x),y:Math.round(me.y),f:Number(me.face.toFixed(2)),says,since:lastSeq,nv:notesVer,who:myWho()};
   return gasPost(body).then(d=>{
     if(!d||!d.ok) throw new Error(d&&d.message||"error");
     setConn(true);
