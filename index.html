@@ -11,6 +11,10 @@
 <script src="gardens.js"></script>
 <!-- 利用状況（アクセスログ）の送信（2026-10）：ツールを開いたときに本部へ記録を送る -->
 <script src="access-log.js"></script>
+<!-- 通知・アイコンの未読数（2026-11-01）：試行中の園（push-client.js の PUSH_GARDENS）だけ manifest を付けて
+     「ホーム画面に追加」したときにアプリとして開くようにする（start_url に ?garden= を入れてあるので園は変わらない） -->
+<script src="push-client.js"></script>
+<script>try{ if(window.ShiodomePush && typeof gardenFromUrl==='function') ShiodomePush.head(gardenFromUrl(), 'manifests/'); }catch(e){}</script>
 <script>
 /* 社会福祉法人雄雅会の園（園コード Y〜）で開いたときは、ホーム画面アイコンを緑版（icons/yuga/）にする（2026-09-30）
    ・柴学園の園や ?garden 無しのときは、今までどおり青（icons/）
@@ -8849,6 +8853,20 @@ applyLawTheme();renderHome();goHome();sdLog('ホーム');
   };
   if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', function(){ window.sdShiftSync(); });
   else window.sdShiftSync();
+})();
+</script>
+<script>
+/* 通知・アイコンの未読数（2026-11-01）：未読のお知らせの件数をアイコンに出す（中身は push-client.js）
+   ・試行中の園（PUSH_GARDENS）でログイン済みのときだけ動く。お知らせを開いたら既読を本部の通知管理に伝える */
+(function(){
+  if(!window.ShiodomePush || typeof gardenFromUrl !== 'function') return;
+  var g = gardenFromUrl(); if(!g) return;
+  ShiodomePush.init({
+    app: 'anshin',
+    garden: { code: g.code, key: g.key, name: g.name },
+    user: function(){ var s = (typeof getPinSession === 'function') ? getPinSession() : null; return s ? { loginId: s.loginId, name: s.name } : {}; },
+    swUrl: 'sw.js'
+  });
 })();
 </script>
 </body>

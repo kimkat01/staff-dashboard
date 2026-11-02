@@ -1,0 +1,15 @@
+{
+  "id": "/staff-dashboard/?garden=koshigaya",
+  "name": "ANSHIN KUN（しおどめ保育園越谷）",
+  "short_name": "ANSHIN KUN",
+  "start_url": "../?garden=koshigaya",
+  "scope": "../",
+  "display": "standalone",
+  "background_color": "#f4f1ec",
+  "theme_color": "#4169e1",
+  "lang": "ja",
+  "icons": [
+    { "src": "../icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "../icons/icon-512.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}
