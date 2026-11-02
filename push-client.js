@@ -14,8 +14,8 @@
    ============================================================ */
 (function () {
   var PUSH_GARDENS = ['S07'];   // S07 = しおどめ保育園越谷（試行）
-  var NOTIFY_GAS_URL = '';      // ← 通知管理GASの /exec のURL
-  var VAPID_PUBLIC = '';        // ← Workerの /setup で作った「公開鍵」（VAPID_PUBLIC と同じもの）
+  var NOTIFY_GAS_URL = 'https://script.google.com/macros/s/AKfycbxuaubQvUXw7OGdplUTuYGkv7b9UbtiFbQomzsX08gnqy1IFiCxa88xbcAKCjGElOJW/exec';   // 通知管理GAS（cryk0289、Apps Script「通知管理」）の /exec
+  var VAPID_PUBLIC = 'BJei1MVs3hDLXJvoH1o0FHGpzwTJNFs2u4G0C0nihVynV4r78m11lcmHnFxN6hic6NM8uv4vH41c4EP4IFDfUaA';   // Worker shiodome-push の公開鍵（/public-key と同じ）
   var NEWS_GAS_URL = 'https://script.google.com/macros/s/AKfycbwvO_eVBaPA31-c93roVoHk8rsyrcQJvAMvGYiyxjvmYBB6niL7dQUDjQG5yjFNpU5d/exec';
   var NEWS_READ_KEY = 'shiodome_news_read';   // ANSHIN KUN のお知らせ既読（端末内）と同じキー
 
