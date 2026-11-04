@@ -45,6 +45,10 @@ header{display:flex;flex-wrap:wrap;align-items:center;gap:10px 16px}
 .chip b{font-weight:700;color:var(--accent)}
 .homebtn{display:inline-flex;align-items:center;gap:6px;padding:5px 14px;border-radius:999px;background:var(--accent);color:var(--accent-ink);font-weight:700;font-size:14px;text-decoration:none;white-space:nowrap}
 .homebtn[hidden]{display:none}
+.exitbtn{display:inline-flex;align-items:center;gap:6px;padding:5px 14px;border-radius:999px;background:var(--surface);color:var(--accent);border:1.5px solid var(--accent);font-weight:700;font-size:14px;white-space:nowrap;cursor:pointer}
+.exitbtn svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+.exitbtn[hidden]{display:none}
+.exitbtn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .conn{display:inline-block;margin-left:8px;padding:0 8px;border-radius:999px;background:var(--surface);color:var(--accent);font-weight:700;font-size:12px}
 .conn.bad{color:#c0392b}
 .homebtn svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
@@ -127,9 +131,10 @@ button:disabled{opacity:.45;cursor:not-allowed}
 
 <div class="wrap">
   <header>
-    <div class="brand"><h1>しおどめひろば</h1><span>職員の匿名ひろば</span></div>
+    <div class="brand"><h1>しおどめひろば</h1><span>職員のひろば</span></div>
     <span class="chip">いまいる場所 <b id="zone-now">ろうか</b></span>
     <span class="chip">ひろばにいる人 <b id="count">6</b>人</span>
+    <button class="exitbtn" id="exitbtn" type="button" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 4h4a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1h-4"/><path d="M10 16l-4-4 4-4"/><path d="M6 12h10"/></svg>退出する</button>
     <a class="homebtn" id="homebtn" href="#" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/></svg>Home</a>
   </header>
   <div class="demo" id="demo-note">試作版です（いまは本部の方だけが見られます）。ほかのアバターはサンプルで、まだ実際の職員とはつながっていません。書いた内容はこの画面の中だけで、どこにも保存・送信されません。</div>
@@ -170,7 +175,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
       <section class="card board-card" id="board-card">
         <h2>本音ボード <small id="board-state">ボードの前で貼れます</small></h2>
         <div class="notes" id="notes"></div>
-        <textarea id="note-input" maxlength="80" placeholder="ふだん言いにくいことを、匿名で（80字まで）"></textarea>
+        <textarea id="note-input" maxlength="80" placeholder="ふだん言いにくいことも、ボードに（80字まで）"></textarea>
         <button class="primary" id="note-btn" type="button" disabled>ボードに貼る</button>
         <p class="status" id="note-status">奥の壁にある「本音ボード」の前まで歩くと貼れるようになります。</p>
       </section>
@@ -228,7 +233,7 @@ if(!HIROBA_OPEN && /github\.io$/.test(location.hostname) && !honbuOk()){
 }
 const W=960,H=600,R=16,HEAR=150,SPEED=190,WALL=120;
 if(ONLINE){
-  document.getElementById("demo-note").innerHTML='試作版です（いまは本部の方だけが見られます）。ここに入っている人と、実際に会話できます。<span class="conn" id="conn">つないでいます…</span><br>吹き出しの言葉は保存されず、1分ほどで消えます。本音ボードの書き込みは、名前なしで保存されます。';
+  document.getElementById("demo-note").innerHTML='試作版です（いまは本部の方だけが見られます）。ここに入っている人と、実際に会話できます。<span class="conn" id="conn">つないでいます…</span><br>ほかの参加者に見えるのはアバターと表示名だけです。話した言葉と本音ボードの書き込みは、法人の記録として保存されます。';
   document.getElementById("count").textContent="1";
 }
 const ANIMALS=[["🐱","ねこ"],["🐶","いぬ"],["🐰","うさぎ"],["🐻","くま"],["🐼","ぱんだ"],["🐥","ひよこ"],["🦊","きつね"],["🐨","こあら"]];
@@ -342,7 +347,7 @@ function renderNotes(){
 noteBtn.onclick=()=>{ const v=noteInput.value.trim(); if(!v){ noteStatus.textContent="内容を入力してください。"; return; }
   if(!ONLINE){ notes.push({t:v,l:0}); noteInput.value=""; renderNotes(); noteStatus.textContent="ボードに貼りました（デモのため、この画面の中だけです）。"; return; }
   noteBtn.disabled=true; noteStatus.textContent="貼っています…";
-  gasPost({action:"note",text:v}).then(d=>{ if(!d||!d.ok) throw 0; applyNotes(d); noteInput.value=""; noteStatus.textContent="ボードに貼りました。名前は保存されません。"; })
+  gasPost({action:"note",text:v,pid:myId,avatar:me.name,who:myWho()}).then(d=>{ if(!d||!d.ok) throw 0; applyNotes(d); noteInput.value=""; noteStatus.textContent="ボードに貼りました。"; })
     .catch(()=>{ noteStatus.textContent="送れませんでした。通信状態を確かめて、もう一度押してください。"; })
     .finally(()=>{ noteBtn.disabled=!inFrontOfBoard(me.x,me.y); });
 };
@@ -611,9 +616,25 @@ function syncOnce(){
     setConn(false);
   }).finally(()=>{ syncing=false; });
 }
+let hasLeft=false;
 function syncLoop(){
-  syncOnce().then(()=>{ setTimeout(syncLoop, document.hidden?5000:(connOk===false?3000:900)); });
+  if(hasLeft) return;
+  syncOnce().then(()=>{ if(!hasLeft) setTimeout(syncLoop, document.hidden?5000:(connOk===false?3000:900)); });
 }
+// 退出：GASに退出を知らせて通信を止める。ANSHIN KUN から来たときは HOME に戻り、そうでなければ「退出しました」を出す
+function leaveHiroba(){
+  if(hasLeft) return;
+  hasLeft=true;
+  if(ONLINE){
+    const body=JSON.stringify({action:"leave",id:myId});
+    try{ fetch(HIROBA_GAS,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body,keepalive:true}).catch(()=>{}); }
+    catch(e){ try{ navigator.sendBeacon(HIROBA_GAS,new Blob([body],{type:"text/plain;charset=utf-8"})); }catch(e2){} }
+  }
+  const hb=document.getElementById("homebtn");
+  if(hb && !hb.hidden && hb.href && hb.getAttribute("href")!=="#"){ location.href=hb.href; return; }
+  document.querySelector(".wrap").innerHTML='<div class="closed"><h2>退出しました</h2><p>しおどめひろばから退出しました。</p><p><button class="exitbtn" type="button" onclick="location.reload()">もう一度入る</button></p></div>';
+}
+document.getElementById("exitbtn").addEventListener("click",leaveHiroba);
 function startOnline(){
   if(!ONLINE) return;
   syncLoop();
@@ -642,6 +663,7 @@ document.getElementById("enter-btn").onclick=()=>{
   entryEl.hidden=true; canvas.focus();
   addLog(null,me.name+" としてひろばに入りました。",false,true);
   startOnline();
+  document.getElementById("exitbtn").hidden=false;
 };
 renderEntry();
 
@@ -761,7 +783,7 @@ function update(dt){
     noteBtn.disabled=!atBoard;
     document.getElementById("board-card").classList.toggle("active",atBoard);
     document.getElementById("board-state").textContent=atBoard?"いま貼れます":"ボードの前で貼れます";
-    noteStatus.textContent=atBoard?"ここで書いた内容は名前なしで貼られます。":"奥の壁にある「本音ボード」の前まで歩くと貼れるようになります。";
+    noteStatus.textContent=atBoard?"ボードには名前を出さずに貼られます（ほかの参加者には書いた人は表示されません）。":"奥の壁にある「本音ボード」の前まで歩くと貼れるようになります。";
     ZONES.forEach((zz,i)=>rugEdges[i].visible=(zz===z));
   }
   if(ONLINE){ const cnt=document.getElementById("count"); const c=String(bots.length+(entryEl.hidden?1:0)); if(cnt.textContent!==c) cnt.textContent=c; }
@@ -814,7 +836,7 @@ function render(now){
 }
 
 let last=performance.now();
-function loop(now){ const dt=Math.min(0.05,(now-last)/1000); last=now; update(dt); render(now); requestAnimationFrame(loop); }
+function loop(now){ if(hasLeft) return; const dt=Math.min(0.05,(now-last)/1000); last=now; update(dt); render(now); requestAnimationFrame(loop); }
 requestAnimationFrame(loop);
 })();
 </script>
