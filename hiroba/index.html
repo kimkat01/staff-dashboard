@@ -213,11 +213,21 @@ button:disabled{opacity:.45;cursor:not-allowed}
 // GitHub Pages では、本部の人（同じブラウザで本部ダッシュボードを7日以内に開いた人、または本部アカウントでログインした人）だけが開ける。
 // 職員に公開するときは HIROBA_OPEN を true にする。
 const HIROBA_OPEN=false;
+// 2026-11-05：試作版を職員にも開く園（ANSHIN KUN のログイン園名と同じ書き方）。いまは「ふれあいしおどめ保育園八潮」だけ。
+// 園を増やすときは、ANSHIN KUN（staff-dashboard/index.html）の HIROBA_GARDENS にも同じ園名を足す。
+const HIROBA_GARDENS=["ふれあいしおどめ保育園八潮"];
 // 通信用GASのURL（…/exec）。空のときは、サンプルのアバターだけのデモとして動く。
 // ?gas=… を付けて開くと、そのURLで試せる（設置直後の確認用）。
 const HIROBA_GAS_DEFAULT="https://script.google.com/macros/s/AKfycbwinrl4ff1pVRE-zgsGZ3WdSWfGcFHeRVoSb2GtpAwwIG0ziTu1FrctQPkzfBq71f54/exec";  // GAS「しおどめひろば 通信」（cryk0289）
 const HIROBA_GAS=(function(){ try{ const q=new URLSearchParams(location.search).get("gas")||""; if(/^https:\/\/script\.google\.com\/macros\/s\/[\w-]+\/exec$/.test(q)) return q; }catch(e){} return HIROBA_GAS_DEFAULT; })();
 const ONLINE=!!HIROBA_GAS;
+// ANSHIN KUN のホームから開いた、対象園の職員かどうか（ANSHIN KUN がログイン中の職員の園名をこのブラウザに渡している）
+function gardenOk(){
+  try{
+    const w=JSON.parse(localStorage.getItem("hiroba_who")||"null");
+    return !!(w&&w.name&&HIROBA_GARDENS.indexOf(w.garden)>=0);
+  }catch(e){ return false; }
+}
 function honbuOk(){
   try{
     const hv=Number(localStorage.getItem("sd_honbu_viewer")||0);
@@ -238,12 +248,13 @@ try{
   const home=new URLSearchParams(location.search).get("home")||"";
   if(/^https:\/\/kimkat01\.github\.io\//.test(home)){ const hb=document.getElementById("homebtn"); hb.href=home; hb.hidden=false; }
 }catch(e){}
-if(!HIROBA_OPEN && /github\.io$/.test(location.hostname) && !honbuOk()){
+if(!HIROBA_OPEN && /github\.io$/.test(location.hostname) && !honbuOk() && !gardenOk()){
   document.getElementById("entry").hidden=true;
   // 2026-11-05：メールやLINEのリンクから開くと、本部ダッシュボードを開いたブラウザとは別のブラウザになり入れないため、
   //             この画面で本部アカウント（ログインマスタで「本部」の人）のログインIDとパスワードでも入れるようにした
   document.querySelector(".wrap").innerHTML='<div class="closed"><h2>しおどめひろば</h2>'+
-    '<p>ただいま試作中のため、本部の方だけが入れます。</p>'+
+    '<p>ただいま試作中のため、'+HIROBA_GARDENS.join("・")+'の職員と、本部の方だけが入れます。</p>'+
+    '<p>'+HIROBA_GARDENS.join("・")+'の職員は、ANSHIN KUN のホームにある「しおどめひろば」から入ってください。</p>'+
     '<p>本部の方は、本部アカウントのログインIDとパスワードを入れてください。</p>'+
     '<form id="hlogin" class="hlogin" autocomplete="on">'+
       '<label for="hlId">ログインID（4桁）<input id="hlId" inputmode="numeric" maxlength="4" autocomplete="username"></label>'+

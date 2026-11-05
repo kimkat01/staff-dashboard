@@ -8398,9 +8398,18 @@ IMG.hiroba="data:image/svg+xml,"+encodeURIComponent('<svg xmlns="http://www.w3.o
   '<ellipse cx="55" cy="59" rx="3" ry="1.8" fill="#f6a5b0"/><ellipse cx="75" cy="59" rx="3" ry="1.8" fill="#f6a5b0"/>'+
   '</svg>');
 IC.hiroba='<svg viewBox="0 0 24 24"><circle cx="8" cy="8" r="3"/><circle cx="16.5" cy="9" r="2.5"/><path d="M2.5 20c0-3.2 2.4-5.4 5.5-5.4s5.5 2.2 5.5 5.4"/><path d="M14 15.3c.8-.5 1.6-.7 2.5-.7 2.6 0 4.5 2 4.5 5.4"/></svg>';
+/* 2026-11-05：試作版を職員にも見せる園。いまは「ふれあいしおどめ保育園八潮」だけ（ほかの園の職員には出さない）。
+   園を増やすときは、ひろば側（hiroba/index.html）の HIROBA_GARDENS にも同じ園名を足す。 */
+const HIROBA_GARDENS=["ふれあいしおどめ保育園八潮"];
 function sdShowHiroba(){
   if(window.SD_HONBU_VIEW) return true;
-  try{var s=getPinSession();return !!(s&&s.role==='本部');}catch(e){return false;}
+  try{
+    var s=getPinSession();
+    if(!s) return false;
+    if(s.role==='本部') return true;
+    // 対象園の画面で、その園の職員としてログインしているときだけ
+    return HIROBA_GARDENS.indexOf(gardenName())>=0 && s.garden===gardenName();
+  }catch(e){return false;}
 }
 function openHiroba(){
   /* 2026-11-01：本部の入室記録用に、ログイン中の職員の情報（園・ログインID・名前）をひろばへ渡す。
