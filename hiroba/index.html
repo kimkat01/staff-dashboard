@@ -143,7 +143,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
     <button class="exitbtn" id="exitbtn" type="button" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 4h4a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1h-4"/><path d="M10 16l-4-4 4-4"/><path d="M6 12h10"/></svg>退出する</button>
     <a class="homebtn" id="homebtn" href="#" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/></svg>Home</a>
   </header>
-  <div class="demo" id="demo-note">試作版です（いまは本部の方だけが見られます）。ほかのアバターはサンプルで、まだ実際の職員とはつながっていません。書いた内容はこの画面の中だけで、どこにも保存・送信されません。</div>
+  <div class="demo" id="demo-note">試作版です。ほかのアバターはサンプルで、まだ実際の職員とはつながっていません。書いた内容はこの画面の中だけで、どこにも保存・送信されません。</div>
 
   <div class="main">
     <div class="stage">
@@ -281,7 +281,7 @@ if(!HIROBA_OPEN && /github\.io$/.test(location.hostname) && !honbuOk() && !garde
 }
 const W=960,H=600,R=16,HEAR=150,SPEED=190,WALL=120;
 if(ONLINE){
-  document.getElementById("demo-note").innerHTML='試作版です（いまは本部の方だけが見られます）。ここに入っている人と、実際に会話できます。<span class="conn" id="conn">つないでいます…</span><br>ほかの参加者に見えるのはアバターと表示名だけです。話した言葉と本音ボードの書き込みは、法人の記録として保存されます。';
+  document.getElementById("demo-note").innerHTML='試作版です（いまは'+HIROBA_GARDENS.join("・")+'の職員と本部の方が入れます）。ここに入っている人と、実際に会話できます。<span class="conn" id="conn">つないでいます…</span><br>ほかの参加者に見えるのはアバターと表示名だけです。話した言葉と本音ボードの書き込みは、法人の記録として保存されます。';
   document.getElementById("count").textContent="1";
 }
 const ANIMALS=[["🐱","ねこ"],["🐶","いぬ"],["🐰","うさぎ"],["🐻","くま"],["🐼","ぱんだ"],["🐥","ひよこ"],["🦊","きつね"],["🐨","こあら"]];
