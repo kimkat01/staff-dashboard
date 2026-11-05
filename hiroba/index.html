@@ -56,6 +56,12 @@ header{display:flex;flex-wrap:wrap;align-items:center;gap:10px 16px}
 .closed{max-width:520px;margin:12vh auto 0;background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:24px;display:grid;gap:8px;text-align:center}
 .closed h2{font-family:var(--display);margin:0;font-size:20px}
 .closed p{margin:0;color:var(--muted);font-size:14px}
+.hlogin{display:grid;gap:10px;text-align:left;margin-top:8px}
+.hlogin label{display:grid;gap:4px;font-size:13px;color:var(--muted)}
+.hlogin input{font:inherit;font-size:16px;padding:9px 12px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--ink)}
+.hlogin input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.hlogin .exitbtn{justify-self:center;padding:8px 28px}
+.hlerr{color:#c0392b!important;min-height:1em}
 .demo{background:var(--accent-soft);border-radius:10px;padding:8px 14px;font-size:13px;color:var(--ink)}
 .main{display:grid;grid-template-columns:minmax(0,1fr) 360px;gap:14px;align-items:start}
 @media (max-width:860px){.main{grid-template-columns:minmax(0,1fr)}
@@ -218,6 +224,12 @@ function honbuOk(){
     if(hv&&Date.now()-hv<7*24*60*60*1000) return true;
     const t=JSON.parse(localStorage.getItem("sd_honbu_token")||"null");
     if(t&&t.token) return true;
+    // 本部アカウントでログイン済み（入室状況の画面や、下のログイン欄で発行した通行証。30日有効）
+    const m=JSON.parse(localStorage.getItem("hiroba_mon_auth")||"null");
+    if(m&&m.token&&m.exp>Date.now()) return true;
+    // 本部ダッシュボードの2段階認証の通行証
+    const h=JSON.parse(localStorage.getItem("honbu_token")||"null");
+    if(h&&h.token&&(!h.exp||h.exp>Date.now())) return true;
   }catch(e){}
   return false;
 }
@@ -228,7 +240,32 @@ try{
 }catch(e){}
 if(!HIROBA_OPEN && /github\.io$/.test(location.hostname) && !honbuOk()){
   document.getElementById("entry").hidden=true;
-  document.querySelector(".wrap").innerHTML='<div class="closed"><h2>しおどめひろば</h2><p>ただいま試作中のため、まだ公開していません。</p><p>公開したら、ANSHIN KUN のホームからご案内します。</p></div>';
+  // 2026-11-05：メールやLINEのリンクから開くと、本部ダッシュボードを開いたブラウザとは別のブラウザになり入れないため、
+  //             この画面で本部アカウント（ログインマスタで「本部」の人）のログインIDとパスワードでも入れるようにした
+  document.querySelector(".wrap").innerHTML='<div class="closed"><h2>しおどめひろば</h2>'+
+    '<p>ただいま試作中のため、本部の方だけが入れます。</p>'+
+    '<p>本部の方は、本部アカウントのログインIDとパスワードを入れてください。</p>'+
+    '<form id="hlogin" class="hlogin" autocomplete="on">'+
+      '<label for="hlId">ログインID（4桁）<input id="hlId" inputmode="numeric" maxlength="4" autocomplete="username"></label>'+
+      '<label for="hlPw">パスワード<input id="hlPw" type="password" autocomplete="current-password"></label>'+
+      '<p class="hlerr" id="hlErr" role="alert"></p>'+
+      '<button class="exitbtn" id="hlBtn" type="submit">入る</button>'+
+    '</form></div>';
+  document.getElementById("hlogin").addEventListener("submit",function(e){
+    e.preventDefault();
+    const btn=document.getElementById("hlBtn"), err=document.getElementById("hlErr");
+    if(!HIROBA_GAS){ err.textContent="いまは通信の設定がないため入れません。"; return; }
+    btn.disabled=true; btn.textContent="確認中…"; err.textContent="";
+    fetch(HIROBA_GAS,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify({action:"login",loginId:document.getElementById("hlId").value,password:document.getElementById("hlPw").value})})
+      .then(r=>r.json())
+      .then(d=>{
+        if(d&&d.ok){ try{ localStorage.setItem("hiroba_mon_auth",JSON.stringify({token:d.token,exp:d.exp,name:d.name})); }catch(x){} location.reload(); return; }
+        err.textContent=(d&&d.message)||"ログインできませんでした。";
+      })
+      .catch(()=>{ err.textContent="通信できませんでした。少し待ってから、もう一度押してください。"; })
+      .finally(()=>{ btn.disabled=false; btn.textContent="入る"; });
+  });
+  setTimeout(()=>{ const i=document.getElementById("hlId"); if(i) i.focus(); },50);
   return;
 }
 const W=960,H=600,R=16,HEAR=150,SPEED=190,WALL=120;
