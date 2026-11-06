@@ -28,7 +28,8 @@ var GARDEN_FOLDERS = {
   "しおどめ保育園越谷":     "koshigaya",
   "しおどめ保育園小規模認可": "shokibo_ninka",
   "八潮しおどめ保育園":     "yashio_shiodome",
-  "しおどめ保育園稲城":     "inagi"
+  "しおどめ保育園稲城":     "inagi",
+  "認定こども園しおどめの森": "shiodome_no_mori"
 };
 
 /* 園のダッシュボードが別のリポジトリにある園だけ、PDF内検索の「Home」の戻り先を書く。
@@ -57,6 +58,12 @@ var MANUALS = {
     ]},
     { label:"参考資料", docs:[
       { title:"こども性暴力防止法の施行について", file:"kodomo-seibouryoku-hou.pdf" }
+    ]}
+  ],
+  shiodome_no_mori: [
+    { label:"規約・マニュアル", docs:[
+      { title:"就業規則（正社員）",     file:"seiki-shugyo-kisoku.pdf" },
+      { title:"就業規則（パートタイム社員）", file:"part-shugyo-kisoku.pdf" }
     ]}
   ],
   fureai_shiodome: [
