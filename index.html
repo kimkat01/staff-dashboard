@@ -1425,20 +1425,16 @@ html.law-y .pin-box:focus,html.law-y .pg-text:focus{border-color:#43a047;box-sha
         }catch(e){ return false; }
       }
       aicTestOn();
-      /* ログイン中の職員（園名・氏名・ログインID）。画面には出さず、記録にだけ使う。AIには送らない。 */
+      /* ログイン中の職員（園名・氏名・ログインID）。画面には出さず、記録にだけ使う。AIには送らない。
+         2026-11-12修正：いま開いている園（URLの ?garden=）のログイン情報だけを見る。
+         同じ kimkat01.github.io の他園（ふれあい等）のログインが残っていても、それは使わない。 */
       function aicViewer(){
-        var list=[];
-        try{
-          for(var i=0;i<localStorage.length;i++){
-            var k=localStorage.key(i); if(!/^sd_pin_login__/.test(k)) continue;
-            var s=JSON.parse(localStorage.getItem(k)||'null');
-            if(s && s.name && !(s.exp && s.exp<Date.now())) list.push(s);
-          }
-        }catch(e){}
-        var g=''; try{ g=new URLSearchParams(location.search).get('garden')||''; if(typeof findGarden==='function'){ var m=findGarden(g); if(m) g=m.name; } }catch(e){}
-        var hit=null; for(var j=0;j<list.length;j++){ if(list[j].garden===g){ hit=list[j]; break; } }
-        if(!hit && list.length===1) hit=list[0];
-        return hit?{garden:hit.garden||g,name:hit.name||'',loginId:String(hit.loginId||'')}:{garden:g,name:'',loginId:''};
+        var raw='', g='', s=null;
+        try{ raw=(new URLSearchParams(location.search).get('garden')||'').trim(); }catch(e){}
+        g=raw; try{ if(typeof findGarden==='function'){ var m=findGarden(raw); if(m) g=m.name; } }catch(e){}
+        try{ s=JSON.parse(localStorage.getItem('sd_pin_login__'+(g||'default'))||'null'); }catch(e){}
+        if(s && s.exp && s.exp<Date.now()) s=null;
+        return s?{garden:g||s.garden||'',name:s.name||'',loginId:String(s.loginId||'')}:{garden:g,name:'',loginId:''};
       }
       function aicNow(){ return new Date().toLocaleString('ja-JP',{timeZone:'Asia/Tokyo'}); }
       function aicLog(q,a,alert){
