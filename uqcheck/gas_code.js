@@ -1,13 +1,27 @@
-// ************************************************************
-// ★注意（2026-10-26）：このファイルは古い控え（v3.3）です。貼り付けに使わないでください。
-//   本番は Apps Script プロジェクト「UQchecker」（cryk0289）の v3.5 です。
-//   （v3.4 二重登録防止／v3.5 セキュリティ対策・段階1 はこの控えに入っていません）
-//   修正するときは、必ず本番のエディタのコードを元にしてください。
-// ************************************************************
 // ============================================================
 // UQ checker - Google Apps Script バックエンド v3（全園共通）
 // スプレッドシート：「UQchecker」（cryk0289@gmail.com）
 // スプレッドシートID: 197yLc-CxuIAomrtAoTPXY1cROu8hWfsxjCbmi7YGIno
+//
+// 2026-11-12 v3.6
+//  ・園長画面から、申請の種別（有給全日／午前半休／午後半休／夏期／時間休）を後から変更できる updateRequestType を追加
+//    （例：夏期休暇で申請したものを有給に変える。受付済の申請は職員マスタの取得済み日数も付け替える）
+//  ・変更は「変更履歴」シートに記録。他の園の申請は変更できない
+//
+// 2026-10-26 v3.5（セキュリティ対策・段階1）
+//  ・職員一覧（getStaff）は、指定された園の職員だけを返すようにした（今までは全園分）
+//    ※画面側も同じ園名で絞り込んでいたので、表示は変わらない。園の指定がないときは空で返す
+//  ・画面へ返す職員情報から、メールアドレス・園長メールを外し、基本給・手当・時給は0で返す
+//    （画面ではメールは使っていない。給与欄はもともと全員0なので「手当の計算」の表示も変わらない）
+//    ※メール送信（受付・相談の通知）はGASの中で職員マスタを直接読むので、これまでどおり届く
+//  ・シートの初期化（initSheets）は外から呼べないようにした（必要なときはエディタから実行）
+//
+// 2026-10-14 v3.4（つくば園：申請ボタン1回で2件・4件登録される不具合の対策）
+//  ・同じ職員・同じ日・同じ種類の申請が「申請中」か「受付済」で既にあれば、新しく登録しない（二重登録防止）
+//    ※「相談」になった申請は対象外（同じ日でもう一度申請し直せる）
+//  ・申請の登録中は他の登録を待たせる（ほぼ同時に届いた同じ申請が両方入らないように）
+//  ・申請IDが同じ秒にかぶっても重ならないよう、かぶったときは末尾に -2, -3 … を付ける
+//  ・二重だった申請は園長へのメールも送らない
 //
 // 2026-10-14 v3.3
 //  ・表示とメールの言葉を変更：「承認」→「受付」、「却下」→「相談」（年次有給休暇は職員の権利で、許可・却下するものではないため）
@@ -63,10 +77,10 @@ function doGet(e) {
     const callback = e.parameter.callback; // JSONPコールバック
 
     if (action === 'getStaff') {
-      return response({ ok: true, data: getAllStaff() }, callback);
+      return response({ ok: true, data: getStaffForGarden_(e.parameter.garden) }, callback);
     }
     if (action === 'getStaffById') {
-      return response({ ok: true, data: getStaffById(e.parameter.id) }, callback);
+      return response({ ok: true, data: publicStaff_(getStaffById(e.parameter.id)) }, callback);
     }
     if (action === 'getRequests') {
       return response({ ok: true, data: getAllRequests(e.parameter.staffId) }, callback);
@@ -74,14 +88,12 @@ function doGet(e) {
     if (action === 'getPending') {
       return response({ ok: true, data: getPendingRequests() }, callback);
     }
-    if (action === 'initSheets') {
-      initSheets();
-      return response({ ok: true, message: 'シートを初期化しました' }, callback);
-    }
+    // initSheets（シート初期化）は外から呼べないようにした（v3.5）。必要なときはエディタで直接実行する
     // POSTをGETで受け付ける（ローカルファイル用）
     if (action === 'addRequest') {
       const data = JSON.parse(e.parameter.data);
       const req = addRequest(data);
+      if (req.duplicate) return response({ ok: true, duplicate: true, data: req }, callback);
       sendMailToEncho(req);
       return response({ ok: true, data: req }, callback);
     }
@@ -106,6 +118,12 @@ function doGet(e) {
       const result = updateRequestDate(e.parameter.reqId, e.parameter.garden, e.parameter.editor, e.parameter.date);
       return response(result, callback);
     }
+    // 園長画面からの申請の種別変更（v3.6）
+    if (action === 'updateRequestType') {
+      const result = updateRequestType(e.parameter.reqId, e.parameter.garden, e.parameter.editor,
+                                       e.parameter.category, e.parameter.type, e.parameter.days);
+      return response(result, callback);
+    }
 
     return response({ ok: false, error: 'Unknown action' }, callback);
   } catch(err) {
@@ -120,6 +138,7 @@ function doPost(e) {
     const action = body.action;
     if (action === 'addRequest') {
       const req = addRequest(body.data);
+      if (req.duplicate) return response({ ok: true, duplicate: true, data: req });
       sendMailToEncho(req);
       return response({ ok: true, data: req });
     }
@@ -138,6 +157,9 @@ function doPost(e) {
     }
     if (action === 'updateRequestDate') {
       return response(updateRequestDate(body.reqId, body.garden, body.editor, body.date));
+    }
+    if (action === 'updateRequestType') {
+      return response(updateRequestType(body.reqId, body.garden, body.editor, body.category, body.type, body.days));
     }
     return response({ ok: false, error: 'Unknown action' });
   } catch(err) {
@@ -188,6 +210,31 @@ function getAllStaff() {
 
 function getStaffById(id) {
   return getAllStaff().find(s => s.id === id) || null;
+}
+
+// ------------------------------------------------------------
+// 画面へ返す用（v3.5）
+//  ・その園の職員だけ
+//  ・メールアドレス・園長メールは返さない。基本給・手当・時給は0で返す
+//  ※GAS内部のメール送信は getStaffById / getAllStaff をそのまま使うので影響しない
+// ------------------------------------------------------------
+function getStaffForGarden_(garden) {
+  const g = String(garden || '').trim();
+  if (!g) return [];
+  return getAllStaff()
+    .filter(s => String(s.garden || '').trim() === g)
+    .map(publicStaff_);
+}
+
+function publicStaff_(s) {
+  if (!s) return null;
+  const o = Object.assign({}, s);
+  o.email = '';
+  o.enchoEmail = '';
+  o.basicPay = 0;
+  o.allowance = 0;
+  o.hourlyWage = 0;
+  return o;
 }
 
 function rowToStaff(row) {
@@ -322,6 +369,64 @@ function updateRequestDate(reqId, garden, editor, date) {
   }
 }
 
+// ------------------------------------------------------------
+// 園長画面からの申請の種別変更（v3.6）
+//  ・例：夏期休暇 → 有給（全日）、有給（全日）→ 有給（午前半休）、有給 → 時間休 など
+//  ・申請ログの F列（種別）・G列（消化数）・H列（カテゴリ）を書き換える
+//  ・受付済（承認済）の申請は、職員マスタの取得済み日数も付け替える
+//    （元の種類の取得済みを減らし、新しい種類の取得済みを増やす）
+//  ・申請中の申請は申請ログだけを書き換える（受付したときに新しい種類で引かれる）
+//  ・変更は「変更履歴」シートに記録。他の園の申請は変更できない
+// ------------------------------------------------------------
+function updateRequestType(reqId, garden, editor, category, type, days) {
+  const cat = String(category || '');
+  if (['有給', '夏期', '時間単位'].indexOf(cat) < 0) return { ok: false, error: '種別が正しくありません' };
+  const newType = String(type || '').trim();
+  if (!newType) return { ok: false, error: '種別が正しくありません' };
+  const newDays = parseFloat(Number(days).toFixed(3));
+  if (!(newDays > 0) || newDays > 1) return { ok: false, error: '日数が正しくありません' };
+
+  const lock = LockService.getScriptLock();
+  lock.waitLock(10000);
+  try {
+    const sheet = SS.getSheetByName(SHEET_REQUESTS);
+    const rows = sheet.getDataRange().getValues();
+    for (let i = 1; i < rows.length; i++) {
+      if (String(rows[i][0]) !== String(reqId)) continue;
+      // 他の園の申請は変更できない（申請ログのD列＝園名で確認）
+      if (String(rows[i][3]) !== String(garden || '')) {
+        return { ok: false, error: 'この園の申請ではないため変更できません' };
+      }
+      const status = String(rows[i][9] || '');
+      if (status !== '承認済' && status !== '申請中') {
+        return { ok: false, error: '受付済・申請中の申請だけ種別を変更できます（現在：' + status + '）' };
+      }
+      const oldCat  = String(rows[i][7] || '有給');
+      const oldType = String(rows[i][5] || '');
+      const oldDays = Number(rows[i][6]) || 0;
+      if (oldCat === cat && oldType === newType && Math.abs(oldDays - newDays) < 0.0005) {
+        return { ok: true, changed: 0 };
+      }
+      // 受付済なら、職員マスタの取得済み日数を付け替える（元を戻してから新しい種類で引く）
+      if (status === '承認済') {
+        updateStaffUsed(rows[i][1], -oldDays, oldCat);
+        updateStaffUsed(rows[i][1], newDays, cat);
+      }
+      sheet.getRange(i + 1, 6, 1, 3).setValues([[newType, newDays, cat]]);   // F列 種別・G列 消化数・H列 カテゴリ
+      const name = (c) => c === '夏期' ? '夏季休暇' : c === '時間単位' ? '時間休' : '有給';
+      writeEditLog([[new Date(), garden, rows[i][1], rows[i][2],
+                     '申請の種別（' + reqId + '）',
+                     name(oldCat) + '・' + oldType + '・' + oldDays + '日',
+                     name(cat) + '・' + newType + '・' + newDays + '日',
+                     editor || '園長']]);
+      return { ok: true, changed: 1, data: rowToRequest(sheet.getRange(i + 1, 1, 1, 14).getValues()[0]) };
+    }
+    return { ok: false, error: '申請が見つかりません：' + reqId };
+  } finally {
+    lock.releaseLock();
+  }
+}
+
 // 変更履歴シートに記録（無ければ自動で作る）
 function writeEditLog(logs) {
   if (!logs || !logs.length) return;
@@ -363,18 +468,52 @@ function rowToRequest(row) {
   };
 }
 
+// v3.4：二重登録を防ぐ
+//  ・登録中は LockService で他の登録を待たせる（ほぼ同時に届いた同じ申請が両方入らないように）
+//  ・同じ職員・同じ日・同じカテゴリ・同じ種別の申請が「申請中」か「承認済（受付済）」で既にあれば、
+//    新しく登録せずに既存の申請を返す（duplicate: true）。「却下（相談）」は対象外
+//  ・申請IDが同じ秒にかぶったら末尾に -2, -3 … を付けて重ならないようにする
 function addRequest(data) {
-  const sheet = SS.getSheetByName(SHEET_REQUESTS);
-  const now = new Date();
-  const id = 'REQ' + Utilities.formatDate(now, 'Asia/Tokyo', 'yyyyMMddHHmmss');
-  const ts = Utilities.formatDate(now, 'Asia/Tokyo', 'yyyy-MM-dd HH:mm');
-  const staff = getStaffById(data.staffId);
-  const garden = staff ? staff.garden : (data.garden || '');
-  sheet.appendRow([id,data.staffId,data.name,garden,data.date,data.type,data.days,
-    data.category||'有給',data.memo||'','申請中','','','',ts]);
-  return {id,staffId:data.staffId,name:data.name,garden,date:data.date,type:data.type,
-    days:data.days,category:data.category||'有給',memo:data.memo||'',
-    status:'申請中',approver:'',approvedAt:'',rejectedReason:'',createdAt:ts};
+  const lock = LockService.getScriptLock();
+  lock.waitLock(20000);
+  try {
+    const sheet = SS.getSheetByName(SHEET_REQUESTS);
+    const rows = sheet.getDataRange().getValues();
+    const category = data.category || '有給';
+
+    for (let i = 1; i < rows.length; i++) {
+      const r = rows[i];
+      if (r[0] === '') continue;
+      if (String(r[1]) !== String(data.staffId)) continue;
+      if (formatDate(r[4]) !== String(data.date)) continue;
+      if (String(r[7] || '有給') !== String(category)) continue;
+      if (String(r[5]) !== String(data.type)) continue;
+      if (r[9] === '申請中' || r[9] === '承認済') {
+        const dup = rowToRequest(r);
+        dup.duplicate = true;
+        return dup;
+      }
+    }
+
+    const now = new Date();
+    const base = 'REQ' + Utilities.formatDate(now, 'Asia/Tokyo', 'yyyyMMddHHmmss');
+    const ids = {};
+    for (let i = 1; i < rows.length; i++) ids[String(rows[i][0])] = true;
+    let id = base, n = 2;
+    while (ids[id]) { id = base + '-' + n; n++; }
+
+    const ts = Utilities.formatDate(now, 'Asia/Tokyo', 'yyyy-MM-dd HH:mm');
+    const staff = getStaffById(data.staffId);
+    const garden = staff ? staff.garden : (data.garden || '');
+    sheet.appendRow([id,data.staffId,data.name,garden,data.date,data.type,data.days,
+      category,data.memo||'','申請中','','','',ts]);
+    SpreadsheetApp.flush();   // 次の登録が来る前に確実に書き込む
+    return {id,staffId:data.staffId,name:data.name,garden,date:data.date,type:data.type,
+      days:data.days,category:category,memo:data.memo||'',
+      status:'申請中',approver:'',approvedAt:'',rejectedReason:'',createdAt:ts};
+  } finally {
+    lock.releaseLock();
+  }
 }
 
 function updateRequestStatus(reqId, status, approver, reason) {
