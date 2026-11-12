@@ -111,6 +111,12 @@ tbody td{padding:11px 12px;font-size:13px;vertical-align:middle}
 .se-taken table{width:100%;border-collapse:collapse}
 .se-taken td{padding:5px 6px;border-bottom:1px solid var(--bd)}
 .se-taken .sum{font-size:12px;color:var(--ts);padding:4px 0 6px}
+.se-taken .re-btn{padding:3px 8px;font-size:12px;border:1px solid var(--bd);border-radius:6px;background:var(--bg);color:var(--t);cursor:pointer;font-family:inherit;white-space:nowrap}
+#reqEditModal{z-index:110}
+.re-hours{display:none;align-items:center;gap:8px;margin-top:8px}
+.re-hours.show{display:flex}
+.re-hours .modal-input{width:90px}
+.re-note{font-size:12px;color:var(--ts);margin-top:8px;padding:8px 10px;background:var(--bg);border-radius:6px}
 /* 月次締め出力（2026-10-14） */
 .shime-bar{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin-bottom:12px}
 .shime-period{font-size:13px;color:var(--ts)}
@@ -279,11 +285,21 @@ html.law-y{ --blue:#43a047; --bl:#e8f5e9; --bld:#2e7d32; --blm:#66bb6a; }
 <!-- 申請の取得日 編集モーダル（2026-10-06追加） -->
 <div class="modal-overlay" id="reqEditModal">
   <div class="modal">
-    <div class="modal-title">申請の取得日を変更</div>
+    <div class="modal-title">申請の取得日・種別を変更</div>
     <div id="reInfo"></div>
-    <div class="modal-label">新しい取得日</div>
+    <div class="modal-label">取得日</div>
     <span class="dt-wrap"><input class="modal-input" type="text" inputmode="numeric" id="re_date" placeholder="例：2026/10/6"><span class="dt-btn" title="カレンダーから選ぶ">📅<input type="date" class="dt-native" data-for="re_date" aria-label="カレンダーから選ぶ"></span></span>
-    <div style="font-size:11px;color:var(--tm);margin-top:8px">※ 日数（消化数）は変わりません。変更内容は「変更履歴」シートに記録されます。</div>
+    <div class="modal-label">種別（2026-11-12追加：後から夏期⇔有給などに変えられます）</div>
+    <select class="modal-input" id="re_kind" onchange="updateReqEditPreview()">
+      <option value="有給|全日">📋 有給（全日）</option>
+      <option value="有給|午前半休">📋 有給（午前半休）</option>
+      <option value="有給|午後半休">📋 有給（午後半休）</option>
+      <option value="夏期|全日（夏季）">☀️ 夏期休暇（全日）</option>
+      <option value="時間単位|">⏰ 時間休</option>
+    </select>
+    <div class="re-hours" id="re_hoursWrap"><input class="modal-input" type="number" min="1" max="12" step="1" id="re_hours" value="1" oninput="updateReqEditPreview()"><span>時間</span></div>
+    <div class="re-note" id="re_note"></div>
+    <div style="font-size:11px;color:var(--tm);margin-top:8px">※ 受付済の申請の種別を変えると、職員の取得済み日数（有給・夏期・時間休）も自動で付け替えます。変更内容は「変更履歴」シートに記録されます。</div>
     <div class="modal-btns">
       <button class="modal-btn modal-btn-cancel" onclick="closeReqEdit()">キャンセル</button>
       <button class="modal-btn modal-btn-ok" id="reSaveBtn" onclick="saveReqEdit()">保存</button>
@@ -392,6 +408,8 @@ const DEMO_API = {
   async rejectRequest(reqId, approver, reason){ try{ return await this.request({action:'rejectRequest',reqId,approver,reason:reason||'',garden:MY_GARDEN}); }catch(e){ return {ok:false}; } },
   // 職員マスタの値を園長が変更する（GAS側に updateStaff の追記が必要）
   async updateRequestDate(reqId, date, editor){ try{ return await this.request({action:'updateRequestDate',reqId,date,garden:MY_GARDEN,editor:editor||''}); }catch(e){ return {ok:false,error:String(e&&e.message||e)}; } },
+  // 申請の種別を変更する（2026-11-12追加。GAS側に updateRequestType が必要）
+  async updateRequestType(reqId, category, type, days, editor){ try{ return await this.request({action:'updateRequestType',reqId,category,type,days,garden:MY_GARDEN,editor:editor||''}); }catch(e){ return {ok:false,error:String(e&&e.message||e)}; } },
   async updateStaff(id, data, editor){ try{ return await this.request({action:'updateStaff',id,garden:MY_GARDEN,editor:editor||'',data:JSON.stringify(data)}); }catch(e){ return {ok:false,error:String(e&&e.message||e)}; } },
 };
 
@@ -615,6 +633,7 @@ function renderStaffTaken(s){
         <td>${catLabel(r.category)}</td>
         <td>${r.type}（${r.days}日）</td>
         <td><span class="sbadge ${r.status==='承認済'?'s-ok':'s-pend'}">${stLabel(r.status)}</span></td>
+        <td style="text-align:right"><button class="re-btn" onclick="openReqEdit('${r.id}')">変更</button></td>
       </tr>`).join('') + '</table>';
 }
 function closeStaffEdit(){ document.getElementById('staffEditModal').classList.remove('open'); _seId=null; }
@@ -664,9 +683,57 @@ async function saveStaffEdit(){
 }
 
 // ============================================================
-// 申請の取得日を変更（2026-10-06追加・全園共通）
+// 申請の取得日・種別を変更（取得日：2026-10-06追加／種別：2026-11-12追加・全園共通）
 // ============================================================
 let _reId = null;
+// 申請の種別から、選択肢の値（カテゴリ|種別）を作る
+function _reKindOf(r){
+  const c = r.category || '有給';
+  if(c==='夏期') return '夏期|全日（夏季）';
+  if(c==='時間単位') return '時間単位|';
+  const t = String(r.type||'');
+  if(t.indexOf('午前')>=0) return '有給|午前半休';
+  if(t.indexOf('午後')>=0) return '有給|午後半休';
+  return '有給|全日';
+}
+function _reStaff(r){ return DB.getStaff().find(x=>x.id===r.staffId) || {}; }
+function _reHpd(s){ return Number(s.dailyHours)>0 ? Number(s.dailyHours) : 8; }
+// 画面の選択から、保存する カテゴリ・種別・日数 を作る
+function _reCollectKind(r){
+  const [cat, t] = document.getElementById('re_kind').value.split('|');
+  if(cat==='時間単位'){
+    const h = Math.round(Number(document.getElementById('re_hours').value));
+    if(!(h>=1 && h<=12)) return null;
+    return { category:'時間単位', type: h+'時間', days: Math.round(h / _reHpd(_reStaff(r)) * 1000) / 1000 };
+  }
+  if(cat==='夏期') return { category:'夏期', type:'全日（夏季）', days:1 };
+  return { category:'有給', type:t, days: t==='全日' ? 1 : 0.5 };
+}
+const _reCatName = c => c==='夏期' ? '夏期休暇' : c==='時間単位' ? '時間休' : '有給';
+function _reSameKind(r, k){
+  return (r.category||'有給')===k.category && String(r.type)===String(k.type) && Math.abs((Number(r.days)||0)-k.days)<0.0005;
+}
+function updateReqEditPreview(){
+  const r = DB.getRequests().find(x=>x.id===_reId);
+  if(!r) return;
+  const isHour = document.getElementById('re_kind').value.indexOf('時間単位')===0;
+  document.getElementById('re_hoursWrap').classList.toggle('show', isHour);
+  const k = _reCollectKind(r);
+  const note = document.getElementById('re_note');
+  if(!k){ note.innerHTML = '<span style="color:var(--red)">時間は1〜12の数字で入れてください</span>'; return; }
+  if(_reSameKind(r, k)){ note.textContent = '種別は今のままです'; return; }
+  let html = `変更後：<b>${_reCatName(k.category)}（${k.type}・${k.days}日）</b>`;
+  if(r.status==='承認済'){
+    html += `<br>受付済のため、${_reCatName(r.category||'有給')}の取得済みを ${Number(r.days)||0}日 減らし、${_reCatName(k.category)}の取得済みを ${k.days}日 増やします。`;
+    const s = _reStaff(r);
+    if(k.category==='夏期'){
+      const sr = (Number(s.summerTotal)||0) - (Number(s.summerUsed)||0) + ((r.category==='夏期') ? (Number(r.days)||0) : 0);
+      if(sr < k.days) html += `<br><span style="color:var(--red)">⚠️ 夏期休暇の残りが足りません（残り ${sr}日）。このまま保存すると夏期がマイナスになります。</span>`;
+    }
+    if(k.category==='時間単位' && s.type==='パート') html += `<br><span style="color:var(--red)">⚠️ パートの方は時間休の対象外です。</span>`;
+  }
+  note.innerHTML = html;
+}
 function openReqEdit(id){
   const r = DB.getRequests().find(x=>x.id===id);
   if(!r) return;
@@ -674,36 +741,64 @@ function openReqEdit(id){
   document.getElementById('reInfo').innerHTML =
     `<div class="modal-row"><span class="modal-key">氏名</span><span class="modal-val">${r.name}</span></div>`+
     `<div class="modal-row"><span class="modal-key">現在の取得日</span><span class="modal-val">${showDate(r.date)||r.date}</span></div>`+
-    `<div class="modal-row"><span class="modal-key">種別</span><span class="modal-val">${r.type}（${r.days}日）</span></div>`+
+    `<div class="modal-row"><span class="modal-key">現在の種別</span><span class="modal-val">${_reCatName(r.category||'有給')}（${r.type}・${r.days}日）</span></div>`+
     `<div class="modal-row"><span class="modal-key">状態</span><span class="modal-val">${stLabel(r.status)}</span></div>`;
   const el = document.getElementById('re_date');
   el.value = showDate(r.date); el.classList.remove('dt-err');
+  document.getElementById('re_kind').value = _reKindOf(r);
+  const m = String(r.type||'').match(/(\d+(?:\.\d+)?)\s*時間/);
+  document.getElementById('re_hours').value = m ? m[1] : 1;
+  updateReqEditPreview();
   document.getElementById('reqEditModal').classList.add('open');
 }
 function closeReqEdit(){ document.getElementById('reqEditModal').classList.remove('open'); _reId=null; }
 async function saveReqEdit(){
   if(!_reId) return;
   const r = DB.getRequests().find(x=>x.id===_reId);
+  if(!r) return;
   const el = document.getElementById('re_date');
   const iso = parseInDate(el.value);
   if(!iso){ el.classList.add('dt-err'); alert('日付の形が正しくありません。\n「2026/10/6」のように入力するか、📅ボタンから選んでください。'); return; }
-  if(r && parseInDate(String(r.date).slice(0,10))===iso){ closeReqEdit(); return; }
-  if(!confirm(`${r?r.name:''} さんの取得日を ${showDate(iso)} に変更します。よろしいですか？`)) return;
+  const k = _reCollectKind(r);
+  if(!k){ alert('時間休の時間は、1〜12の数字で入れてください。'); return; }
+  const dateChanged = parseInDate(String(r.date).slice(0,10))!==iso;
+  const kindChanged = !_reSameKind(r, k);
+  if(!dateChanged && !kindChanged){ closeReqEdit(); return; }
+  const lines = [];
+  if(dateChanged) lines.push(`取得日：${showDate(r.date)||r.date} → ${showDate(iso)}`);
+  if(kindChanged) lines.push(`種別：${_reCatName(r.category||'有給')}（${r.type}） → ${_reCatName(k.category)}（${k.type}）`);
+  if(!confirm(`${r.name} さんの申請を変更します。よろしいですか？\n\n${lines.join('\n')}`)) return;
   const btn = document.getElementById('reSaveBtn');
   btn.disabled = true; btn.textContent = '保存中...';
-  const res = await DEMO_API.updateRequestDate(_reId, iso, getApprover());
-  btn.disabled = false; btn.textContent = '保存';
-  if(!res || !res.ok){
+  const fail = res => {
     const msg = (res && res.error) ? res.error : '通信に失敗しました';
     alert('保存できませんでした。\n' + (String(msg).indexOf('Unknown action')>=0 ? 'サーバー（GAS）側の更新がまだ済んでいません。本部にご連絡ください。' : msg));
-    return;
-  }
+  };
   const reqs = DB.getRequests();
   const t = reqs.find(x=>x.id===_reId);
-  if(t){ t.date = iso; DB.saveRequests(reqs); }
+  if(dateChanged){
+    const res = await DEMO_API.updateRequestDate(_reId, iso, getApprover());
+    if(!res || !res.ok){ btn.disabled = false; btn.textContent = '保存'; fail(res); return; }
+    if(t){ t.date = iso; DB.saveRequests(reqs); }
+  }
+  if(kindChanged){
+    const res = await DEMO_API.updateRequestType(_reId, k.category, k.type, k.days, getApprover());
+    if(!res || !res.ok){
+      btn.disabled = false; btn.textContent = '保存';
+      if(dateChanged) alert('取得日の変更は保存しましたが、種別は変更できませんでした。');
+      fail(res); syncDemo(); return;
+    }
+    if(t){ t.category = k.category; t.type = k.type; t.days = k.days; DB.saveRequests(reqs); }
+  }
+  btn.disabled = false; btn.textContent = '保存';
+  const staffOpen = _seId;
   closeReqEdit();
   renderAll(); renderPending();
-  syncDemo();
+  await syncDemo();
+  // 残日数の編集画面から開いていたときは、一覧と数字を最新に戻す
+  if(staffOpen && document.getElementById('staffEditModal').classList.contains('open')){
+    openStaffEdit(staffOpen);
+  }
 }
 
 // 承認ボタンは確認画面を挟まず即実行する（却下は openAction のモーダルを使用）
