@@ -325,7 +325,7 @@ html.law-y{ --blue:#43a047; --bl:#e8f5e9; --bld:#2e7d32; --blm:#66bb6a; }
 try{ var _lg=(typeof gardenFromUrl==='function')?gardenFromUrl():null;
   if(_lg && /^Y/.test(_lg.code||'')) document.documentElement.classList.add('law-y'); }catch(e){}
 </script>
-<script src="_shared.js?v=5"></script>
+<script src="_shared.js?v=6"></script>
 <script src="../access-log.js"></script>
 <script>
 // ★ 園の決め方（2026-09 改修）：URLの ?garden=園名 をそのまま使う。
@@ -469,9 +469,7 @@ function renderPending(){
   if(!reqs.length){ tbody.innerHTML=`<tr><td colspan="8" class="empty">受付待ちの申請はありません</td></tr>`; return; }
   tbody.innerHTML = reqs.map(r=>{
     const s = DB.getStaffById(r.staffId);
-    const expDays = s ? DB.getExpireDays(s) : null;
-    const expCell = expDays===null ? '<span style="font-size:11px;color:var(--tm)">—</span>'
-      : `<span style="${expDays<=30?'color:var(--red);font-weight:600':expDays<=90?'color:var(--warn);font-weight:600':''}">${expDays>=0?expDays+'日':'失効済'}</span>`;
+    const expCell = s ? DB.expireCellHtml(s) : '<span style="font-size:11px;color:var(--tm)">—</span>';
     return `
     <tr>
       <td style="font-weight:500">${r.name}</td>
@@ -519,16 +517,12 @@ function renderStaff(){
     const sr=DB.getSummerRemain(s);
     const isPart = s.type==='パート';
     const isIku = String(s.status||'').indexOf('育休')>=0;
-    const hg = (s.hourLeaveGrant===undefined||s.hourLeaveGrant===null||s.hourLeaveGrant==='') ? 5 : Number(s.hourLeaveGrant)||0;
-    // 時間休は年休の一部なので、有休の残日数を超えない
-    const hr = Math.max(0, Math.min(Math.round((hg-(Number(s.hourLeaveUsed)||0))*1000)/1000, DB.getRemain(s)));
-    const hourCell = isPart ? '<span style="font-size:11px;color:var(--tm)">対象外</span>' : `${hr}日残`;
+    // 時間休の残り：時間で表示し、日数をカッコで添える（例：38時間（4.75日））。有休の残日数は超えない
+    const hourCell = isPart ? '<span style="font-size:11px;color:var(--tm)">対象外</span>' : `<span style="white-space:nowrap">${DB.fmtHourLeave(s)}</span>`;
     const ikuBadge = isIku ? ' <span class="sbadge" style="background:#fce4ec;color:#c2185b">育休中</span>' : '';
     const yet = !s.grantDate && s.nextGrantDate;   // 名簿の黄色：これから付与する方
     const summerBadge=(isIku && !(s.summerTotal>0))?'<span class="sbadge" style="background:#fce4ec;color:#c2185b">育休中</span>':s.summerTotal>0?(sr===0?'<span class="sbadge s-ok">✓ 取得完了</span>':`<span class="sbadge" style="background:#fff0f7;color:#ff69b4">${sr}日残</span>`):'<span style="font-size:11px;color:var(--tm)">対象外</span>';
-    const expDays=DB.getExpireDays(s);
-    const expCell = expDays===null ? '<span style="font-size:11px;color:var(--tm)">未設定</span>'
-      : `<span style="${expDays<=30?'color:var(--red);font-weight:600':expDays<=90?'color:var(--warn);font-weight:600':''}">${expDays>=0?expDays+'日':'失効済'}</span>`;
+    const expCell = !s.grantDate ? '<span style="font-size:11px;color:var(--tm)">未設定</span>' : DB.expireCellHtml(s);
     return `<tr>
       <td style="font-weight:500">${s.name}${ikuBadge}</td>
       <td><span class="sbadge s-gray">${s.type}</span></td>
@@ -648,7 +642,7 @@ function updateStaffEditPreview(){
   const d = _seCollect();
   const remain = Math.round((d.grant + d.carry - d.used)*1000)/1000;
   const sr = Math.max(0, d.summerTotal - d.summerUsed);
-  const hr = d.type==='パート' ? '対象外' : Math.max(0, Math.min(Math.round((d.hourLeaveGrant-d.hourLeaveUsed)*1000)/1000, remain))+'日';
+  const hr = d.type==='パート' ? '対象外' : DB.fmtHourLeave(d);
   document.getElementById('sePreview').innerHTML =
     `保存後の表示：<b>有給残 ${remain}日</b>　／　夏期 ${sr}日残　／　時間休 ${hr}`
     + (remain<0 ? '<div style="color:var(--red);margin-top:4px">⚠️ 有給残がマイナスです。数値をご確認ください。</div>' : '');
