@@ -291,18 +291,18 @@ html.law-y .date-chip-x{color:#81c784}
         </div>
         <div id="summerAlert" style="margin-top:8px"></div>
       </div>
-      <!-- 時間休（単位：日。時間への換算は一旦省略） -->
+      <!-- 時間休（単位：時間。2026-11-13 日→時間に変更） -->
       <div class="sub-card" id="hourCard">
         <div class="sub-card-title">時間休</div>
-        <div class="sub-big"><span id="hourRemainNum">0</span><span style="font-size:16px;color:#222;font-weight:400"> 日 残り</span></div>
+        <div class="sub-big"><span id="hourRemainNum">0</span><span style="font-size:16px;color:#222;font-weight:400"> 時間 残り</span></div>
         <div class="sub-circles">
           <div>
             <div class="sub-circle" id="hGrant">0</div>
-            <div class="sub-circle-label">付与</div>
+            <div class="sub-circle-label">枠（時間）</div>
           </div>
           <div>
             <div class="sub-circle" id="hUsed">0</div>
-            <div class="sub-circle-label">取得済</div>
+            <div class="sub-circle-label">取得済（時間）</div>
           </div>
         </div>
         <div id="hourNote" style="margin-top:8px"></div>
@@ -651,19 +651,63 @@ const DB = {
     return Math.max(0, Math.min(h, this.getRemain(s)));
   },
 
-  // 基準日（直近の有給付与日）と、そこから法定2年で失効するまでの日数
-  getExpireDate(s){
-    if(!s.grantDate) return null;
+  // ------------------------------------------------------------
+  // 時間休を「時間」で扱う（2026-11-13）
+  // ------------------------------------------------------------
+  // 時間休の「1日分」の時間数。1時間未満の端数は切り上げ（7.5時間勤務 → 8時間）
+  hourUnit(s){ return Math.ceil(this.hpd(s)); },
+  // 時間休の残り（時間）＝ 年5日分の枠 － 使った時間。有給残を超えない。パートは0
+  getHourLeaveRemainHours(s){
+    if(this.isPart(s)) return 0;
+    const g = (s.hourLeaveGrant===undefined||s.hourLeaveGrant===null||s.hourLeaveGrant==='') ? 5 : Number(s.hourLeaveGrant)||0;
+    const usedH = (Number(s.hourLeaveUsed)||0) * this.hpd(s);
+    const left  = g * this.hourUnit(s) - usedH;
+    const cap   = this.getRemain(s) * this.hpd(s);
+    return Math.max(0, Math.round(Math.min(left, cap)*100)/100);
+  },
+  // 時間休の枠（時間）と使った時間
+  getHourLeaveGrantHours(s){
+    const g = (s.hourLeaveGrant===undefined||s.hourLeaveGrant===null||s.hourLeaveGrant==='') ? 5 : Number(s.hourLeaveGrant)||0;
+    return Math.round(g * this.hourUnit(s) * 100) / 100;
+  },
+  getHourLeaveUsedHours(s){ return Math.round((Number(s.hourLeaveUsed)||0) * this.hpd(s) * 100) / 100; },
+  // 日数 → 「18日7時間」（端数を1日の所定時間で時間に直す）
+  fmtDaysHours(s, days){
+    const i = Math.floor(days + 1e-9);
+    const h = Math.round((days - i) * this.hpd(s) * 100) / 100;
+    return h ? `${i}日${h}時間` : `${i}日`;
+  },
+
+  // ------------------------------------------------------------
+  // 失効（2026-11-13 修正）
+  //   有給は付与日から2年で失効する。
+  //   ・繰越分＝前年度に付与された分 → 基準日から1年（次回付与日の前日）で失効
+  //   ・今年度分 → 基準日から2年で失効
+  //   使うときは繰越分から先に消化する扱い。一番早く失効する分を返す
+  // ------------------------------------------------------------
+  _ymd(d){ return `${d.getFullYear()}/${d.getMonth()+1}/${d.getDate()}`; },
+  getExpireInfo(s){
+    if(!s || !s.grantDate) return null;
     const g = new Date(s.grantDate);
     if(isNaN(g)) return null;
-    return new Date(g.getFullYear()+2, g.getMonth(), g.getDate());
-  },
-  getExpireDays(s){
-    const exp = this.getExpireDate(s);
-    if(!exp) return null;
     const today = new Date(); today.setHours(0,0,0,0);
-    return Math.ceil((exp - today) / (24*3600*1000));
+    const dd = d => Math.round((d - today) / 86400000);
+    const carryLeft = Math.max(0, Math.round(((Number(s.carry)||0) - (Number(s.used)||0))*1000)/1000);
+    const thisLeft  = Math.max(0, Math.round((this.getRemain(s) - carryLeft)*1000)/1000);
+    const carryEnd  = new Date(g.getFullYear()+1, g.getMonth(), g.getDate()-1);   // この日まで使える
+    const thisEnd   = new Date(g.getFullYear()+2, g.getMonth(), g.getDate()-1);
+    const isCarry   = carryLeft > 0 && dd(carryEnd) >= 0;
+    const end = isCarry ? carryEnd : thisEnd;
+    return {
+      kind: isCarry ? '繰越' : '今年度',
+      left: isCarry ? carryLeft : thisLeft,
+      end, endText: this._ymd(end), days: dd(end),
+      carryLeft, carryEnd, carryEndText: this._ymd(carryEnd),
+      thisLeft,  thisEnd,  thisEndText:  this._ymd(thisEnd)
+    };
   },
+  getExpireDate(s){ const e = this.getExpireInfo(s); return e ? e.end : null; },
+  getExpireDays(s){ const e = this.getExpireInfo(s); return e ? e.days : null; },
 
   // 時間給計算（給与規程第17・18条）
   calcHourlyWage(s){
@@ -961,9 +1005,12 @@ function renderHome(){
   document.getElementById('uname').textContent = s.name;
   document.getElementById('utype').innerHTML = s.type+'／採用 '+s.hire.replace(/-/g,'/')
     + (DB.isIkukyu(s) ? ' <span style="display:inline-block;background:#fce4ec;color:#c2185b;font-weight:700;border-radius:10px;padding:1px 8px;font-size:11px">育休中</span>' : '');
-  const expDays = DB.getExpireDays(s);
+  const expInfo = DB.getExpireInfo(s);
+  const expDays = expInfo ? expInfo.days : null;
   const expColor = expDays===null ? '#aaa' : expDays<=30 ? '#e94b4b' : expDays<=90 ? '#e8a23d' : (document.documentElement.classList.contains('law-y')?'#43a047':'#4169e1');
-  const expText = expDays===null ? '基準日未設定' : (expDays>=0 ? `失効まで${expDays}日` : '失効済');
+  // 一番早く失効する分を表示（繰越分が残っていれば繰越分）
+  const expText = expDays===null ? '基準日未設定'
+    : (expDays>=0 ? `${expInfo.kind}分 ${DB.fmtDaysHours(s, expInfo.left)}<br>あと${expDays}日（${expInfo.endText}まで）` : '失効済');
   document.getElementById('expireBadge').innerHTML = (!s.grantDate && s.nextGrantDate)
     // これから付与する方（名簿の黄色）：次回付与日を出す
     ? `<div style="font-size:10px;color:#aaa">次回付与</div>` +
@@ -993,17 +1040,19 @@ function renderHome(){
     ? `<div style="background:#fff0f7;border-radius:8px;padding:7px 10px;font-size:12px;color:#ff69b4;font-weight:500;text-align:center">あと${sr}日残っています（有給とは別枠）</div>`
     : (s.summerTotal>0 ? `<div style="background:#e8f5ef;border-radius:8px;padding:7px 10px;font-size:12px;color:#1a7a4a;font-weight:500;text-align:center">✅ 全日取得済み</div>` : '');
 
-  // 時間休（単位：日）。パートは対象外
+  // 時間休（単位：時間）。パートは対象外
   const part = DB.isPart(s);
-  document.getElementById('hourRemainNum').textContent = part ? '—' : hr;
-  document.getElementById('hGrant').textContent = part ? '—' : (s.hourLeaveGrant===undefined||s.hourLeaveGrant===''?5:s.hourLeaveGrant);
-  document.getElementById('hUsed').textContent = part ? '—' : (s.hourLeaveUsed||0);
+  const hrH = DB.getHourLeaveRemainHours(s);
+  document.getElementById('hourRemainNum').textContent = part ? '—' : hrH;
+  document.getElementById('hGrant').textContent = part ? '—' : DB.getHourLeaveGrantHours(s);
+  document.getElementById('hUsed').textContent = part ? '—' : DB.getHourLeaveUsedHours(s);
   const hn = document.getElementById('hourNote');
-  const hRaw = Math.max(0, Math.round(((s.hourLeaveGrant===undefined||s.hourLeaveGrant===''?5:Number(s.hourLeaveGrant)||0) - (Number(s.hourLeaveUsed)||0))*1000)/1000);
+  // 有給残で頭打ちになっているか（枠の残りより有給残の方が少ない）
+  const hRawH = Math.max(0, Math.round((DB.getHourLeaveGrantHours(s) - DB.getHourLeaveUsedHours(s))*100)/100);
   const hpd = DB.hpd(s);
-  const hpdNote = (!part && hpd!==8) ? `<div style="background:#eef3ff;border-radius:8px;padding:7px 10px;font-size:12px;color:#4169e1;text-align:center;margin-top:6px">1日${hpd}時間勤務で計算（残り${Math.round(hr*hpd*100)/100}時間）</div>` : '';
+  const hpdNote = (!part && hpd!==8) ? `<div style="background:#eef3ff;border-radius:8px;padding:7px 10px;font-size:12px;color:#4169e1;text-align:center;margin-top:6px">1日${hpd}時間勤務で計算（1日分＝${DB.hourUnit(s)}時間）</div>` : '';
   if(hn) hn.innerHTML = part ? `<div style="background:#f2f2f2;border-radius:8px;padding:7px 10px;font-size:12px;color:#888;text-align:center">パートのため対象外</div>`
-    : (hr < hRaw ? `<div style="background:#fff8e1;border-radius:8px;padding:7px 10px;font-size:12px;color:#b8860b;text-align:center">有休の残りが${hr}日のため、時間休も${hr}日まで</div>` : '') + hpdNote;
+    : (hrH < hRawH ? `<div style="background:#fff8e1;border-radius:8px;padding:7px 10px;font-size:12px;color:#b8860b;text-align:center">有休の残りが少ないため、時間休も${hrH}時間まで</div>` : '') + hpdNote;
   const ht = document.getElementById('catTabHour');
   if(ht) ht.style.display = part ? 'none' : '';
 }
@@ -1065,10 +1114,17 @@ function renderMypage(){
   const next = new Date(grant.getFullYear()+1,grant.getMonth(),grant.getDate());
   const diff = Math.floor((new Date()-hire)/(365.25*24*3600*1000));
   const nextDays=[10,11,12,14,16,18,20][Math.min(diff+1,6)];
-  const expDays = DB.getExpireDays(s);
-  const expireLabel = expDays===null ? '未設定' : (expDays>=0 ? expDays+'日' : '失効済');
-  const expireStyle = expDays!==null && expDays<=30 ? ' style="color:#e94b4b;font-weight:700"'
-    : expDays!==null && expDays<=90 ? ' style="color:#e8a23d;font-weight:700"' : '';
+  // 失効：繰越分（基準日から1年）と今年度分（基準日から2年）を分けて表示
+  const ei = DB.getExpireInfo(s);
+  const expStyleOf = d => d<0 || d<=30 ? ' style="color:#e94b4b;font-weight:700"' : d<=90 ? ' style="color:#e8a23d;font-weight:700"' : '';
+  const expRow = (label, left, end, endText) => {
+    if(!(left>0)) return '';
+    const today = new Date(); today.setHours(0,0,0,0);
+    const d = Math.round((end - today)/86400000);
+    return `<div class="my-row"><span class="my-key">${label}</span><span class="my-val"${expStyleOf(d)}>${d>=0 ? `${DB.fmtDaysHours(s,left)}：あと${d}日（${endText}まで）` : '失効済'}</span></div>`;
+  };
+  const expireRows = !ei ? '<div class="my-row"><span class="my-key">失効まで</span><span class="my-val">未設定</span></div>'
+    : expRow('繰越分の失効', ei.carryLeft, ei.carryEnd, ei.carryEndText) + expRow('今年度分の失効', ei.thisLeft, ei.thisEnd, ei.thisEndText);
   document.getElementById('mypageContent').innerHTML=`
     <div class="my-row"><span class="my-key">氏名</span><span class="my-val">${s.name}</span></div>
     <div class="my-row"><span class="my-key">雇用形態</span><span class="my-val">${s.type}</span></div>
@@ -1078,9 +1134,9 @@ function renderMypage(){
     <div class="my-row"><span class="my-key">繰越</span><span class="my-val">${s.carry}日</span></div>
     <div class="my-row"><span class="my-key">有給残日数</span><span class="my-val" style="color:${document.documentElement.classList.contains('law-y')?'#43a047':'#4169e1'};font-size:18px">${DB.getRemain(s)}日</span></div>
     <div class="my-row"><span class="my-key">基準日（付与日）</span><span class="my-val">${s.grantDate||'未設定'}</span></div>
-    <div class="my-row"><span class="my-key">失効まで</span><span class="my-val"${expireStyle}>${expireLabel}</span></div>
+    ${expireRows}
     <div class="my-row"><span class="my-key">夏季休暇残</span><span class="my-val">${DB.isIkukyu(s)&&!(s.summerTotal>0)?'対象外（育休中）':DB.getSummerRemain(s)+'日'}</span></div>
-    <div class="my-row"><span class="my-key">時間休残</span><span class="my-val">${DB.isPart(s)?'対象外（パート）':DB.getHourLeaveRemain(s)+'日'}</span></div>
+    <div class="my-row"><span class="my-key">時間休残</span><span class="my-val">${DB.isPart(s)?'対象外（パート）':DB.getHourLeaveRemainHours(s)+'時間'}</span></div>
     ${DB.isIkukyu(s)?'<div class="my-row"><span class="my-key">状態</span><span class="my-val" style="color:#c2185b">育休中</span></div>':''}
     <div class="my-row"><span class="my-key">次回付与予定</span><span class="my-val">${s.nextGrantDate ? s.nextGrantDate.replace(/-/g,'/')+(s.nextGrant?' ／ '+s.nextGrant+'日':'')
       : s.grantDate ? (()=>{const g=new Date(s.grantDate);return isNaN(g)?'—':new Date(g.getFullYear()+1,g.getMonth(),g.getDate()).toLocaleDateString('ja-JP');})()
@@ -1200,9 +1256,9 @@ function updateRemainPreview(){
     const r=DB.getSummerRemain(s);
     el.textContent = cnt>0 ? `現在 ${r}日 → 申請後 ${Math.max(0,r-cnt)}日（夏季休暇・${cnt}日分）` : '';
   } else if(applyCategory==='時間単位'){
-    const r=DB.getHourLeaveRemain(s);
-    const hd = hourDays(s, applyHours);
-    el.textContent = cnt>0 ? `現在 ${r}日 → 申請後 ${Math.max(0,Math.round((r-hd)*1000)/1000)}日（${applyHours}時間＝${hd}日）` : '';
+    const rH = DB.getHourLeaveRemainHours(s);
+    const needH = applyHours * cnt;
+    el.textContent = cnt>0 ? `現在 ${rH}時間 → 申請後 ${Math.max(0,Math.round((rH-needH)*100)/100)}時間（${applyHours}時間${cnt>1?`×${cnt}日`:''}）` : '';
   } else {
     const totalDays = multiDates.reduce((sum,d)=> sum + ((dateTypes[d]||'全日')==='全日'?1:0.5), 0);
     const r=DB.getRemain(s);
@@ -1255,8 +1311,8 @@ async function submitApply(){
     if(r < dates.length){ showToast(`夏季休暇の残日数が不足しています（必要：${dates.length}日）`); return; }
   } else if(applyCategory==='時間単位'){
     if(DB.isPart(s)){ showToast('パートの方は時間休の対象外です'); return; }
-    const r=DB.getHourLeaveRemain(s);
-    if(r<hourDays(s, applyHours)){ showToast('時間休の残りが不足しています'); return; }
+    const rH = DB.getHourLeaveRemainHours(s);
+    if(rH < applyHours * dates.length){ showToast(`時間休の残りが不足しています（残り${rH}時間）`); return; }
   } else {
     totalDays = dates.reduce((sum,d)=> sum + ((dateTypes[d]||'全日')==='全日'?1:0.5), 0);
     const r = DB.getRemain(s);

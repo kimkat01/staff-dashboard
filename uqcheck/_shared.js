@@ -261,18 +261,73 @@ const DB = {
   getSummerRemain(s){ return Math.max(0, (s.summerTotal||0) - (s.summerUsed||0)); },
   getObligDone(s){ return s.used >= 5; },
 
-  // 基準日（直近の有給付与日）と、そこから法定2年で失効するまでの日数
-  getExpireDate(s){
-    if(!s.grantDate) return null;
+  // ------------------------------------------------------------
+  // 時間休を「時間」で扱う（2026-11-13）
+  // ------------------------------------------------------------
+  // 1日の所定時間（職員マスタW列）。空欄・0なら8時間
+  hpd(s){ const h = Number(s && s.dailyHours); return h>0 ? h : 8; },
+  // 時間休の「1日分」の時間数。1時間未満の端数は切り上げ（7.5時間勤務 → 8時間）
+  hourUnit(s){ return Math.ceil(this.hpd(s)); },
+  // 時間休の残り（時間）＝ 年5日分の枠 － 使った時間。有給残を超えない。パートは0
+  getHourLeaveRemainHours(s){
+    if(!s || s.type==='パート') return 0;
+    const g = (s.hourLeaveGrant===undefined||s.hourLeaveGrant===null||s.hourLeaveGrant==='') ? 5 : Number(s.hourLeaveGrant)||0;
+    const usedH = (Number(s.hourLeaveUsed)||0) * this.hpd(s);
+    const left  = g * this.hourUnit(s) - usedH;
+    const cap   = this.getRemain(s) * this.hpd(s);
+    return Math.max(0, Math.round(Math.min(left, cap)*100)/100);
+  },
+  // 園長画面用：「38時間（4.75日）」
+  fmtHourLeave(s){
+    const h = this.getHourLeaveRemainHours(s);
+    const d = Math.round(h / this.hourUnit(s) * 1000) / 1000;
+    return `${h}時間（${d}日）`;
+  },
+  // 日数 → 「18日7時間」（端数を1日の所定時間で時間に直す）
+  fmtDaysHours(s, days){
+    const i = Math.floor(days + 1e-9);
+    const h = Math.round((days - i) * this.hpd(s) * 100) / 100;
+    return h ? `${i}日${h}時間` : `${i}日`;
+  },
+
+  // ------------------------------------------------------------
+  // 失効（2026-11-13 修正）
+  //   有給は付与日から2年で失効する。
+  //   ・繰越分＝前年度に付与された分 → 基準日から1年（次回付与日の前日）で失効
+  //   ・今年度分 → 基準日から2年で失効
+  //   使うときは繰越分から先に消化する扱い。一番早く失効する分を返す
+  // ------------------------------------------------------------
+  _ymd(d){ return `${d.getFullYear()}/${d.getMonth()+1}/${d.getDate()}`; },
+  getExpireInfo(s){
+    if(!s || !s.grantDate) return null;
     const g = new Date(s.grantDate);
     if(isNaN(g)) return null;
-    return new Date(g.getFullYear()+2, g.getMonth(), g.getDate());
-  },
-  getExpireDays(s){
-    const exp = this.getExpireDate(s);
-    if(!exp) return null;
     const today = new Date(); today.setHours(0,0,0,0);
-    return Math.ceil((exp - today) / (24*3600*1000));
+    const dd = d => Math.round((d - today) / 86400000);
+    const carryLeft = Math.max(0, Math.round(((Number(s.carry)||0) - (Number(s.used)||0))*1000)/1000);
+    const thisLeft  = Math.max(0, Math.round((this.getRemain(s) - carryLeft)*1000)/1000);
+    const carryEnd  = new Date(g.getFullYear()+1, g.getMonth(), g.getDate()-1);   // この日まで使える
+    const thisEnd   = new Date(g.getFullYear()+2, g.getMonth(), g.getDate()-1);
+    const isCarry   = carryLeft > 0 && dd(carryEnd) >= 0;
+    const end = isCarry ? carryEnd : thisEnd;
+    return {
+      kind: isCarry ? '繰越' : '今年度',
+      left: isCarry ? carryLeft : thisLeft,
+      end, endText: this._ymd(end), days: dd(end),
+      carryLeft, carryEnd, carryEndText: this._ymd(carryEnd),
+      thisLeft,  thisEnd,  thisEndText:  this._ymd(thisEnd)
+    };
+  },
+  getExpireDate(s){ const e = this.getExpireInfo(s); return e ? e.end : null; },
+  getExpireDays(s){ const e = this.getExpireInfo(s); return e ? e.days : null; },
+  // 園長画面の「失効まで」欄（2行表示）
+  expireCellHtml(s){
+    const e = this.getExpireInfo(s);
+    if(!e) return '<span style="font-size:11px;color:var(--tm)">—</span>';
+    if(e.days < 0) return '<span style="color:var(--red);font-weight:600">失効済</span>';
+    const st = e.days<=30 ? 'color:var(--red);font-weight:600' : e.days<=90 ? 'color:var(--warn);font-weight:600' : '';
+    return `<span style="${st}">あと${e.days}日</span>`
+      + `<div style="font-size:11px;color:var(--tm);white-space:nowrap">${e.kind}分 ${this.fmtDaysHours(s, e.left)}・${e.endText}まで</div>`;
   },
 
   // 時間給計算（給与規程第17・18条）
