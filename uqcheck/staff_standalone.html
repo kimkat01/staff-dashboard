@@ -1009,8 +1009,9 @@ function renderHome(){
   const expDays = expInfo ? expInfo.days : null;
   const expColor = expDays===null ? '#aaa' : expDays<=30 ? '#e94b4b' : expDays<=90 ? '#e8a23d' : (document.documentElement.classList.contains('law-y')?'#43a047':'#4169e1');
   // 一番早く失効する分を表示（繰越分が残っていれば繰越分）
+  //   1行目：失効まで◯日（太字）／2行目：どの分が何日・いつまで（小さく）
   const expText = expDays===null ? '基準日未設定'
-    : (expDays>=0 ? `${expInfo.kind}分 ${DB.fmtDaysHours(s, expInfo.left)}<br>あと${expDays}日（${expInfo.endText}まで）` : '失効済');
+    : (expDays>=0 ? `失効まで${expDays}日<div style="font-size:10px;font-weight:400;color:#888">${expInfo.kind}分 ${DB.fmtDaysHours(s, expInfo.left)}・${expInfo.endText}まで</div>` : '失効済');
   document.getElementById('expireBadge').innerHTML = (!s.grantDate && s.nextGrantDate)
     // これから付与する方（名簿の黄色）：次回付与日を出す
     ? `<div style="font-size:10px;color:#aaa">次回付与</div>` +
@@ -1124,7 +1125,7 @@ function renderMypage(){
     return `<div class="my-row"><span class="my-key">${label}</span><span class="my-val"${expStyleOf(d)}>${d>=0 ? `${DB.fmtDaysHours(s,left)}：あと${d}日（${endText}まで）` : '失効済'}</span></div>`;
   };
   const expireRows = !ei ? '<div class="my-row"><span class="my-key">失効まで</span><span class="my-val">未設定</span></div>'
-    : expRow('繰越分の失効', ei.carryLeft, ei.carryEnd, ei.carryEndText) + expRow('今年度分の失効', ei.thisLeft, ei.thisEnd, ei.thisEndText);
+    : expRow('失効まで（繰越分）', ei.carryLeft, ei.carryEnd, ei.carryEndText) + expRow('失効まで（今年度分）', ei.thisLeft, ei.thisEnd, ei.thisEndText);
   document.getElementById('mypageContent').innerHTML=`
     <div class="my-row"><span class="my-key">氏名</span><span class="my-val">${s.name}</span></div>
     <div class="my-row"><span class="my-key">雇用形態</span><span class="my-val">${s.type}</span></div>
