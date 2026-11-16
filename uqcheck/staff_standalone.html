@@ -1005,19 +1005,14 @@ function renderHome(){
   document.getElementById('uname').textContent = s.name;
   document.getElementById('utype').innerHTML = s.type+'／採用 '+s.hire.replace(/-/g,'/')
     + (DB.isIkukyu(s) ? ' <span style="display:inline-block;background:#fce4ec;color:#c2185b;font-weight:700;border-radius:10px;padding:1px 8px;font-size:11px">育休中</span>' : '');
-  const expInfo = DB.getExpireInfo(s);
-  const expDays = expInfo ? expInfo.days : null;
-  const expColor = expDays===null ? '#aaa' : expDays<=30 ? '#e94b4b' : expDays<=90 ? '#e8a23d' : (document.documentElement.classList.contains('law-y')?'#43a047':'#4169e1');
-  // 一番早く失効する分を表示（繰越分が残っていれば繰越分）
-  //   1行目：失効まで◯日（太字）／2行目：どの分が何日・いつまで（小さく）
-  const expText = expDays===null ? '基準日未設定'
-    : (expDays>=0 ? `失効まで${expDays}日<div style="font-size:10px;font-weight:400;color:#888">${expInfo.kind}分 ${DB.fmtDaysHours(s, expInfo.left)}・${expInfo.endText}まで</div>` : '失効済');
+  // 「失効まで◯日」の表示はやめた（2026-11-16：見る側がかえって分かりにくいため）。基準日だけ出す
+  const baseColor = document.documentElement.classList.contains('law-y')?'#43a047':'#4169e1';
   document.getElementById('expireBadge').innerHTML = (!s.grantDate && s.nextGrantDate)
     // これから付与する方（名簿の黄色）：次回付与日を出す
     ? `<div style="font-size:10px;color:#aaa">次回付与</div>` +
       `<div style="font-size:13px;font-weight:700;color:#b8860b">${s.nextGrantDate.replace(/-/g,'/')}${s.nextGrant?`（${s.nextGrant}日）`:''}</div>`
-    : `<div style="font-size:10px;color:#aaa">基準日 ${s.grantDate?s.grantDate.replace(/-/g,'/'):'—'}</div>` +
-      `<div style="font-size:13px;font-weight:700;color:${expColor}">${expText}</div>`;
+    : `<div style="font-size:10px;color:#aaa">基準日</div>` +
+      `<div style="font-size:13px;font-weight:700;color:${baseColor}">${s.grantDate?s.grantDate.replace(/-/g,'/'):'未設定'}</div>`;
   document.getElementById('remainNum').textContent = remain;
   document.getElementById('mGrant').textContent = s.grant;
   document.getElementById('mCarry').textContent = s.carry;
@@ -1115,17 +1110,7 @@ function renderMypage(){
   const next = new Date(grant.getFullYear()+1,grant.getMonth(),grant.getDate());
   const diff = Math.floor((new Date()-hire)/(365.25*24*3600*1000));
   const nextDays=[10,11,12,14,16,18,20][Math.min(diff+1,6)];
-  // 失効：繰越分（基準日から1年）と今年度分（基準日から2年）を分けて表示
-  const ei = DB.getExpireInfo(s);
-  const expStyleOf = d => d<0 || d<=30 ? ' style="color:#e94b4b;font-weight:700"' : d<=90 ? ' style="color:#e8a23d;font-weight:700"' : '';
-  const expRow = (label, left, end, endText) => {
-    if(!(left>0)) return '';
-    const today = new Date(); today.setHours(0,0,0,0);
-    const d = Math.round((end - today)/86400000);
-    return `<div class="my-row"><span class="my-key">${label}</span><span class="my-val"${expStyleOf(d)}>${d>=0 ? `${DB.fmtDaysHours(s,left)}：あと${d}日（${endText}まで）` : '失効済'}</span></div>`;
-  };
-  const expireRows = !ei ? '<div class="my-row"><span class="my-key">失効まで</span><span class="my-val">未設定</span></div>'
-    : expRow('失効まで（繰越分）', ei.carryLeft, ei.carryEnd, ei.carryEndText) + expRow('失効まで（今年度分）', ei.thisLeft, ei.thisEnd, ei.thisEndText);
+  // 「失効まで」の行はやめた（2026-11-16：見る側がかえって分かりにくいため）
   document.getElementById('mypageContent').innerHTML=`
     <div class="my-row"><span class="my-key">氏名</span><span class="my-val">${s.name}</span></div>
     <div class="my-row"><span class="my-key">雇用形態</span><span class="my-val">${s.type}</span></div>
@@ -1135,7 +1120,6 @@ function renderMypage(){
     <div class="my-row"><span class="my-key">繰越</span><span class="my-val">${s.carry}日</span></div>
     <div class="my-row"><span class="my-key">有給残日数</span><span class="my-val" style="color:${document.documentElement.classList.contains('law-y')?'#43a047':'#4169e1'};font-size:18px">${DB.getRemain(s)}日</span></div>
     <div class="my-row"><span class="my-key">基準日（付与日）</span><span class="my-val">${s.grantDate||'未設定'}</span></div>
-    ${expireRows}
     <div class="my-row"><span class="my-key">夏季休暇残</span><span class="my-val">${DB.isIkukyu(s)&&!(s.summerTotal>0)?'対象外（育休中）':DB.getSummerRemain(s)+'日'}</span></div>
     <div class="my-row"><span class="my-key">時間休残</span><span class="my-val">${DB.isPart(s)?'対象外（パート）':DB.getHourLeaveRemainHours(s)+'時間'}</span></div>
     ${DB.isIkukyu(s)?'<div class="my-row"><span class="my-key">状態</span><span class="my-val" style="color:#c2185b">育休中</span></div>':''}
@@ -1290,6 +1274,30 @@ function findSameRequest(d){
     (r.category||'有給')===applyCategory && String(r.type)===String(t) &&
     (r.status==='申請中' || r.status==='承認済'));
 }
+// 同じ日に、すでに別の休み（有給・夏季・時間休）があって合わせて1日を超えるか（2026-11-16）
+//  全日どうし・全日と半休・同じ半休はNG。午前半休＋午後半休、半休＋時間休（合わせて1日以内）はOK
+//  サーバー（GAS v3.7）でも同じチェックをしている
+function applyDaysOf(d){
+  if(applyCategory==='夏期') return 1;
+  if(applyCategory==='時間単位'){ const s=getLatestMe(); return s ? hourDays(s, applyHours) : 0; }
+  return (dateTypes[d]||'全日')==='全日' ? 1 : 0.5;
+}
+function findDayConflict(d){
+  const t = String(applyTypeOf(d));
+  const isFull = x => String(x||'').indexOf('全日')===0;
+  const half = x => String(x||'').indexOf('午前')>=0 ? '午前' : String(x||'').indexOf('午後')>=0 ? '午後' : '';
+  let total = applyDaysOf(d);
+  for(const r of DB.getRequests()){
+    if(String(r.staffId)!==String(me.id) || r.date!==d) continue;
+    if(r.status!=='申請中' && r.status!=='承認済') continue;
+    if(isFull(t) || isFull(r.type)) return r;
+    if(half(t) && half(t)===half(r.type)) return r;
+    total += Number(r.days)||0;
+    if(total > 1.0005) return r;
+  }
+  return null;
+}
+const _catName = c => c==='夏期' ? '夏季休暇' : c==='時間単位' ? '時間休' : '有給';
 
 async function submitApply(){
   if(!me) return;
@@ -1302,6 +1310,13 @@ async function submitApply(){
   const already = multiDates.filter(d => findSameRequest(d));
   if(already.length){
     showToast(`${already.map(d=>d.slice(5).replace('-','/')).join('、')} はすでに申請済みです（履歴をご確認ください）`);
+    return;
+  }
+  // 同じ日に別の休みがすでにある（有給と夏季の重複など）
+  const clash = multiDates.map(d => ({d, r: findDayConflict(d)})).filter(x => x.r);
+  if(clash.length){
+    const x = clash[0];
+    showToast(`${x.d.slice(5).replace('-','/')} はすでに${_catName(x.r.category||'有給')}（${x.r.type}）を申請済みです。同じ日に重ねて休みは取れません`);
     return;
   }
   const dates = [...multiDates];
@@ -1322,7 +1337,7 @@ async function submitApply(){
 
   _submitting = true;
   btn.disabled = true;
-  let okCount = 0, dupCount = 0, ngCount = 0;
+  let okCount = 0, dupCount = 0, ngCount = 0, clashMsg = '';
   for(let i=0;i<dates.length;i++){
     btn.textContent = dates.length>1 ? `送信中... (${i+1}/${dates.length})` : '送信中...';
     let reqData;
@@ -1340,6 +1355,9 @@ async function submitApply(){
     const res = await API.addRequest(reqData);
     if(res && res.ok && res.duplicate){
       dupCount++;
+    } else if(res && res.conflict){
+      // サーバー側で「同じ日に別の休みがある」と判定された（送らずに終わる）
+      clashMsg = res.error || '同じ日に重ねて休みは取れません';
     } else if(res && res.ok && res.data){
       const reqs = DB.getRequests();
       if(!reqs.some(r=>r.id===res.data.id)){ reqs.unshift(res.data); DB.saveRequests(reqs); }
@@ -1352,6 +1370,14 @@ async function submitApply(){
   }
   _submitting = false;
   btn.textContent = '申請する'; btn.disabled = false;
+
+  if(clashMsg){
+    await syncProd();
+    multiDates = multiDates.filter(d => !findSameRequest(d) && !findDayConflict(d));
+    renderCal(); renderMultiDateChips(); updateRemainPreview();
+    alert(clashMsg + (okCount ? `\n（ほかの${okCount}日分は送信しました）` : ''));
+    return;
+  }
 
   if(ngCount){
     // 通信がうまくいかなかった日は選択を残す（最新の履歴を読み込んでから再送すれば、二重にはならない）

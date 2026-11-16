@@ -3,6 +3,15 @@
 // スプレッドシート：「UQchecker」（cryk0289@gmail.com）
 // スプレッドシートID: 197yLc-CxuIAomrtAoTPXY1cROu8hWfsxjCbmi7YGIno
 //
+// 2026-11-16 v3.7（同じ日に有給と夏期休暇などが重なって取れてしまう不具合の対策）
+//  ・同じ職員・同じ日に、合わせて1日を超える休みは登録・受付できないようにした
+//    例：有給（全日）と夏期（全日）、全日と半休、午前半休を2回 … はNG
+//        午前半休＋午後半休、半休＋時間休（合わせて1日以内）はOK
+//  ・チェックするのは「申請中」「受付済（承認済）」の申請。「相談（却下）」は対象外
+//  ・チェックする場面：職員の申請（addRequest）／園長の受付（approveRequest）／
+//    園長の取得日変更（updateRequestDate）／園長の種別変更（updateRequestType）
+//  ・受付のときは、同じ日にすでに「受付済」の休みがあると受付しない（申請中どうしは受付の時点で判定）
+//
 // 2026-11-12 v3.6
 //  ・園長画面から、申請の種別（有給全日／午前半休／午後半休／夏期／時間休）を後から変更できる updateRequestType を追加
 //    （例：夏期休暇で申請したものを有給に変える。受付済の申請は職員マスタの取得済み日数も付け替える）
@@ -94,11 +103,13 @@ function doGet(e) {
       const data = JSON.parse(e.parameter.data);
       const req = addRequest(data);
       if (req.duplicate) return response({ ok: true, duplicate: true, data: req }, callback);
+      if (req.conflict) return response({ ok: false, conflict: true, error: req.error }, callback);
       sendMailToEncho(req);
       return response({ ok: true, data: req }, callback);
     }
     if (action === 'approveRequest') {
       const req = updateRequestStatus(e.parameter.reqId, '承認済', e.parameter.approver, '');
+      if (req && req.conflict) return response({ ok: false, conflict: true, error: req.error }, callback);
       if(req) sendMailToStaff(req, '受付');
       return response({ ok: true, data: req }, callback);
     }
@@ -139,11 +150,13 @@ function doPost(e) {
     if (action === 'addRequest') {
       const req = addRequest(body.data);
       if (req.duplicate) return response({ ok: true, duplicate: true, data: req });
+      if (req.conflict) return response({ ok: false, conflict: true, error: req.error });
       sendMailToEncho(req);
       return response({ ok: true, data: req });
     }
     if (action === 'approveRequest') {
       const req = updateRequestStatus(body.reqId, '承認済', body.approver, '');
+      if (req && req.conflict) return response({ ok: false, conflict: true, error: req.error });
       if(req) sendMailToStaff(req, '受付');
       return response({ ok: true, data: req });
     }
@@ -356,6 +369,11 @@ function updateRequestDate(reqId, garden, editor, date) {
       }
       const before = formatDate(rows[i][4]);
       if (before === newDate) return { ok: true, changed: 0 };
+      // v3.7：変更先の日に、合わせて1日を超える休みがあれば変更しない
+      if (rows[i][9] === '申請中' || rows[i][9] === '承認済') {
+        const hit = findDayConflict_(rows, rows[i][1], newDate, rows[i][5], rows[i][6], i, false);
+        if (hit) return { ok: false, conflict: true, error: dayConflictMessage_(hit) };
+      }
       const cell = sheet.getRange(i + 1, 5);
       cell.setNumberFormat('@');                 // 文字の日付として保存（形がくずれないように）
       cell.setValue(newDate);
@@ -407,6 +425,9 @@ function updateRequestType(reqId, garden, editor, category, type, days) {
       if (oldCat === cat && oldType === newType && Math.abs(oldDays - newDays) < 0.0005) {
         return { ok: true, changed: 0 };
       }
+      // v3.7：変更後の種別で、同じ日の他の休みと合わせて1日を超えるなら変更しない
+      const hit = findDayConflict_(rows, rows[i][1], formatDate(rows[i][4]), newType, newDays, i, false);
+      if (hit) return { ok: false, conflict: true, error: dayConflictMessage_(hit) };
       // 受付済なら、職員マスタの取得済み日数を付け替える（元を戻してから新しい種類で引く）
       if (status === '承認済') {
         updateStaffUsed(rows[i][1], -oldDays, oldCat);
@@ -425,6 +446,41 @@ function updateRequestType(reqId, garden, editor, category, type, days) {
   } finally {
     lock.releaseLock();
   }
+}
+
+// ------------------------------------------------------------
+// v3.7：同じ職員・同じ日の休みの重なりチェック
+//  rows      … 申請ログの全行（getValues の結果）
+//  skipIndex … 自分自身の行番号（rows の添字）。新規申請なら ''
+//  onlyApproved … true なら「受付済」だけと比べる（受付のとき）。false なら「申請中」「受付済」と比べる
+//  ルール：どちらかが全日（全日・全日（夏季））ならNG／同じ半休（午前と午前、午後と午後）はNG／
+//          合わせて1日を超えたらNG。重なった相手の行を返す（無ければ null）
+// ------------------------------------------------------------
+function findDayConflict_(rows, staffId, date, type, days, skipIndex, onlyApproved) {
+  const t = String(type || '');
+  const isFull = x => String(x || '').indexOf('全日') === 0;
+  const half = x => String(x || '').indexOf('午前') >= 0 ? '午前' : String(x || '').indexOf('午後') >= 0 ? '午後' : '';
+  let total = Number(days) || 0;
+  for (let j = 1; j < rows.length; j++) {
+    if (j === skipIndex) continue;
+    const r = rows[j];
+    if (r[0] === '') continue;
+    if (String(r[1]) !== String(staffId)) continue;
+    if (formatDate(r[4]) !== String(date)) continue;
+    const st = String(r[9] || '');
+    if (onlyApproved ? st !== '承認済' : (st !== '申請中' && st !== '承認済')) continue;
+    if (isFull(t) || isFull(r[5])) return r;
+    if (half(t) && half(t) === half(r[5])) return r;
+    total += Number(r[6]) || 0;
+    if (total > 1.0005) return r;
+  }
+  return null;
+}
+function dayConflictMessage_(r) {
+  const cat = String(r[7] || '有給');
+  const name = cat === '夏期' ? '夏季休暇' : cat === '時間単位' ? '時間休' : '有給';
+  const st = String(r[9]) === '承認済' ? '受付済' : '申請中';
+  return formatDate(r[4]) + ' はすでに ' + name + '（' + r[5] + '・' + st + '）があります。同じ日に重ねて休みは取れません。';
 }
 
 // 変更履歴シートに記録（無ければ自動で作る）
@@ -495,6 +551,10 @@ function addRequest(data) {
       }
     }
 
+    // v3.7：同じ日に、合わせて1日を超える休みは登録しない（有給と夏期の重複など）
+    const hit = findDayConflict_(rows, data.staffId, String(data.date), data.type, data.days, '', false);
+    if (hit) return { conflict: true, error: dayConflictMessage_(hit) };
+
     const now = new Date();
     const base = 'REQ' + Utilities.formatDate(now, 'Asia/Tokyo', 'yyyyMMddHHmmss');
     const ids = {};
@@ -526,6 +586,11 @@ function updateRequestStatus(reqId, status, approver, reason) {
     for (let i = 1; i < rows.length; i++) {
       if (rows[i][0] === reqId) {
         const prevStatus = rows[i][9];
+        // v3.7：受付するとき、同じ日にすでに受付済の休みがあって合わせて1日を超えるなら受付しない
+        if (status === '承認済' && prevStatus !== '承認済') {
+          const hit = findDayConflict_(rows, rows[i][1], formatDate(rows[i][4]), rows[i][5], rows[i][6], i, true);
+          if (hit) return { conflict: true, error: dayConflictMessage_(hit) };
+        }
         sheet.getRange(i+1,10).setValue(status);
         sheet.getRange(i+1,11).setValue(approver);
         sheet.getRange(i+1,12).setValue(now);
