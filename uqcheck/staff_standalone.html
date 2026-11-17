@@ -9,135 +9,135 @@
 <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@800&display=swap" rel="stylesheet">
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:-apple-system,BlinkMacSystemFont,'Hiragino Sans','Yu Gothic UI',sans-serif;background:#f0f0f0;color:#222;font-size:15px;min-height:100vh;padding-bottom:80px}
+body{font-family:-apple-system,BlinkMacSystemFont,'Hiragino Sans','Yu Gothic UI',sans-serif;background:#f0f0f0;color:#000;font-size:17px;min-height:100vh;padding-bottom:80px}
 
 /* ヘッダー */
 .hd{background:#4169e1;padding:16px 20px 14px;position:sticky;top:0;z-index:50}
 .hd-row{display:flex;align-items:center;justify-content:space-between}
-.hd-title{font-size:22px;font-weight:800;color:#fff;letter-spacing:0.02em;font-family:'Nunito','Apple SD Gothic Neo',sans-serif}
+.hd-title{font-size:24px;font-weight:800;color:#fff;letter-spacing:0.02em;font-family:'Nunito','Apple SD Gothic Neo',sans-serif}
 .hd-sub{display:none}
-.logout-btn{font-size:12px;color:rgba(255,255,255,0.8);background:none;border:1px solid rgba(255,255,255,0.4);border-radius:5px;padding:4px 10px;cursor:pointer;font-family:inherit}
-.hd-home{flex:0 0 auto;display:inline-flex;align-items:center;gap:5px;border:1.5px solid rgba(255,255,255,.8);background:transparent;color:#fff;font-size:12.5px;font-weight:800;padding:6px 12px 6px 9px;border-radius:999px;cursor:pointer;font-family:inherit;white-space:nowrap;text-decoration:none}
+.logout-btn{font-size:14px;color:rgba(255,255,255,0.8);background:none;border:1px solid rgba(255,255,255,0.4);border-radius:5px;padding:4px 10px;cursor:pointer;font-family:inherit}
+.hd-home{flex:0 0 auto;display:inline-flex;align-items:center;gap:5px;border:1.5px solid rgba(255,255,255,.8);background:transparent;color:#fff;font-size:14.5px;font-weight:800;padding:6px 12px 6px 9px;border-radius:999px;cursor:pointer;font-family:inherit;white-space:nowrap;text-decoration:none}
 .hd-home:active{background:rgba(255,255,255,.16)}
 .hd-home svg{width:16px;height:16px;flex:0 0 auto}
 
 /* ログイン */
 .login-wrap{padding:40px 24px}
 .login-card{background:#fff;border-radius:16px;padding:32px 24px;text-align:center;box-shadow:0 4px 10px rgba(0,0,0,0.17)}
-.login-logo{font-size:36px;font-weight:800;color:#2d1b6b;margin-bottom:4px;letter-spacing:0.02em;font-family:'Nunito','Apple SD Gothic Neo',sans-serif}
-.login-sub{font-size:12px;color:#aaa;margin-bottom:28px}
-.login-label{font-size:12px;color:#888;text-align:left;margin-bottom:6px;font-weight:500}
-.login-select{width:100%;padding:12px 14px;border:1.5px solid #ddd;border-radius:10px;font-size:15px;font-family:inherit;background:#fafafa;color:#222;margin-bottom:20px;-webkit-appearance:none}
-.login-btn{width:100%;padding:14px;background:#4169e1;color:#fff;border:none;border-radius:10px;font-size:16px;font-weight:700;font-family:inherit;cursor:pointer;letter-spacing:0.04em}
+.login-logo{font-size:38px;font-weight:800;color:#000;margin-bottom:4px;letter-spacing:0.02em;font-family:'Nunito','Apple SD Gothic Neo',sans-serif}
+.login-sub{font-size:14px;color:#000;margin-bottom:28px}
+.login-label{font-size:14px;color:#000;text-align:left;margin-bottom:6px;font-weight:500}
+.login-select{width:100%;padding:12px 14px;border:1.5px solid #ddd;border-radius:10px;font-size:17px;font-family:inherit;background:#fafafa;color:#000;margin-bottom:20px;-webkit-appearance:none}
+.login-btn{width:100%;padding:14px;background:#4169e1;color:#fff;border:none;border-radius:10px;font-size:18px;font-weight:700;font-family:inherit;cursor:pointer;letter-spacing:0.04em}
 
 /* メイン */
 .main{padding:16px 14px}
 
 /* プロフィール */
 .profile{display:flex;align-items:center;gap:14px;padding:14px 16px;background:#fff;border-radius:14px;margin-bottom:14px;box-shadow:0 3px 8px rgba(0,0,0,0.14)}
-.avatar{width:48px;height:48px;border-radius:50%;background:#4169e1;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;color:#fff;flex-shrink:0}
-.profile-name{font-size:17px;font-weight:600;color:#222}
-.profile-sub{font-size:12px;color:#888;margin-top:2px}
+.avatar{width:48px;height:48px;border-radius:50%;background:#4169e1;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:700;color:#fff;flex-shrink:0}
+.profile-name{font-size:19px;font-weight:600;color:#000}
+.profile-sub{font-size:14px;color:#000;margin-top:2px}
 
 /* 年次有給カード */
 .yukyu-card{background:#fff;border-radius:16px;padding:20px 16px 16px;margin-bottom:14px;box-shadow:0 3px 8px rgba(0,0,0,0.14)}
-.card-title{font-size:15px;font-weight:600;color:#222;text-align:center;margin-bottom:12px;letter-spacing:0.04em}
+.card-title{font-size:17px;font-weight:600;color:#000;text-align:center;margin-bottom:12px;letter-spacing:0.04em}
 .big-num-wrap{text-align:center;margin-bottom:16px}
-.big-num{font-size:72px;font-weight:700;color:#222;line-height:1}
-.big-unit{font-size:18px;color:#222;font-weight:400}
+.big-num{font-size:74px;font-weight:700;color:#000;line-height:1}
+.big-unit{font-size:20px;color:#000;font-weight:400}
 .circles{display:flex;justify-content:center;gap:16px;margin-bottom:14px}
 .circle-item{display:flex;flex-direction:column;align-items:center;gap:5px}
-.circle{width:64px;height:64px;border-radius:50%;border:2px solid #222;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:600;color:#222}
-.circle-label{font-size:12px;color:#222}
+.circle{width:64px;height:64px;border-radius:50%;border:2px solid #222;display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:600;color:#000}
+.circle-label{font-size:14px;color:#000}
 .prog-section{border-top:1px solid #f0f0f0;padding-top:12px}
-.prog-row{display:flex;justify-content:space-between;font-size:13px;color:#222;margin-bottom:5px}
+.prog-row{display:flex;justify-content:space-between;font-size:15px;color:#000;margin-bottom:5px}
 .prog-bar{height:5px;background:#e8e8e8;border-radius:3px;overflow:hidden;margin-bottom:5px}
 .prog-fill{height:100%;background:#4169e1;border-radius:3px;transition:width 0.5s}
-.prog-note{font-size:13px;color:#222}
+.prog-note{font-size:15px;color:#000}
 
 /* 夏期・時間休 2カラム */
 .two-col{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
 .sub-card{background:#fff;border-radius:16px;padding:16px 12px;box-shadow:0 3px 8px rgba(0,0,0,0.14)}
-.sub-card-title{font-size:14px;font-weight:600;color:#222;text-align:center;margin-bottom:10px;letter-spacing:0.03em}
-.sub-big{font-size:56px;font-weight:700;color:#222;text-align:center;line-height:1;margin-bottom:12px}
+.sub-card-title{font-size:16px;font-weight:600;color:#000;text-align:center;margin-bottom:10px;letter-spacing:0.03em}
+.sub-big{font-size:58px;font-weight:700;color:#000;text-align:center;line-height:1;margin-bottom:12px}
 .sub-circles{display:flex;justify-content:center;gap:10px;margin-bottom:8px}
-.sub-circle{width:48px;height:48px;border-radius:50%;border:2px solid #222;display:flex;align-items:center;justify-content:center;font-size:17px;font-weight:600;color:#222}
-.sub-circle-label{font-size:11px;color:#222;text-align:center;margin-top:3px}
-.calc-link{text-align:center;font-size:12px;color:#4169e1;font-weight:600;cursor:pointer;margin-top:4px}
+.sub-circle{width:48px;height:48px;border-radius:50%;border:2px solid #222;display:flex;align-items:center;justify-content:center;font-size:19px;font-weight:600;color:#000}
+.sub-circle-label{font-size:13px;color:#000;text-align:center;margin-top:3px}
+.calc-link{text-align:center;font-size:14px;color:#4169e1;font-weight:600;cursor:pointer;margin-top:4px}
 
 /* アラート */
-.alert{border-radius:10px;padding:10px 14px;font-size:12px;margin-bottom:10px;line-height:1.5}
+.alert{border-radius:10px;padding:10px 14px;font-size:14px;margin-bottom:10px;line-height:1.5}
 .alert-warn{background:#fff8e6;color:#a05a00;border-left:3px solid #f0c050}
 .alert-ok{background:#e8f5ef;color:#1a7a4a;border-left:3px solid #a0d8b8}
 
 /* タブ */
 .tabs{display:flex;background:#e8e8e8;border-radius:10px;padding:3px;margin-bottom:12px}
-.tab{flex:1;padding:9px 6px;text-align:center;font-size:13px;color:#888;cursor:pointer;border-radius:8px;font-weight:500}
-.tab.active{background:#fff;color:#222;font-weight:700;box-shadow:0 1px 3px rgba(0,0,0,0.1)}
+.tab{flex:1;padding:9px 6px;text-align:center;font-size:15px;color:#000;cursor:pointer;border-radius:8px;font-weight:500}
+.tab.active{background:#fff;color:#000;font-weight:700;box-shadow:0 1px 3px rgba(0,0,0,0.1)}
 
 /* 申請フォーム */
 .form-section{background:#fff;border-radius:16px;overflow:hidden;margin-bottom:14px;box-shadow:0 3px 8px rgba(0,0,0,0.14)}
 .form-row{padding:13px 16px;border-bottom:1px solid #f2f2f2}
 .form-row:last-child{border-bottom:none}
-.f-label{font-size:11px;color:#aaa;font-weight:500;margin-bottom:5px;text-transform:uppercase;letter-spacing:0.04em}
-.f-input{width:100%;padding:10px 12px;border:1.5px solid #eee;border-radius:8px;font-size:15px;font-family:inherit;background:#fafafa;color:#222}
+.f-label{font-size:13px;color:#000;font-weight:500;margin-bottom:5px;text-transform:uppercase;letter-spacing:0.04em}
+.f-input{width:100%;padding:10px 12px;border:1.5px solid #eee;border-radius:8px;font-size:17px;font-family:inherit;background:#fafafa;color:#000}
 .f-input:focus{outline:none;border-color:#4169e1}
 /* カレンダー */
 .cal-wrap{background:#fafafa;border:1.5px solid #eee;border-radius:10px;padding:10px 8px}
 .cal-head{display:flex;align-items:center;justify-content:space-between;padding:2px 4px 10px}
-.cal-label{font-size:14px;font-weight:700;color:#222}
-.cal-nav{width:28px;height:28px;border:1px solid #eee;background:#fff;border-radius:6px;font-size:16px;color:#4169e1;cursor:pointer;line-height:1}
+.cal-label{font-size:16px;font-weight:700;color:#000}
+.cal-nav{width:28px;height:28px;border:1px solid #eee;background:#fff;border-radius:6px;font-size:18px;color:#4169e1;cursor:pointer;line-height:1}
 .cal-nav:active{background:#eef2fd}
 .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px}
-.cal-dow{font-size:10px;color:#aaa;text-align:center;padding:2px 0 6px;font-weight:600}
-.cal-day{aspect-ratio:1;display:flex;align-items:center;justify-content:center;font-size:13px;border-radius:8px;cursor:pointer;color:#333}
+.cal-dow{font-size:12px;color:#000;text-align:center;padding:2px 0 6px;font-weight:600}
+.cal-day{aspect-ratio:1;display:flex;align-items:center;justify-content:center;font-size:15px;border-radius:8px;cursor:pointer;color:#000}
 .cal-day.other{visibility:hidden;cursor:default}
 .cal-day.today{box-shadow:inset 0 0 0 1.5px #4169e1}
 .cal-day.past{color:#ddd;cursor:not-allowed}
 /* 過去日でも申請できる日（前月1日〜昨日）：少し薄く表示してタップ可能（2026-10-14） */
-.cal-day.pastok:not(.sel){background:#f4f4f6;color:#999}
+.cal-day.pastok:not(.sel){background:#f4f4f6;color:#000}
 .cal-day.pastok.sun:not(.sel),.cal-day.pastok.sat:not(.sel){color:#bbb}
 .cal-day.sun:not(.sel){color:#e05a5a}
 .cal-day.sat:not(.sel){color:#4a7fd6}
 .cal-day.sel{background:#4169e1;color:#fff;font-weight:700;box-shadow:none}
 /* 日付ごとの種別選択リスト */
 .date-item{display:flex;align-items:center;gap:8px;background:#fafafa;border:1px solid #eee;border-radius:8px;padding:8px 10px}
-.date-item-label{font-size:13px;font-weight:600;color:#333;flex:0 0 auto;min-width:64px}
-.date-item-type{flex:1;padding:6px 8px;border:1px solid #eee;border-radius:6px;font-size:12px;font-family:inherit;background:#fff;color:#333}
+.date-item-label{font-size:15px;font-weight:600;color:#000;flex:0 0 auto;min-width:64px}
+.date-item-type{flex:1;padding:6px 8px;border:1px solid #eee;border-radius:6px;font-size:14px;font-family:inherit;background:#fff;color:#000}
 .date-item-remove{cursor:pointer;color:#c99;font-weight:700;padding:0 4px;flex:0 0 auto}
-.date-chip{display:inline-flex;align-items:center;gap:5px;background:#eef2fd;color:#2d4fba;font-size:12px;font-weight:600;padding:5px 8px 5px 10px;border-radius:100px}
+.date-chip{display:inline-flex;align-items:center;gap:5px;background:#eef2fd;color:#2d4fba;font-size:14px;font-weight:600;padding:5px 8px 5px 10px;border-radius:100px}
 .date-chip-x{cursor:pointer;color:#8fa3e0;font-weight:700}
 .radio-row{display:flex;gap:6px}
-.ropt{flex:1;padding:9px;border:1.5px solid #eee;border-radius:8px;text-align:center;font-size:13px;color:#aaa;cursor:pointer;font-weight:500}
-.ropt.sel{border-color:#222;color:#222;background:#f8f8f8;font-weight:700}
-.sub-btn{display:block;width:100%;padding:15px;background:#222;color:#fff;border:none;border-radius:12px;font-size:16px;font-weight:700;font-family:inherit;cursor:pointer;margin-top:12px;letter-spacing:0.04em}
-.remain-preview{font-size:13px;color:#4169e1;font-weight:600}
-.apply-note{font-size:11px;color:#aaa;text-align:center;margin-top:8px}
+.ropt{flex:1;padding:9px;border:1.5px solid #eee;border-radius:8px;text-align:center;font-size:15px;color:#000;cursor:pointer;font-weight:500}
+.ropt.sel{border-color:#222;color:#000;background:#f8f8f8;font-weight:700}
+.sub-btn{display:block;width:100%;padding:15px;background:#222;color:#fff;border:none;border-radius:12px;font-size:18px;font-weight:700;font-family:inherit;cursor:pointer;margin-top:12px;letter-spacing:0.04em}
+.remain-preview{font-size:15px;color:#4169e1;font-weight:600}
+.apply-note{font-size:13px;color:#000;text-align:center;margin-top:8px}
 
 /* 計算ページ */
 .calc-card{background:#fff;border-radius:16px;padding:18px 16px;margin-bottom:14px;box-shadow:0 3px 8px rgba(0,0,0,0.14)}
-.calc-card-title{font-size:13px;font-weight:600;color:#888;margin-bottom:12px;letter-spacing:0.04em}
+.calc-card-title{font-size:15px;font-weight:600;color:#000;margin-bottom:12px;letter-spacing:0.04em}
 .calc-formula{background:#f5f5f5;border-radius:10px;padding:12px 14px;margin-bottom:14px}
-.calc-formula-label{font-size:11px;color:#aaa;margin-bottom:4px}
-.calc-formula-val{font-size:18px;font-weight:700;color:#222}
+.calc-formula-label{font-size:13px;color:#000;margin-bottom:4px}
+.calc-formula-val{font-size:20px;font-weight:700;color:#000}
 .rate-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px}
 .rate-box{background:#f5f5f5;border-radius:10px;padding:12px;text-align:center}
-.rate-box-label{font-size:11px;color:#aaa;margin-bottom:4px}
-.rate-box-val{font-size:16px;font-weight:700;color:#222}
+.rate-box-label{font-size:13px;color:#000;margin-bottom:4px}
+.rate-box-val{font-size:18px;font-weight:700;color:#000}
 .rate-box.red .rate-box-val{color:#b83232}
 .calc-tool{background:#f5f5f5;border-radius:10px;padding:14px}
-.calc-tool-title{font-size:12px;font-weight:600;color:#888;margin-bottom:10px}
+.calc-tool-title{font-size:14px;font-weight:600;color:#000;margin-bottom:10px}
 .calc-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
-.calc-sel{flex:1;padding:9px 8px;border:1.5px solid #ddd;border-radius:8px;font-size:13px;font-family:inherit;background:#fff}
-.calc-inp{width:60px;padding:9px 6px;border:1.5px solid #ddd;border-radius:8px;font-size:15px;text-align:right;font-family:inherit;background:#fff}
-.calc-btn{padding:9px 16px;background:#222;color:#fff;border:none;border-radius:8px;font-size:13px;font-family:inherit;cursor:pointer;font-weight:600}
+.calc-sel{flex:1;padding:9px 8px;border:1.5px solid #ddd;border-radius:8px;font-size:15px;font-family:inherit;background:#fff}
+.calc-inp{width:60px;padding:9px 6px;border:1.5px solid #ddd;border-radius:8px;font-size:17px;text-align:right;font-family:inherit;background:#fff}
+.calc-btn{padding:9px 16px;background:#222;color:#fff;border:none;border-radius:8px;font-size:15px;font-family:inherit;cursor:pointer;font-weight:600}
 .calc-result{margin-top:10px;text-align:center}
 
 /* 履歴 */
 .hist-item{background:#fff;border-radius:12px;padding:13px 16px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;box-shadow:0 3px 7px rgba(0,0,0,0.12)}
-.h-date{font-size:14px;font-weight:600;color:#222}
-.h-sub{font-size:11px;color:#aaa;margin-top:2px}
-.sbadge{display:inline-block;padding:3px 10px;border-radius:100px;font-size:11px;font-weight:600}
+.h-date{font-size:16px;font-weight:600;color:#000}
+.h-sub{font-size:13px;color:#000;margin-top:2px}
+.sbadge{display:inline-block;padding:3px 10px;border-radius:100px;font-size:13px;font-weight:600}
 .s-ok{background:#e8f5ef;color:#1a7a4a}
 .s-ng{background:#fef0f0;color:#b83232}
 .s-sodan{background:#f3ecfb;color:#7b3fb5}
@@ -146,25 +146,26 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Hiragino Sans','Yu Gothic UI'
 
 /* マイページ */
 .my-section{background:#fff;border-radius:16px;overflow:hidden;margin-bottom:12px;box-shadow:0 3px 8px rgba(0,0,0,0.14)}
-.my-row{display:flex;justify-content:space-between;align-items:center;padding:13px 16px;border-bottom:1px solid #f2f2f2;font-size:14px}
+.my-row{display:flex;justify-content:space-between;align-items:center;padding:13px 16px;border-bottom:1px solid #f2f2f2;font-size:16px}
 .my-row:last-child{border-bottom:none}
-.my-key{color:#aaa;font-size:13px}
-.my-val{font-weight:600;color:#222}
+.my-key{color:#000;font-size:15px}
+.my-val{font-weight:600;color:#000}
 
 /* bottom nav */
 .bnav{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid #eee;display:flex;padding-bottom:env(safe-area-inset-bottom)}
-.ni{flex:1;display:flex;flex-direction:column;align-items:center;padding:10px 0 7px;cursor:pointer;color:#ccc;font-size:10px;font-weight:500;gap:3px}
-.ni.active{color:#222}
-.ni-icon{font-size:22px;line-height:1}
+.ni{flex:1;display:flex;flex-direction:column;align-items:center;padding:10px 0 7px;cursor:pointer;color:#000;font-size:12px;font-weight:500;gap:3px}
+.ni.active{color:#000;font-weight:800;box-shadow:inset 0 3px 0 #4169e1}
+html.law-y .ni.active{box-shadow:inset 0 3px 0 #43a047}
+.ni-icon{font-size:24px;line-height:1}
 
 /* toast */
-.toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%) translateY(20px);background:#222;color:#fff;padding:10px 22px;border-radius:100px;font-size:13px;opacity:0;transition:all 0.3s;pointer-events:none;white-space:nowrap;z-index:200}
+.toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%) translateY(20px);background:#222;color:#fff;padding:10px 22px;border-radius:100px;font-size:15px;opacity:0;transition:all 0.3s;pointer-events:none;white-space:nowrap;z-index:200}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 
 /* cat tabs */
 .cat-tabs{display:flex;background:#e8e8e8;border-radius:10px;padding:3px;margin-bottom:12px}
-.cat-tab{flex:1;padding:9px 6px;text-align:center;font-size:13px;color:#888;cursor:pointer;border-radius:8px;font-weight:500}
-.cat-tab.active{background:#fff;color:#222;font-weight:700;box-shadow:0 1px 3px rgba(0,0,0,0.1)}
+.cat-tab{flex:1;padding:9px 6px;text-align:center;font-size:15px;color:#000;cursor:pointer;border-radius:8px;font-weight:500}
+.cat-tab.active{background:#fff;color:#000;font-weight:700;box-shadow:0 1px 3px rgba(0,0,0,0.1)}
 </style>
 <script src="../gardens.js"></script>
 <script>
@@ -210,18 +211,18 @@ html.law-y .date-chip-x{color:#81c784}
     <div class="login-card" id="loginCard">
       <div class="login-logo">UQ checker</div>
       <div class="login-sub" id="loginSub">柴学園 有給管理アプリ</div>
-      <div class="login-label" id="gardenLabel" style="font-size:15px;font-weight:700;color:#4169e1;margin-top:4px"></div>
+      <div class="login-label" id="gardenLabel" style="font-size:17px;font-weight:700;color:#4169e1;margin-top:4px"></div>
       <div class="login-label" style="margin-top:14px">職員を選択してください</div>
       <select class="login-select" id="staffSelect"></select>
       <button class="login-btn" onclick="doLogin()">ログイン</button>
     </div>
     <div class="login-card" id="loginErrorCard" style="display:none">
       <div class="login-logo">UQ checker</div>
-      <div style="margin-top:16px;font-size:14px;color:#c0392b;line-height:1.7">
+      <div style="margin-top:16px;font-size:16px;color:#c0392b;line-height:1.7">
         このURLからはログインできません。<br>
         園ごとに配布されている専用のリンク（またはQRコード）からアクセスしてください。
       </div>
-      <div style="margin-top:12px;font-size:12px;color:#999;line-height:1.6">
+      <div style="margin-top:12px;font-size:14px;color:#000;line-height:1.6">
         リンクが分からない場合は、園長にご確認ください。
       </div>
     </div>
@@ -278,7 +279,7 @@ html.law-y .date-chip-x{color:#81c784}
       <!-- 夏期休暇 -->
       <div class="sub-card" id="summerCard">
         <div class="sub-card-title">夏季休暇</div>
-        <div class="sub-big"><span id="summerRemainNum">0</span><span style="font-size:16px;color:#222;font-weight:400"> 日 残り</span></div>
+        <div class="sub-big"><span id="summerRemainNum">0</span><span style="font-size:18px;color:#000;font-weight:400"> 日 残り</span></div>
         <div class="sub-circles">
           <div>
             <div class="sub-circle" id="mSummerTotal">0</div>
@@ -294,7 +295,7 @@ html.law-y .date-chip-x{color:#81c784}
       <!-- 時間休（単位：時間。2026-11-13 日→時間に変更） -->
       <div class="sub-card" id="hourCard">
         <div class="sub-card-title">時間休</div>
-        <div class="sub-big"><span id="hourRemainNum">0</span><span style="font-size:16px;color:#222;font-weight:400"> 時間 残り</span></div>
+        <div class="sub-big"><span id="hourRemainNum">0</span><span style="font-size:18px;color:#000;font-weight:400"> 時間 残り</span></div>
         <div class="sub-circles">
           <div>
             <div class="sub-circle" id="hGrant">0</div>
@@ -320,7 +321,7 @@ html.law-y .date-chip-x{color:#81c784}
     <div class="form-section">
       <div class="form-row" id="dateRow">
         <div class="f-label">取得したい日をタップして選択（複数選択可）</div>
-        <div style="font-size:12px;color:#999;margin:-2px 0 8px">※申請し忘れた過去の日も、前月1日までさかのぼって申請できます（‹ で前月へ）</div>
+        <div style="font-size:14px;color:#000;margin:-2px 0 8px">※申請し忘れた過去の日も、前月1日までさかのぼって申請できます（‹ で前月へ）</div>
         <div class="cal-wrap">
           <div class="cal-head">
             <button type="button" class="cal-nav" onclick="calMove(-1)">‹</button>
@@ -330,7 +331,7 @@ html.law-y .date-chip-x{color:#81c784}
           <div class="cal-grid" id="calGrid"></div>
         </div>
         <div id="multiDateChips" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:12px"></div>
-        <div style="font-size:12px;color:#999;margin-top:8px" id="multiDayPreview">まだ日付が選択されていません</div>
+        <div style="font-size:14px;color:#000;margin-top:8px" id="multiDayPreview">まだ日付が選択されていません</div>
       </div>
       <div class="form-row" id="hourRow" style="display:none">
         <div class="f-label">取得時間数</div>
@@ -399,11 +400,11 @@ html.law-y .date-chip-x{color:#81c784}
             <option value="1.00">欠勤控除（×1.00）</option>
           </select>
           <input type="number" class="calc-inp" id="calcHours" value="1" min="0.5" max="24" step="0.5">
-          <span style="font-size:13px;color:#aaa">時間</span>
+          <span style="font-size:15px;color:#000">時間</span>
           <button class="calc-btn" onclick="doCalc()">計算</button>
         </div>
         <div class="calc-result" id="calcResult">
-          <span style="font-size:13px;color:#aaa">時間数を入力して「計算」を押してください</span>
+          <span style="font-size:15px;color:#000">時間数を入力して「計算」を押してください</span>
         </div>
       </div>
     </div>
@@ -1004,15 +1005,15 @@ function renderHome(){
   document.getElementById('avatar').textContent = s.name[0];
   document.getElementById('uname').textContent = s.name;
   document.getElementById('utype').innerHTML = s.type+'／採用 '+s.hire.replace(/-/g,'/')
-    + (DB.isIkukyu(s) ? ' <span style="display:inline-block;background:#fce4ec;color:#c2185b;font-weight:700;border-radius:10px;padding:1px 8px;font-size:11px">育休中</span>' : '');
+    + (DB.isIkukyu(s) ? ' <span style="display:inline-block;background:#fce4ec;color:#c2185b;font-weight:700;border-radius:10px;padding:1px 8px;font-size:13px">育休中</span>' : '');
   // 「失効まで◯日」の表示はやめた（2026-11-16：見る側がかえって分かりにくいため）。基準日だけ出す
   const baseColor = document.documentElement.classList.contains('law-y')?'#43a047':'#4169e1';
   document.getElementById('expireBadge').innerHTML = (!s.grantDate && s.nextGrantDate)
     // これから付与する方（名簿の黄色）：次回付与日を出す
-    ? `<div style="font-size:10px;color:#aaa">次回付与</div>` +
-      `<div style="font-size:13px;font-weight:700;color:#b8860b">${s.nextGrantDate.replace(/-/g,'/')}${s.nextGrant?`（${s.nextGrant}日）`:''}</div>`
-    : `<div style="font-size:10px;color:#aaa">基準日</div>` +
-      `<div style="font-size:13px;font-weight:700;color:${baseColor}">${s.grantDate?s.grantDate.replace(/-/g,'/'):'未設定'}</div>`;
+    ? `<div style="font-size:12px;color:#000">次回付与</div>` +
+      `<div style="font-size:15px;font-weight:700;color:#b8860b">${s.nextGrantDate.replace(/-/g,'/')}${s.nextGrant?`（${s.nextGrant}日）`:''}</div>`
+    : `<div style="font-size:12px;color:#000">基準日</div>` +
+      `<div style="font-size:15px;font-weight:700;color:${baseColor}">${s.grantDate?s.grantDate.replace(/-/g,'/'):'未設定'}</div>`;
   document.getElementById('remainNum').textContent = remain;
   document.getElementById('mGrant').textContent = s.grant;
   document.getElementById('mCarry').textContent = s.carry;
@@ -1031,10 +1032,10 @@ function renderHome(){
   document.getElementById('mSummerTotal').textContent = s.summerTotal||0;
   document.getElementById('mSummerUsed').textContent = s.summerUsed||0;
   const sa = document.getElementById('summerAlert');
-  if(sa && DB.isIkukyu(s) && !(s.summerTotal>0)) sa.innerHTML = `<div style="background:#fce4ec;border-radius:8px;padding:7px 10px;font-size:12px;color:#c2185b;font-weight:600;text-align:center">育休中のため対象外</div>`;
+  if(sa && DB.isIkukyu(s) && !(s.summerTotal>0)) sa.innerHTML = `<div style="background:#fce4ec;border-radius:8px;padding:7px 10px;font-size:14px;color:#c2185b;font-weight:600;text-align:center">育休中のため対象外</div>`;
   else if(sa) sa.innerHTML = (s.summerTotal>0 && sr>0)
-    ? `<div style="background:#fff0f7;border-radius:8px;padding:7px 10px;font-size:12px;color:#ff69b4;font-weight:500;text-align:center">あと${sr}日残っています（有給とは別枠）</div>`
-    : (s.summerTotal>0 ? `<div style="background:#e8f5ef;border-radius:8px;padding:7px 10px;font-size:12px;color:#1a7a4a;font-weight:500;text-align:center">✅ 全日取得済み</div>` : '');
+    ? `<div style="background:#fff0f7;border-radius:8px;padding:7px 10px;font-size:14px;color:#ff69b4;font-weight:500;text-align:center">あと${sr}日残っています（有給とは別枠）</div>`
+    : (s.summerTotal>0 ? `<div style="background:#e8f5ef;border-radius:8px;padding:7px 10px;font-size:14px;color:#1a7a4a;font-weight:500;text-align:center">✅ 全日取得済み</div>` : '');
 
   // 時間休（単位：時間）。パートは対象外
   const part = DB.isPart(s);
@@ -1046,9 +1047,9 @@ function renderHome(){
   // 有給残で頭打ちになっているか（枠の残りより有給残の方が少ない）
   const hRawH = Math.max(0, Math.round((DB.getHourLeaveGrantHours(s) - DB.getHourLeaveUsedHours(s))*100)/100);
   const hpd = DB.hpd(s);
-  const hpdNote = (!part && hpd!==8) ? `<div style="background:#eef3ff;border-radius:8px;padding:7px 10px;font-size:12px;color:#4169e1;text-align:center;margin-top:6px">1日${hpd}時間勤務で計算（1日分＝${DB.hourUnit(s)}時間）</div>` : '';
-  if(hn) hn.innerHTML = part ? `<div style="background:#f2f2f2;border-radius:8px;padding:7px 10px;font-size:12px;color:#888;text-align:center">パートのため対象外</div>`
-    : (hrH < hRawH ? `<div style="background:#fff8e1;border-radius:8px;padding:7px 10px;font-size:12px;color:#b8860b;text-align:center">有休の残りが少ないため、時間休も${hrH}時間まで</div>` : '') + hpdNote;
+  const hpdNote = (!part && hpd!==8) ? `<div style="background:#eef3ff;border-radius:8px;padding:7px 10px;font-size:14px;color:#4169e1;text-align:center;margin-top:6px">1日${hpd}時間勤務で計算（1日分＝${DB.hourUnit(s)}時間）</div>` : '';
+  if(hn) hn.innerHTML = part ? `<div style="background:#f2f2f2;border-radius:8px;padding:7px 10px;font-size:14px;color:#000;text-align:center">パートのため対象外</div>`
+    : (hrH < hRawH ? `<div style="background:#fff8e1;border-radius:8px;padding:7px 10px;font-size:14px;color:#b8860b;text-align:center">有休の残りが少ないため、時間休も${hrH}時間まで</div>` : '') + hpdNote;
   const ht = document.getElementById('catTabHour');
   if(ht) ht.style.display = part ? 'none' : '';
 }
@@ -1074,7 +1075,7 @@ function doCalc(){
   if(!me) return;
   const s = getLatestMe(); if(!s) return;
   const hw = DB.calcHourlyWage(s);
-  if(!hw){ document.getElementById('calcResult').innerHTML='<span style="font-size:13px;color:#aaa">時間給データが未設定です</span>'; return; }
+  if(!hw){ document.getElementById('calcResult').innerHTML='<span style="font-size:15px;color:#000">時間給データが未設定です</span>'; return; }
   const mult = parseFloat(document.getElementById('calcType').value);
   const hours = parseFloat(document.getElementById('calcHours').value);
   if(!hours||isNaN(hours)) return;
@@ -1083,7 +1084,7 @@ function doCalc(){
   const isDeduct = mult===1.00;
   const color = isDeduct?'#b83232':'#1a7a4a';
   document.getElementById('calcResult').innerHTML =
-    `<span style="font-size:28px;font-weight:700;color:${color}">${isDeduct?'▲':''}${result.toLocaleString()} 円</span><br><span style="font-size:11px;color:#aaa">${labels[String(mult)]}（${hours}時間）</span>`;
+    `<span style="font-size:30px;font-weight:700;color:${color}">${isDeduct?'▲':''}${result.toLocaleString()} 円</span><br><span style="font-size:13px;color:#000">${labels[String(mult)]}（${hours}時間）</span>`;
 }
 
 // 表示上の呼び方（2026-10-14）：年次有給休暇は労働者の権利で「許可・却下」するものではないため、
@@ -1094,7 +1095,7 @@ async function renderHistory(){
   const el = document.getElementById('histList');
   // ★デモ固定：ローカルのダミーデータから履歴を表示（GASへは接続しない）
   const reqs = DB.getRequests().filter(r=>r.staffId===me.id);
-  if(!reqs.length){ el.innerHTML='<div style="text-align:center;color:#aaa;font-size:13px;padding:40px 0">申請履歴はありません</div>'; return; }
+  if(!reqs.length){ el.innerHTML='<div style="text-align:center;color:#000;font-size:15px;padding:40px 0">申請履歴はありません</div>'; return; }
   el.innerHTML = reqs.map(r=>{
     const cls = r.status==='承認済'?(r.category==='夏期'?'s-summer':'s-ok'):r.status==='却下'?'s-sodan':'s-pend';
     const cat = r.category==='夏期'?'☀️ 夏季':r.category==='時間単位'?'⏰ 時間休':'📋 有給';
@@ -1118,7 +1119,7 @@ function renderMypage(){
     <div class="my-row"><span class="my-key">勤続年数</span><span class="my-val">${diff}年</span></div>
     <div class="my-row"><span class="my-key">有給付与</span><span class="my-val">${s.grant}日</span></div>
     <div class="my-row"><span class="my-key">繰越</span><span class="my-val">${s.carry}日</span></div>
-    <div class="my-row"><span class="my-key">有給残日数</span><span class="my-val" style="color:${document.documentElement.classList.contains('law-y')?'#43a047':'#4169e1'};font-size:18px">${DB.getRemain(s)}日</span></div>
+    <div class="my-row"><span class="my-key">有給残日数</span><span class="my-val" style="color:${document.documentElement.classList.contains('law-y')?'#43a047':'#4169e1'};font-size:20px">${DB.getRemain(s)}日</span></div>
     <div class="my-row"><span class="my-key">基準日（付与日）</span><span class="my-val">${s.grantDate||'未設定'}</span></div>
     <div class="my-row"><span class="my-key">夏季休暇残</span><span class="my-val">${DB.isIkukyu(s)&&!(s.summerTotal>0)?'対象外（育休中）':DB.getSummerRemain(s)+'日'}</span></div>
     <div class="my-row"><span class="my-key">時間休残</span><span class="my-val">${DB.isPart(s)?'対象外（パート）':DB.getHourLeaveRemainHours(s)+'時間'}</span></div>
@@ -1418,9 +1419,9 @@ async function submitApply(){
      ============================================================ -->
 <style>
   .hv-bar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;background:#1b2340;color:#fff;
-    padding:8px 12px;font-size:13px;font-weight:700;line-height:1.4;}
-  .hv-bar .hv-tag{background:#f0a134;color:#1b2340;border-radius:999px;padding:2px 10px;font-size:12px;white-space:nowrap;}
-  .hv-bar .hv-note{font-size:11.5px;font-weight:400;opacity:.85;}
+    padding:8px 12px;font-size:15px;font-weight:700;line-height:1.4;}
+  .hv-bar .hv-tag{background:#f0a134;color:#000;border-radius:999px;padding:2px 10px;font-size:14px;white-space:nowrap;}
+  .hv-bar .hv-note{font-size:13.5px;font-weight:400;opacity:.85;}
 </style>
 <script>
 (function(){

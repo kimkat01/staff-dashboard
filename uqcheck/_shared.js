@@ -323,11 +323,11 @@ const DB = {
   // 園長画面の「失効まで」欄（2行表示）
   expireCellHtml(s){
     const e = this.getExpireInfo(s);
-    if(!e) return '<span style="font-size:11px;color:var(--tm)">—</span>';
+    if(!e) return '<span style="font-size:13px;color:var(--tm)">—</span>';
     if(e.days < 0) return '<span style="color:var(--red);font-weight:600">失効済</span>';
     const st = e.days<=30 ? 'color:var(--red);font-weight:600' : e.days<=90 ? 'color:var(--warn);font-weight:600' : '';
     return `<span style="${st}">あと${e.days}日</span>`
-      + `<div style="font-size:11px;color:var(--tm);white-space:nowrap">${e.kind}分 ${this.fmtDaysHours(s, e.left)}・${e.endText}まで</div>`;
+      + `<div style="font-size:13px;color:var(--tm);white-space:nowrap">${e.kind}分 ${this.fmtDaysHours(s, e.left)}・${e.endText}まで</div>`;
   },
 
   // 時間給計算（給与規程第17・18条）
