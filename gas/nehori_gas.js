@@ -221,7 +221,7 @@ function monitor_(ev, b) {
 function log_(ev, kind, w, sid) {
   sheet_("入室記録", ["日時", "回", "種別", "役割", "アバター", "声", "園名", "ログインID", "名前", "接続ID"])
     .appendRow([Utilities.formatDate(new Date(), TZ, "yyyy/MM/dd HH:mm:ss"), ev, kind, w.role === "mc" ? "MC" : "参加者",
-                AVATAR_NAMES[w.av] || w.av, w.voice || "", w.garden || "", w.loginId || "", w.name || "", sid]);
+                AVATAR_NAMES[w.av] || w.av, w.voice || "", w.garden || "", w.loginId ? "'" + w.loginId : "", w.name || "", sid]);   // ログインIDは先頭の0が消えないよう文字列で保存
 }
 function sheet_(name, headers) {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
