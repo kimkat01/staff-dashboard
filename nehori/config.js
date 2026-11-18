@@ -4,9 +4,9 @@
 
 /* ---- 設置後に入れる ---- */
 // Cloudflare Worker「nehori-proxy」のURL（末尾の / なし）。例：https://nehori-proxy.cryk0289.workers.dev
-const NEHORI_WORKER_URL = "";
+const NEHORI_WORKER_URL = "https://nehori-proxy.cryk0289.workers.dev";
 // GAS「しおどめねほりんぱほりん 通信」のウェブアプリURL（…/exec）
-const NEHORI_GAS_URL = "";
+const NEHORI_GAS_URL = "https://script.google.com/macros/s/AKfycbzIDEdI-YsP74HOCfHa5orivEtR_sNlcPk8r5pMhPwrmQvduDIlZhSq59MOHrrQZmFt-Q/exec";
 
 /* ---- 開催回 ---- */
 // id は記録（スプレッドシート・録音フォルダ）の区別に使う。回を増やすときはここを書きかえる。
