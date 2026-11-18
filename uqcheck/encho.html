@@ -458,7 +458,11 @@ function stLabel(st){ return st==='承認済' ? '受付済' : st==='却下' ? '�
 function fmtDate(d){ const dt=new Date(d); return `${dt.getMonth()+1}/${dt.getDate()}`; }
 
 function renderPending(){
-  const reqs = DB.getRequests().filter(r=>r.status==='申請中');
+  // 並び順：取得希望日の早い順（2026-11-18）。同じ日なら申請日時の早い順
+  //   日付は「2026/1/5」「2026-01-05」どちらで入っていても正しく並ぶよう、いったん yyyy-mm-dd にそろえて比べる
+  const _dk = v => parseInDate(String(v||'').slice(0,10)) || '9999-99-99';
+  const reqs = DB.getRequests().filter(r=>r.status==='申請中')
+    .sort((a,b)=> _dk(a.date).localeCompare(_dk(b.date)) || String(a.createdAt||'').localeCompare(String(b.createdAt||'')));
   const cnt = reqs.length;
   document.getElementById('topPending').textContent = `受付待ち ${cnt}件`;
   document.getElementById('sidebarCnt').textContent = cnt;
