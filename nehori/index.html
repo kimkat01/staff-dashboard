@@ -1,0 +1,701 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>しおどめねほりんぱほりん</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=BIZ+UDPGothic:wght@400;700&family=Zen+Maru+Gothic:wght@500;700&display=swap">
+<script src="config.js"></script>
+<!--
+  しおどめねほりんぱほりん（2026-11-18 試作版）
+  ・ANSHIN KUN のホームから入る、アバターの討論会会場（音声）。参加者8名＋MC（本部）2名
+  ・声は話す人のスマホの中で加工してから送る（AudioWorklet）。加工前の声はスマホの外に出ない
+  ・音声の通話：Cloudflare Realtime（SFU）。秘密の鍵は Worker「nehori-proxy」が持ち、このページには置かない
+  ・だれがどのアバターか・録音：GAS「しおどめねほりんぱほりん 通信」（本部の入室状況 honbu-dashboard/nehori-monitor.html で見る）
+  ・ほかの参加者に見えるのは、アバターと「ねこさん」などの呼び名だけ
+-->
+<style>
+:root{
+  --bg:#eef2fa; --surface:#ffffff; --ink:#1b2340; --muted:#56607c; --line:#d5dcec;
+  --accent:#4169e2; --accent-ink:#ffffff; --accent-soft:#e1e8fb; --warm:#e0922a; --red:#c8453a; --red-soft:#fbe3e0;
+  --stage1:#dfe8fb; --stage2:#f6f8fd; --desk:#c4a47c; --desk2:#a98a62; --seat:#ffffff; --talk:#2fb36b;
+  --display:"Zen Maru Gothic","Hiragino Maru Gothic ProN","Meiryo",sans-serif;
+  --body:"BIZ UDPGothic","Hiragino Kaku Gothic ProN","Meiryo",sans-serif;
+}
+@media (prefers-color-scheme: dark){:root{
+  --bg:#10141e; --surface:#191f2e; --ink:#e4e9f5; --muted:#9ba6c2; --line:#2a3249;
+  --accent:#7d9cf2; --accent-ink:#0e1530; --accent-soft:#1e2a4d; --warm:#f0b85a; --red:#ef7b70; --red-soft:#3b2226;
+  --stage1:#1c2640; --stage2:#141a29; --desk:#8a6e52; --desk2:#6f573f; --seat:#232a3c; --talk:#4fd18a; color-scheme:dark}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.6;-webkit-tap-highlight-color:transparent}
+[hidden]{display:none!important}
+button{font:inherit;cursor:pointer}
+button:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.wrap{max-width:760px;margin:0 auto;padding-block:14px 120px;padding-left:max(14px,env(safe-area-inset-left,0px));padding-right:max(14px,env(safe-area-inset-right,0px));display:grid;gap:12px}
+header{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.brand{margin-right:auto;min-width:0}
+.brand h1{font-family:var(--display);font-size:21px;margin:0;line-height:1.3;text-wrap:balance}
+.brand p{margin:0;color:var(--muted);font-size:12.5px}
+.homebtn{display:inline-flex;align-items:center;gap:6px;padding:5px 14px;border-radius:999px;background:var(--accent);color:var(--accent-ink);font-weight:700;font-size:14px;text-decoration:none;white-space:nowrap}
+.homebtn svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:16px}
+.card h2{font-family:var(--display);font-size:18px;margin:0 0 6px}
+.muted{color:var(--muted)}
+.small{font-size:13px}
+.notes{margin:8px 0 0;padding-left:1.2em;font-size:13.5px;color:var(--muted)}
+.notes li{margin:2px 0}
+.when{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:14px;margin:4px 0 0}
+.when b{color:var(--accent)}
+/* アバター選び */
+.pick{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-top:10px}
+.pick button{display:grid;justify-items:center;gap:2px;padding:8px 4px 6px;border-radius:14px;border:2px solid var(--line);background:var(--bg);color:var(--ink)}
+.pick button svg{width:58px;height:58px}
+.pick button .nm{font-size:13px;font-weight:700}
+.pick button .vc{font-size:10.5px;color:var(--muted)}
+.pick button[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-soft)}
+.pick button:disabled{opacity:.35;cursor:not-allowed}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:12px}
+.btn{border:0;border-radius:999px;padding:10px 22px;font-weight:700;background:var(--accent);color:var(--accent-ink)}
+.btn.sub{background:var(--surface);color:var(--accent);border:1.5px solid var(--accent)}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.err{color:var(--red);font-size:13.5px;min-height:1.2em;margin:6px 0 0}
+.mcbox{margin-top:12px;padding:12px;border-radius:12px;background:var(--accent-soft);display:grid;gap:8px}
+.mcbox label{display:grid;gap:3px;font-size:13px;color:var(--muted)}
+.mcbox input[type=text],.mcbox input[type=password]{font:inherit;font-size:16px;padding:8px 10px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--ink)}
+.chk{display:flex!important;align-items:center;gap:8px;color:var(--ink)!important;font-weight:700}
+.chk input{width:20px;height:20px}
+/* 会場 */
+.status{display:flex;flex-wrap:wrap;gap:6px;font-size:13px}
+.chip{display:inline-flex;align-items:center;gap:6px;padding:3px 11px;border-radius:999px;background:var(--surface);border:1px solid var(--line);white-space:nowrap}
+.chip b{color:var(--accent)}
+.chip.bad{color:var(--red);border-color:var(--red)}
+.stage{position:relative;border-radius:18px;border:1px solid var(--line);background:linear-gradient(180deg,var(--stage1),var(--stage2));padding:14px 10px 18px;overflow:hidden}
+.stage .theme{text-align:center;font-family:var(--display);font-size:14px;color:var(--muted);margin:0 0 6px}
+.mcrow{display:flex;justify-content:center;gap:26px;position:relative;padding-bottom:30px}
+.mcrow .seat{z-index:1}
+.mcrow::after{content:"";position:absolute;left:12%;right:12%;bottom:2px;height:20px;border-radius:8px;background:linear-gradient(180deg,var(--desk),var(--desk2));box-shadow:0 3px 0 rgba(0,0,0,.08)}
+.seats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px 6px;margin-top:14px}
+.seat{position:relative;display:grid;justify-items:center;gap:2px;background:none;border:0;padding:0;color:inherit}
+.seat .face{position:relative;width:74px;height:74px;border-radius:50%;background:var(--seat);border:2px solid var(--line);display:grid;place-items:center;transition:box-shadow .12s,border-color .12s}
+.seat .face svg{width:66px;height:66px}
+.seat.empty .face{border-style:dashed;background:transparent}
+.seat.empty .face::after{content:"空席";font-size:12px;color:var(--muted)}
+.seat .nm{font-size:12.5px;font-weight:700;line-height:1.2}
+.seat .tag{font-size:10px;font-weight:800;color:#fff;background:var(--accent);border-radius:999px;padding:0 7px;line-height:1.6}
+.seat.me .face{border-color:var(--accent)}
+.seat.talking .face{border-color:var(--talk);box-shadow:0 0 0 4px color-mix(in srgb,var(--talk) 35%,transparent)}
+.seat .mouth{transform-box:fill-box;transform-origin:center}
+.seat.talking .mouth{animation:talk .22s ease-in-out infinite alternate}
+@keyframes talk{from{transform:scaleY(.6)}to{transform:scaleY(2.1)}}
+.seat .badge{position:absolute;top:-4px;right:-6px;font-size:22px;line-height:1;filter:drop-shadow(0 1px 1px rgba(0,0,0,.2))}
+.seat .micoff{position:absolute;bottom:-2px;right:-4px;width:24px;height:24px;border-radius:50%;background:var(--red);display:grid;place-items:center}
+.seat .micoff svg{width:14px;height:14px;fill:none;stroke:#fff;stroke-width:2.4;stroke-linecap:round}
+.seat .react{position:absolute;top:-10px;left:-8px;font-size:24px;animation:pop 2.4s ease-out forwards}
+@keyframes pop{0%{transform:scale(.4);opacity:0}12%{transform:scale(1.15);opacity:1}80%{opacity:1}100%{transform:translateY(-14px);opacity:0}}
+@media (prefers-reduced-motion:reduce){.seat.talking .mouth,.seat .react{animation:none}}
+@media (max-width:380px){.seat .face{width:64px;height:64px}.seat .face svg{width:56px;height:56px}}
+/* 下の操作バー */
+.bar{position:fixed;left:0;right:0;bottom:0;background:var(--surface);border-top:1px solid var(--line);padding:10px max(8px,env(safe-area-inset-left,0px)) calc(10px + env(safe-area-inset-bottom,0px));display:flex;justify-content:center;gap:6px;z-index:5}
+.bar button{display:grid;justify-items:center;gap:1px;flex:1 1 0;max-width:86px;min-width:0;padding:6px 4px;border-radius:14px;border:1.5px solid var(--line);background:var(--bg);color:var(--ink);font-size:12px;font-weight:700}
+.bar button svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.bar button .em{font-size:22px;line-height:24px}
+.bar button.on{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.bar button.off{background:var(--red-soft);border-color:var(--red);color:var(--red)}
+.bar button.leave{color:var(--red);border-color:var(--red)}
+.toast{position:fixed;left:50%;bottom:96px;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:8px 16px;border-radius:999px;font-size:13.5px;z-index:9;max-width:92vw;text-align:center}
+/* MCメニュー */
+.menu{position:fixed;inset:0;background:rgba(10,15,30,.35);display:grid;place-items:end center;z-index:8}
+.menu .sheet{background:var(--surface);width:min(420px,100%);border-radius:18px 18px 0 0;padding:16px 16px calc(16px + env(safe-area-inset-bottom,0px));display:grid;gap:8px}
+.menu .sheet h3{margin:0;font-family:var(--display);font-size:17px}
+.menu .sheet button{border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:12px;padding:11px;font-weight:700;text-align:left}
+.closed{text-align:center;display:grid;gap:8px;margin-top:10vh}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="brand">
+      <h1 id="title">しおどめねほりんぱほりん</h1>
+      <p id="sub">アバターの討論会会場</p>
+    </div>
+    <a class="homebtn" id="homebtn" href="#" hidden><svg viewBox="0 0 24 24"><path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/></svg>Home</a>
+  </header>
+
+  <!-- 入場前 -->
+  <section id="entry" hidden>
+    <div class="card">
+      <h2 id="evTitle"></h2>
+      <div class="when"><span>日時 <b id="evWhen"></b></span><span>テーマ <b id="evTheme"></b></span></div>
+      <ul class="notes">
+        <li>アバターを選んで出席します。会話は音声です。</li>
+        <li>声は加工されて相手に届きます（加工前の声はスマホの外に出ません）。</li>
+        <li>参加者どうしでは、園名・名前はわかりません。</li>
+        <li id="recNote">討論会の音声は、法人の記録として保存されます。</li>
+        <li>業務ではありません。イヤホンを使うと聞きやすくなります。</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <h2 id="pickTitle">アバターを選んでください</h2>
+      <p class="muted small" id="pickNote">先着<span id="maxN"></span>名です。アバターごとに声の種類が決まっています。</p>
+      <div class="pick" id="pick" role="group" aria-label="アバター"></div>
+
+      <div class="mcbox" id="mcbox" hidden>
+        <label class="chk"><input type="checkbox" id="mcMode">本部（MC）として入る</label>
+        <div id="mcFields" hidden style="display:grid;gap:8px">
+          <label>お名前（記録用・ほかの人には見えません）<input type="text" id="mcName" autocomplete="name"></label>
+          <label>MCの合言葉<input type="password" id="mcKey" autocomplete="off"></label>
+        </div>
+      </div>
+
+      <div class="row">
+        <button class="btn sub" id="tryBtn" type="button">声を試す（5秒）</button>
+        <button class="btn" id="enterBtn" type="button" disabled>入室する</button>
+      </div>
+      <p class="err" id="entryErr" role="alert"></p>
+    </div>
+  </section>
+
+  <!-- 会場 -->
+  <section id="room" hidden>
+    <div class="status">
+      <span class="chip" id="timeChip">—</span>
+      <span class="chip">参加 <b id="cntP">0</b>/<span id="cntPMax"></span>　MC <b id="cntM">0</b>/<span id="cntMMax"></span></span>
+      <span class="chip" id="connChip">つないでいます…</span>
+    </div>
+    <div class="stage" id="stage">
+      <p class="theme" id="stageTheme"></p>
+      <div class="mcrow" id="mcrow"></div>
+      <div class="seats" id="seats"></div>
+    </div>
+    <p class="muted small" id="roomHint">話していると、アバターの口が動きます。自分の声は加工されて届いています。</p>
+  </section>
+
+  <!-- 入れないとき・退出後 -->
+  <section id="closed" class="card closed" hidden></section>
+</div>
+
+<nav class="bar" id="bar" hidden aria-label="操作">
+  <button id="micBtn" class="on" type="button" aria-pressed="true"><svg viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg><span id="micTx">マイクON</span></button>
+  <button id="handBtn" type="button" aria-pressed="false"><span class="em">✋</span><span>挙手</span></button>
+  <button id="clapBtn" type="button"><span class="em">👏</span><span>拍手</span></button>
+  <button id="nodBtn" type="button"><span class="em">💡</span><span>なるほど</span></button>
+  <button id="leaveBtn" class="leave" type="button"><svg viewBox="0 0 24 24"><path d="M15 4h4v16h-4M10 8l-4 4 4 4M6 12h10"/></svg><span>退出</span></button>
+</nav>
+<div class="toast" id="toast" role="status" hidden></div>
+<div class="menu" id="menu" hidden><div class="sheet" id="menuSheet"></div></div>
+
+<script>
+(function(){
+"use strict";
+/* 本番の告知どおり「音声は保存」を入場画面に書くかどうか。
+   声は個人を特定できる情報なので、保存するなら利用目的を知らせておくのが安全（true のまま推奨） */
+const SHOW_RECORD_NOTICE = true;
+
+const $ = (id) => document.getElementById(id);
+const qs = new URLSearchParams(location.search);
+const EV = (function(){ const e=(qs.get("ev")||"").trim(); return /^[\w-]{1,40}$/.test(e) ? e : NEHORI_EVENT.id; })();
+const IS_TEST = EV !== NEHORI_EVENT.id;
+const BEAT_MS = 2500, REC_SLICE_MS = 30000;
+
+/* ---------- 共通 ---------- */
+function toast(t, ms){ const el=$("toast"); el.textContent=t; el.hidden=false; clearTimeout(toast._t); toast._t=setTimeout(()=>{el.hidden=true;}, ms||2600); }
+function gas(body, keepalive){
+  if(!NEHORI_GAS_URL) return Promise.reject(new Error("GASのURLが未設定です"));
+  return fetch(NEHORI_GAS_URL,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify(body),keepalive:!!keepalive}).then(r=>r.json());
+}
+function avName(a){ return a ? a.name+"さん" : ""; }
+function fmtMin(ms){ return Math.max(0, Math.ceil(ms/60000)); }
+
+/* ---------- だれが入るか ---------- */
+// 職員：ANSHIN KUN のホームから開くと、ログイン中の職員の情報（園・ログインID・名前）がこのブラウザに渡される（URLには載せない）
+function staffWho(){
+  try{ const w=JSON.parse(localStorage.getItem("nehori_who")||"null"); if(w&&w.name) return {kind:"staff",garden:w.garden||"",loginId:w.loginId||"",name:w.name}; }catch(e){}
+  return null;
+}
+// 本部の人（本部ダッシュボードを開いたブラウザ）。MCとして入れる（合言葉はGASで確認する）
+function honbuCapable(){
+  try{
+    const hv=Number(localStorage.getItem("sd_honbu_viewer")||0); if(hv&&Date.now()-hv<7*864e5) return true;
+    if(JSON.parse(localStorage.getItem("sd_honbu_token")||"null")) return true;
+    const h=JSON.parse(localStorage.getItem("honbu_token")||"null"); if(h&&h.token) return true;
+    const m=JSON.parse(localStorage.getItem("nehori_mc")||"null"); if(m&&m.key) return true;
+  }catch(e){}
+  return qs.get("mc")==="1";
+}
+
+/* ---------- 戻り先 ---------- */
+let HOME="";
+try{ const h=qs.get("home")||""; if(/^https:\/\/kimkat01\.github\.io\//.test(h)){ HOME=h; $("homebtn").href=h; $("homebtn").hidden=false; } }catch(e){}
+
+/* ---------- 画面の文字 ---------- */
+$("title").textContent = NEHORI_EVENT.title.replace(/^第\d+回\s*/,"") || "しおどめねほりんぱほりん";
+$("sub").textContent = (IS_TEST ? "【テスト回："+EV+"】" : "") + NEHORI_EVENT.label;
+$("evTitle").textContent = NEHORI_EVENT.title;
+$("evWhen").textContent = NEHORI_EVENT.label;
+$("evTheme").textContent = NEHORI_EVENT.theme;
+$("stageTheme").textContent = "テーマ：" + NEHORI_EVENT.theme;
+$("maxN").textContent = NEHORI_MAX_PARTICIPANTS;
+$("cntPMax").textContent = NEHORI_MAX_PARTICIPANTS; $("cntMMax").textContent = NEHORI_MAX_MC;
+$("recNote").hidden = !SHOW_RECORD_NOTICE;
+
+function showClosed(html){ $("entry").hidden=true; $("room").hidden=true; $("bar").hidden=true; const c=$("closed"); c.innerHTML=html; c.hidden=false; }
+
+/* ---------- 入れるかどうか ---------- */
+const WHO = staffWho();
+const CAN_MC = honbuCapable();
+if(!NEHORI_GAS_URL || !NEHORI_WORKER_URL){
+  showClosed('<h2>準備中です</h2><p class="muted">通信の設定（config.js の NEHORI_GAS_URL・NEHORI_WORKER_URL）がまだ入っていません。</p>');
+  return;
+}
+if(!WHO && !CAN_MC){
+  showClosed('<h2>しおどめねほりんぱほりん</h2><p class="muted">ANSHIN KUN のホームにある「しおどめねほりんぱほりん」から入ってください。</p>');
+  return;
+}
+function timeState(){
+  const now=Date.now(), st=Date.parse(NEHORI_EVENT.start), en=Date.parse(NEHORI_EVENT.end);
+  if(NEHORI_ALWAYS_OPEN || IS_TEST) return {open:true, now, st, en};
+  return {open: now>=st-NEHORI_OPEN_BEFORE_MIN*6e4 && now<=en+30*6e4, now, st, en};
+}
+{
+  const ts=timeState();
+  if(!ts.open){
+    const early=ts.now<ts.st;
+    showClosed('<h2>'+NEHORI_EVENT.title+'</h2><p>'+NEHORI_EVENT.label+'</p><p class="muted">'+
+      (early ? '会場は開始の'+NEHORI_OPEN_BEFORE_MIN+'分前から入れます。' : 'この回は終了しました。ご参加ありがとうございました。')+'</p>');
+    return;
+  }
+}
+
+/* ---------- 入場画面 ---------- */
+$("entry").hidden=false;
+let mcMode=false, chosen="", taken=new Set();
+if(CAN_MC){
+  $("mcbox").hidden=false;
+  try{ const m=JSON.parse(localStorage.getItem("nehori_mc")||"null"); if(m){ $("mcName").value=m.name||""; $("mcKey").value=m.key||""; } }catch(e){}
+  if(!WHO){ $("mcMode").checked=true; $("mcMode").disabled=true; mcMode=true; }
+}
+$("mcMode").addEventListener("change",()=>{ mcMode=$("mcMode").checked; chosen=""; renderPick(); });
+function list(){ return mcMode ? NEHORI_MC_AVATARS : NEHORI_AVATARS; }
+function renderPick(){
+  $("mcFields").hidden=!mcMode;
+  $("pickTitle").textContent = mcMode ? "MCのアバターを選んでください" : "アバターを選んでください";
+  $("pickNote").hidden = mcMode;
+  $("pick").style.gridTemplateColumns = mcMode ? "repeat(2,minmax(0,1fr))" : "";
+  $("pick").innerHTML = list().map(a=>{
+    const dis=taken.has(a.id);
+    return '<button type="button" data-id="'+a.id+'" aria-pressed="'+(chosen===a.id)+'"'+(dis?' disabled':'')+'>'+nehoriAvatarSVG(a.id)+
+      '<span class="nm">'+a.name+'</span><span class="vc">'+(dis?"使用中":NEHORI_VOICES[a.voice].label)+'</span></button>';
+  }).join("");
+  $("enterBtn").disabled = !chosen;
+}
+$("pick").addEventListener("click",(e)=>{
+  const b=e.target.closest("button[data-id]"); if(!b||b.disabled) return;
+  chosen=b.dataset.id; renderPick();
+});
+function peek(){
+  gas({action:"peek",ev:EV}).then(d=>{
+    if(!d||!d.ok) return;
+    taken=new Set((d.roster||[]).map(m=>m.av));
+    if(chosen && taken.has(chosen)) chosen="";
+    if(!mcMode && d.counts && d.counts.p>=NEHORI_MAX_PARTICIPANTS) $("entryErr").textContent="定員（"+NEHORI_MAX_PARTICIPANTS+"名）になりました。";
+    renderPick();
+  }).catch(()=>{});
+}
+renderPick(); peek();
+const peekTimer=setInterval(()=>{ if(!$("entry").hidden) peek(); }, 5000);
+
+/* ---------- 声の加工（AudioWorklet） ----------
+   2本の読み出し位置を少しずつずらして重ね合わせ、声の高さを変える（遅れは約0.05秒）。robot は声を細かく揺らしてロボット風にする */
+const WORKLET_SRC = `
+class NehoriVoice extends AudioWorkletProcessor{
+  constructor(o){ super(); const p=(o&&o.processorOptions)||{};
+    this.ratio=p.ratio||1; this.robot=p.robot||0; this.W=Math.round(sampleRate*0.05); this.N=this.W*4;
+    this.buf=new Float32Array(this.N); this.w=0; this.ph=0; this.rp=0; }
+  process(inputs,outputs){
+    const inp=inputs[0]&&inputs[0][0]; const outs=outputs[0]; if(!outs||!outs[0]) return true;
+    const out=outs[0], n=out.length, W=this.W, N=this.N, step=(1-this.ratio)/W, buf=this.buf;
+    for(let i=0;i<n;i++){
+      buf[this.w]=inp?inp[i]:0;
+      this.ph+=step; if(this.ph>=1)this.ph-=1; else if(this.ph<0)this.ph+=1;
+      let y=0;
+      for(let k=0;k<2;k++){ let p=this.ph+k*0.5; if(p>=1)p-=1;
+        let r=this.w-(p*W+1); if(r<0)r+=N;
+        const i0=r|0, f=r-i0, i1=i0+1<N?i0+1:0;
+        const s=buf[i0]+(buf[i1]-buf[i0])*f; const g=Math.sin(Math.PI*p); y+=s*g*g; }
+      if(this.robot){ this.rp+=6.283185307*this.robot/sampleRate; if(this.rp>6.283185307)this.rp-=6.283185307; y*=0.35+0.65*Math.sin(this.rp); }
+      out[i]=y; this.w++; if(this.w>=N)this.w=0;
+    }
+    for(let c=1;c<outs.length;c++) outs[c].set(out);
+    return true;
+  }
+}
+registerProcessor('nehori-voice',NehoriVoice);`;
+
+let ctx=null, micStream=null, chain=null;
+async function startVoice(avId){
+  const a=nehoriFindAvatar(avId), v=NEHORI_VOICES[a.voice];
+  if(!ctx){ ctx=new (window.AudioContext||window.webkitAudioContext)(); }
+  if(ctx.state==="suspended") await ctx.resume();
+  if(!startVoice._loaded){
+    await ctx.audioWorklet.addModule(URL.createObjectURL(new Blob([WORKLET_SRC],{type:"application/javascript"})));
+    startVoice._loaded=true;
+  }
+  if(!micStream){
+    micStream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true,autoGainControl:true,channelCount:1}});
+  }
+  stopChain();
+  const src=ctx.createMediaStreamSource(micStream);
+  const hp=ctx.createBiquadFilter(); hp.type="highpass"; hp.frequency.value=90;
+  const node=new AudioWorkletNode(ctx,"nehori-voice",{numberOfInputs:1,numberOfOutputs:1,outputChannelCount:[1],processorOptions:{ratio:v.ratio,robot:v.robot}});
+  const comp=ctx.createDynamicsCompressor(); comp.threshold.value=-24; comp.ratio.value=3;
+  const gain=ctx.createGain(); gain.gain.value=1.1;
+  const out=ctx.createGain(); out.gain.value=1;  // マイクOFFのときは0にする
+  const an=ctx.createAnalyser(); an.fftSize=512;
+  const dest=ctx.createMediaStreamDestination();
+  src.connect(hp); hp.connect(node); node.connect(comp); comp.connect(gain); gain.connect(an); gain.connect(out); out.connect(dest);
+  chain={src,hp,node,comp,gain,out,an,dest};
+  return chain;
+}
+function stopChain(){
+  if(!chain) return;
+  try{ chain.src.disconnect(); chain.node.disconnect(); chain.out.disconnect(); chain.gain.disconnect(); }catch(e){}
+  chain=null;
+}
+function micErrorText(e){
+  const n=e&&e.name||"";
+  if(n==="NotAllowedError"||n==="SecurityError") return "マイクの使用が許可されていません。ブラウザの設定でマイクを「許可」にしてから、もう一度押してください。";
+  if(n==="NotFoundError") return "マイクが見つかりません。";
+  return "マイクを使えませんでした（"+(e&&e.message||n||"不明")+"）。";
+}
+
+/* 声を試す：加工した声を5秒だけ自分で聞く（ハウリング防止のためイヤホン推奨） */
+$("tryBtn").addEventListener("click", async ()=>{
+  $("entryErr").textContent="";
+  const id=chosen||list()[0].id;
+  try{
+    const c=await startVoice(id);
+    c.out.connect(ctx.destination);
+    $("tryBtn").disabled=true; $("tryBtn").textContent="話してみてください…";
+    toast("「"+nehoriFindAvatar(id).name+"」の声で聞こえます（イヤホン推奨）", 5000);
+    setTimeout(()=>{ try{ c.out.disconnect(ctx.destination); }catch(e){} $("tryBtn").disabled=false; $("tryBtn").textContent="声を試す（5秒）"; }, 5000);
+  }catch(e){ $("entryErr").textContent=micErrorText(e); }
+});
+
+/* ---------- 通話（Cloudflare Realtime SFU・Worker経由） ---------- */
+let pc=null, mySid="", joined=false, leaving=false;
+const remotes=new Map();   // sid -> {audio, an, mid, track}
+const midToSid=new Map();
+const pending=new Set();   // 受け取り準備中の sid
+let negotiation=Promise.resolve();
+function queue(fn){ negotiation=negotiation.then(fn).catch(e=>console.warn("[nehori]",e)); return negotiation; }
+async function sfu(path, method, body){
+  const r=await fetch(NEHORI_WORKER_URL+"/calls/"+path,{method,headers:{"Content-Type":"application/json"},body:body?JSON.stringify(body):undefined});
+  const j=await r.json().catch(()=>({}));
+  if(!r.ok||j.errorCode) throw new Error("音声の接続ができませんでした（"+(j.errorDescription||j.errorCode||("SFU "+r.status))+"）。少し待ってから、もう一度押してください。");
+  return j;
+}
+async function iceServers(){
+  try{ const r=await fetch(NEHORI_WORKER_URL+"/ice"); const j=await r.json(); if(j&&j.iceServers) return j.iceServers; }catch(e){}
+  return [{urls:"stun:stun.cloudflare.com:3478"}];
+}
+function waitConnected(timeoutMs){
+  return new Promise((res,rej)=>{
+    if(pc.connectionState==="connected") return res();
+    const t=setTimeout(()=>rej(new Error("音声の接続に時間がかかっています")), timeoutMs);
+    pc.addEventListener("connectionstatechange", function h(){
+      if(pc.connectionState==="connected"){ clearTimeout(t); pc.removeEventListener("connectionstatechange",h); res(); }
+      if(pc.connectionState==="failed"){ clearTimeout(t); pc.removeEventListener("connectionstatechange",h); rej(new Error("音声の接続に失敗しました")); }
+    });
+  });
+}
+async function connectAndPush(track){
+  pc=new RTCPeerConnection({iceServers:await iceServers(), bundlePolicy:"max-bundle"});
+  pc.ontrack=(e)=>{ const sid=midToSid.get(e.transceiver.mid); if(sid) attachRemote(sid, e.track); };
+  pc.addEventListener("connectionstatechange",()=>{
+    const s=pc.connectionState, ch=$("connChip");
+    ch.classList.toggle("bad", s==="failed"||s==="disconnected");
+    ch.textContent = s==="connected" ? "音声：接続中" : s==="failed" ? "音声：切れました" : s==="disconnected" ? "音声：つなぎ直しています…" : "つないでいます…";
+  });
+  const s=await sfu("sessions/new","POST");
+  mySid=s.sessionId;
+  const tx=pc.addTransceiver(track,{direction:"sendonly"});
+  const offer=await pc.createOffer(); await pc.setLocalDescription(offer);
+  const r=await sfu("sessions/"+mySid+"/tracks/new","POST",{
+    sessionDescription:{type:"offer",sdp:pc.localDescription.sdp},
+    tracks:[{location:"local",mid:tx.mid,trackName:"mic"}]
+  });
+  await pc.setRemoteDescription(r.sessionDescription);
+  await waitConnected(15000);
+}
+function pull(sid){
+  if(remotes.has(sid)||pending.has(sid)) return;
+  pending.add(sid);
+  queue(async ()=>{
+    try{
+      const r=await sfu("sessions/"+mySid+"/tracks/new","POST",{tracks:[{location:"remote",sessionId:sid,trackName:"mic"}]});
+      const t=(r.tracks||[])[0];
+      if(!t||t.errorCode) throw new Error((t&&t.errorDescription)||"track not ready");
+      midToSid.set(t.mid, sid);
+      remotes.set(sid,{mid:t.mid});
+      if(r.requiresImmediateRenegotiation){
+        await pc.setRemoteDescription(r.sessionDescription);
+        const ans=await pc.createAnswer(); await pc.setLocalDescription(ans);
+        await sfu("sessions/"+mySid+"/renegotiate","PUT",{sessionDescription:{type:"answer",sdp:pc.localDescription.sdp}});
+      }
+    }catch(e){
+      remotes.delete(sid);
+      console.warn("[nehori] pull retry later", sid, e.message);
+    }finally{ pending.delete(sid); }
+  });
+}
+function attachRemote(sid, track){
+  const r=remotes.get(sid)||{};
+  const ms=new MediaStream([track]);
+  const au=new Audio(); au.autoplay=true; au.playsInline=true; au.srcObject=ms;
+  au.play().catch(()=>{ toast("音が出ないときは、画面をタップしてください"); document.addEventListener("click",()=>au.play().catch(()=>{}),{once:true}); });
+  let an=null;
+  try{ const src=ctx.createMediaStreamSource(ms); an=ctx.createAnalyser(); an.fftSize=512; src.connect(an); }catch(e){}
+  r.audio=au; r.an=an; r.track=track;
+  remotes.set(sid,r);
+}
+function dropRemote(sid){
+  const r=remotes.get(sid); if(!r) return;
+  try{ if(r.audio){ r.audio.pause(); r.audio.srcObject=null; } }catch(e){}
+  remotes.delete(sid);
+}
+
+/* ---------- 録音（自分の加工後の声を30秒ずつ本部のドライブへ） ---------- */
+let rec=null, recSeq=0, recTimer=null, recMime="";
+const uploads=[];
+function pickMime(){
+  const c=["audio/webm;codecs=opus","audio/mp4","audio/ogg;codecs=opus","audio/webm"];
+  for(const m of c){ try{ if(window.MediaRecorder&&MediaRecorder.isTypeSupported(m)) return m; }catch(e){} }
+  return "";
+}
+function startRec(){
+  if(!window.MediaRecorder||!chain) return;
+  recMime=pickMime();
+  const one=()=>{
+    if(leaving) return;
+    let r; try{ r=new MediaRecorder(chain.dest.stream, recMime?{mimeType:recMime,audioBitsPerSecond:24000}:{audioBitsPerSecond:24000}); }catch(e){ console.warn(e); return; }
+    const parts=[];
+    r.ondataavailable=(e)=>{ if(e.data&&e.data.size) parts.push(e.data); };
+    r.onstop=()=>{ if(parts.length) uploads.push(upload(new Blob(parts,{type:r.mimeType||recMime||"audio/webm"}), ++recSeq)); };
+    r.start(); rec=r;
+    if(micMuted) try{ r.pause(); }catch(e){}
+  };
+  one();
+  recTimer=setInterval(()=>{ try{ if(rec&&rec.state!=="inactive") rec.stop(); }catch(e){} one(); }, REC_SLICE_MS);
+}
+function stopRec(){
+  clearInterval(recTimer);
+  return new Promise(res=>{
+    if(!rec||rec.state==="inactive") return res();
+    rec.addEventListener("stop",()=>setTimeout(res,0),{once:true});
+    try{ rec.stop(); }catch(e){ res(); }
+  });
+}
+function upload(blob, seq){
+  return new Promise(res=>{
+    const fr=new FileReader();
+    fr.onload=()=>{
+      const b64=String(fr.result).split(",")[1]||"";
+      gas({action:"upload",ev:EV,sid:mySid,seq,mime:blob.type,data:b64}).catch(()=>{}).finally(res);
+    };
+    fr.onerror=()=>res();
+    fr.readAsDataURL(blob);
+  });
+}
+
+/* ---------- 入室 ---------- */
+let me=null;   // {av, role}
+let micMuted=false, hand=false, pendingReact="";
+$("enterBtn").addEventListener("click", async ()=>{
+  const btn=$("enterBtn"), err=$("entryErr"); err.textContent="";
+  if(!chosen) return;
+  let who=WHO, key="";
+  if(mcMode){
+    const nm=$("mcName").value.trim(); key=$("mcKey").value.trim();
+    if(!nm||!key){ err.textContent="お名前とMCの合言葉を入れてください。"; return; }
+    who={kind:"mc",name:nm};
+    try{ localStorage.setItem("nehori_mc",JSON.stringify({name:nm,key})); }catch(e){}
+  }
+  btn.disabled=true; btn.textContent="入室しています…"; $("tryBtn").disabled=true;
+  try{
+    const c=await startVoice(chosen);
+    await connectAndPush(c.dest.stream.getAudioTracks()[0]);
+    const d=await gas({action:"join",ev:EV,sid:mySid,av:chosen,role:mcMode?"mc":"p",voice:nehoriFindAvatar(chosen).voice,who,key});
+    if(!d||!d.ok){
+      const msg={taken:"そのアバターは、ほかの人が選んだところです。別のアバターを選んでください。",full:"定員になりました。",badkey:"MCの合言葉がちがいます。",mcfull:"MCは2名までです。"}[d&&d.code]||(d&&d.message)||"入室できませんでした。";
+      throw new Error(msg);
+    }
+    joined=true; me={av:chosen, role:mcMode?"mc":"p", key};
+    clearInterval(peekTimer);
+    $("entry").hidden=true; $("room").hidden=false; $("bar").hidden=false;
+    if(mcMode) $("roomHint").textContent="MCは、参加者のアバターを押すと「マイクをオフにする」「挙手をおろす」ができます。";
+    applyRoster(d.roster||[]);
+    startRec();
+    beatLoop();
+    levelLoop();
+    toast("入室しました。"+avName(nehoriFindAvatar(chosen))+"として参加しています");
+  }catch(e){
+    err.textContent = (e&&e.name&&/NotAllowed|NotFound|Security/.test(e.name)) ? micErrorText(e) : (e.message||"入室できませんでした。");
+    try{ if(pc) pc.close(); }catch(x){} pc=null; mySid=""; midToSid.clear(); remotes.clear();
+    btn.disabled=false; btn.textContent="入室する"; $("tryBtn").disabled=false;
+    peek();
+  }
+});
+
+/* ---------- 会場の表示 ---------- */
+let roster=[];
+function applyRoster(list){
+  roster=list;
+  const live=new Set(list.map(m=>m.sid));
+  list.forEach(m=>{ if(m.sid!==mySid) pull(m.sid); });
+  Array.from(remotes.keys()).forEach(sid=>{ if(!live.has(sid)&&!pending.has(sid)) dropRemote(sid); });
+  render();
+}
+function seatHTML(m, isMC){
+  if(!m) return '<div class="seat empty"><span class="face"></span><span class="nm">&nbsp;</span></div>';
+  const a=nehoriFindAvatar(m.av), mine=m.sid===mySid;
+  const react=(m.react&&Date.now()-m.rt<2600)?'<span class="react">'+(m.react==="clap"?"👏":"💡")+'</span>':"";
+  const tagName = (me&&me.role==="mc"&&!mine&&!isMC) ? "button" : "div";   // MCが参加者を押せるようにする
+  return '<'+tagName+(tagName==="button"?' type="button"':'')+' class="seat'+(mine?' me':'')+'" data-sid="'+m.sid+'" aria-label="'+avName(a)+(m.muted?"（マイクOFF）":"")+(m.hand?"（挙手中）":"")+'">'+
+    '<span class="face">'+nehoriAvatarSVG(m.av)+(m.hand?'<span class="badge">✋</span>':'')+
+    (m.muted?'<span class="micoff"><svg viewBox="0 0 24 24"><path d="M4 4l16 16M9 9v2a3 3 0 0 0 5 2M15 10V6a3 3 0 0 0-6 0"/></svg></span>':'')+react+'</span>'+
+    '<span class="nm">'+(a?a.name:"")+(mine?"（自分）":"")+'</span>'+(isMC?'<span class="tag">MC</span>':'')+
+  '</'+tagName+'>';
+}
+let lastReactKey="";
+function render(){
+  const mcs=roster.filter(m=>m.role==="mc"), ps=roster.filter(m=>m.role!=="mc");
+  // 席は「選んだアバターの順」で固定（入れ替わっても席が動かない）
+  const bySeat=NEHORI_AVATARS.map(a=>ps.find(m=>m.av===a.id)||null);
+  const mcSeat=NEHORI_MC_AVATARS.map(a=>mcs.find(m=>m.av===a.id)||null);
+  $("mcrow").innerHTML=mcSeat.map(m=>seatHTML(m,true)).join("");
+  $("seats").innerHTML=bySeat.map(m=>seatHTML(m,false)).join("");
+  $("cntP").textContent=ps.length; $("cntM").textContent=mcs.length;
+}
+// 話している人の口を動かす（音の大きさで判定。10回/秒）
+const talkHold=new Map();
+function level(an){
+  if(!an) return 0;
+  const d=new Uint8Array(an.fftSize); an.getByteTimeDomainData(d);
+  let s=0; for(let i=0;i<d.length;i++){ const v=(d[i]-128)/128; s+=v*v; }
+  return Math.sqrt(s/d.length);
+}
+function levelLoop(){
+  const tick=()=>{
+    if(!joined) return;
+    const now=Date.now();
+    const check=(sid,an,muted)=>{
+      if(!muted && level(an)>0.035) talkHold.set(sid, now+350);
+      const on=(talkHold.get(sid)||0)>now;
+      const el=document.querySelector('.seat[data-sid="'+sid+'"]'); if(el) el.classList.toggle("talking",on);
+    };
+    if(chain) check(mySid, chain.an, micMuted);
+    remotes.forEach((r,sid)=>check(sid, r.an, false));
+  };
+  setInterval(tick, 100);
+}
+// 残り時間
+setInterval(()=>{
+  if(!joined) return;
+  const now=Date.now(), st=Date.parse(NEHORI_EVENT.start), en=Date.parse(NEHORI_EVENT.end);
+  $("timeChip").textContent = IS_TEST ? "テスト回" : now<st-3*36e5 ? NEHORI_EVENT.label+" 開始" : now<st ? "開始まで あと"+fmtMin(st-now)+"分" : now<en ? "残り "+fmtMin(en-now)+"分" : "終了時刻を過ぎました";
+}, 1000);
+
+/* ---------- 定期通信（2.5秒ごと） ---------- */
+let beatFails=0;
+function beatLoop(){
+  const once=()=>{
+    if(!joined||leaving) return;
+    const body={action:"beat",ev:EV,sid:mySid,muted:micMuted,hand};
+    if(pendingReact){ body.react=pendingReact; pendingReact=""; }
+    gas(body).then(d=>{
+      beatFails=0;
+      if(!d) return;
+      if(d.gone){ toast("通信が切れたため、入り直してください", 6000); return leave(true); }
+      if(d.cmd==="mute" && !micMuted){ setMic(true); toast("MCがマイクをオフにしました。話すときはマイクボタンでONにしてください", 4500); }
+      if(d.cmd==="lowerHand" && hand){ setHand(false); toast("挙手がおろされました"); }
+      if(d.roster) applyRoster(d.roster);
+    }).catch(()=>{ if(++beatFails===3) toast("通信が不安定です"); })
+      .finally(()=>{ if(joined&&!leaving) setTimeout(once, BEAT_MS); });
+  };
+  once();
+}
+
+/* ---------- 操作 ---------- */
+function setMic(mute){
+  micMuted=mute;
+  if(chain) chain.out.gain.value = mute ? 0 : 1;
+  try{ if(rec){ if(mute&&rec.state==="recording") rec.pause(); else if(!mute&&rec.state==="paused") rec.resume(); } }catch(e){}
+  const b=$("micBtn"); b.className=mute?"off":"on"; b.setAttribute("aria-pressed",String(!mute)); $("micTx").textContent=mute?"マイクOFF":"マイクON";
+  const m=roster.find(x=>x.sid===mySid); if(m){ m.muted=mute; render(); }
+}
+function setHand(on){
+  hand=on; const b=$("handBtn"); b.classList.toggle("on",on); b.setAttribute("aria-pressed",String(on));
+  const m=roster.find(x=>x.sid===mySid); if(m){ m.hand=on; render(); }
+}
+$("micBtn").addEventListener("click",()=>setMic(!micMuted));
+$("handBtn").addEventListener("click",()=>setHand(!hand));
+$("clapBtn").addEventListener("click",()=>{ pendingReact="clap"; const m=roster.find(x=>x.sid===mySid); if(m){ m.react="clap"; m.rt=Date.now(); render(); } });
+$("nodBtn").addEventListener("click",()=>{ pendingReact="nod"; const m=roster.find(x=>x.sid===mySid); if(m){ m.react="nod"; m.rt=Date.now(); render(); } });
+$("leaveBtn").addEventListener("click",()=>leave(false));
+
+// MC：参加者を押すとメニュー
+$("stage").addEventListener("click",(e)=>{
+  if(!me||me.role!=="mc") return;
+  const s=e.target.closest(".seat[data-sid]"); if(!s) return;
+  const sid=s.dataset.sid; if(sid===mySid) return;
+  const m=roster.find(x=>x.sid===sid); if(!m) return;
+  const a=nehoriFindAvatar(m.av);
+  $("menuSheet").innerHTML='<h3>'+avName(a)+'</h3>'+
+    '<button type="button" data-cmd="mute">マイクをオフにする</button>'+
+    '<button type="button" data-cmd="lowerHand">挙手をおろす</button>'+
+    '<button type="button" data-cmd="">閉じる</button>';
+  $("menu").hidden=false;
+  $("menuSheet").onclick=(ev)=>{
+    const b=ev.target.closest("button"); if(!b) return;
+    $("menu").hidden=true;
+    if(!b.dataset.cmd) return;
+    gas({action:"mc",ev:EV,sid:mySid,key:me.key,target:sid,cmd:b.dataset.cmd}).then(d=>{
+      toast(d&&d.ok ? (b.dataset.cmd==="mute"?avName(a)+"のマイクをオフにしました":avName(a)+"の挙手をおろしました") : "できませんでした");
+    }).catch(()=>toast("通信できませんでした"));
+  };
+});
+$("menu").addEventListener("click",(e)=>{ if(e.target===$("menu")) $("menu").hidden=true; });
+
+/* ---------- 退出 ---------- */
+async function leave(silent){
+  if(leaving) return; leaving=true;
+  $("bar").querySelectorAll("button").forEach(b=>b.disabled=true);
+  toast("保存して退出しています…", 8000);
+  try{
+    await stopRec();
+    await Promise.race([Promise.all(uploads), new Promise(r=>setTimeout(r,8000))]);
+  }catch(e){}
+  try{ await gas({action:"leave",ev:EV,sid:mySid}); }catch(e){}
+  joined=false;
+  cleanup();
+  if(HOME && !silent){ location.href=HOME; return; }
+  showClosed('<h2>退出しました</h2><p class="muted">ご参加ありがとうございました。</p>'+(HOME?'<p><a class="homebtn" href="'+HOME+'">Home に戻る</a></p>':''));
+}
+function cleanup(){
+  try{ remotes.forEach((r,sid)=>dropRemote(sid)); }catch(e){}
+  try{ if(pc) pc.close(); }catch(e){}
+  try{ if(micStream) micStream.getTracks().forEach(t=>t.stop()); }catch(e){}
+  try{ if(ctx) ctx.close(); }catch(e){}
+}
+// 画面を閉じたとき：退出を知らせる（録音の最後の数秒は保存できないことがある）
+window.addEventListener("pagehide",()=>{
+  if(!joined||leaving) return;
+  try{ navigator.sendBeacon(NEHORI_GAS_URL,new Blob([JSON.stringify({action:"leave",ev:EV,sid:mySid})],{type:"text/plain;charset=utf-8"})); }catch(e){}
+});
+})();
+</script>
+</body>
+</html>
