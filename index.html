@@ -13713,6 +13713,9 @@ IC.hiroba='<svg viewBox="0 0 24 24"><circle cx="8" cy="8" r="3"/><circle cx="16.
    園を増やすときは、ひろば側（hiroba/index.html）の HIROBA_GARDENS にも同じ園名を足す。 */
 const HIROBA_GARDENS=["ふれあいしおどめ保育園八潮"];
 function sdShowHiroba(){
+  /* 2026-11-20：本番のホームは「ご意見箱」に戻す（しおどめひろばは本番では表示しない）。
+     再び表示するときは、下の return false; の1行を消す */
+  return false;
   if(window.SD_HONBU_VIEW) return true;
   try{
     var s=getPinSession();
