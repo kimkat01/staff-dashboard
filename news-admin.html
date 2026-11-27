@@ -82,6 +82,11 @@ textarea.inp{resize:vertical;line-height:1.75;min-height:200px}
 .chip.garden{background:var(--brand-soft);color:var(--brand)}
 .chip.pin{background:var(--gold-bg);color:var(--gold-ink)}
 .chip.draft{background:var(--off-bg);color:var(--off-ink)}
+.chip.new{background:#e53935;color:#fff;animation:naBlink 1.2s ease-in-out infinite}
+@keyframes naBlink{0%,100%{opacity:1}50%{opacity:.3}}
+@media (prefers-reduced-motion:reduce){.chip.new{animation:none}}
+.newinfo{display:flex;align-items:center;gap:8px;margin:6px 0 16px;padding:8px 11px;border-radius:10px;font-size:12.5px;line-height:1.6;background:#fdecea;color:#8f322c;font-weight:700}
+.newinfo.off{background:var(--off-bg);color:var(--off-ink);font-weight:600}
 .lbar{display:flex;align-items:center;gap:8px;padding:8px 14px 0;font-size:12px;color:var(--ink-soft)}
 .lbar span{flex:1}
 .lbar button{border:0;background:transparent;color:var(--law);font-weight:700;font-size:12.5px;cursor:pointer;padding:2px 4px}
@@ -246,6 +251,8 @@ details.link .inner{padding:0 12px 12px;display:grid;gap:10px}
           <input class="inp" type="date" id="fDate" oninput="naDirty()">
         </div>
       </div>
+      <!-- 2026-11-27：ANSHIN KUN ホームの「お知らせ」カードの点滅NEWは、公開中の記事の「日付」から4日間、自動で表示される -->
+      <div class="newinfo" id="newInfo"></div>
 
       <div class="field hidden" id="gardenField">
         <label for="fGarden">園名<span class="req">必須</span></label>
@@ -330,6 +337,23 @@ details.link .inner{padding:0 12px 12px;display:grid;gap:10px}
 
 <script>
 /* ===== 設定 ===== */
+/* ANSHIN KUN ホームの「お知らせ」カードに点滅「NEW」を出す日数（記事の日付の日を1日目として数える）。
+   ANSHIN KUN 側（index.html / shisaku.html）の NS_NEW_DAYS と同じ数字にする。 */
+var NA_NEW_DAYS = 4;
+function naYmd(iso){var m=(iso||'').match(/(\d{4})-(\d{2})-(\d{2})/);return m?new Date(+m[1],+m[2]-1,+m[3]):null;}
+function naToday(){var t=new Date();return new Date(t.getFullYear(),t.getMonth(),t.getDate());}
+function naNewEnd(iso){var d=naYmd(iso);return d?new Date(d.getFullYear(),d.getMonth(),d.getDate()+NA_NEW_DAYS-1):null;}
+function naIsNew(iso){var st=naYmd(iso);if(!st)return false;var t=naToday();return t>=st&&t<=naNewEnd(iso);}
+function naMd(d){return (d.getMonth()+1)+'月'+d.getDate()+'日';}
+function naNewInfo(){
+  var el=document.getElementById('newInfo');if(!el)return;
+  var iso=document.getElementById('fDate').value;var st=naYmd(iso);
+  if(!st){el.className='newinfo off';el.textContent='日付を入れると、NEWの表示期間がここに出ます。';return;}
+  var e=naNewEnd(iso),t=naToday();
+  if(t>e){el.className='newinfo off';el.textContent='NEW表示は '+naMd(e)+' で終了しています。もう一度NEWを出したいときは、日付を今日にして「更新して公開」してください。';return;}
+  el.className='newinfo';
+  el.innerHTML='<span class="chip new">NEW</span><span>公開すると、ANSHIN KUN のホーム「お知らせ」カードに <b>'+naMd(st)+'〜'+naMd(e)+'（'+NA_NEW_DAYS+'日間）</b> 点滅表示されます（期間が過ぎると自動で消えます）。'+(t<st?'<br>※日付が先の日なので、その日になってから表示されます。':'')+'</span>';
+}
 var NA_GAS_URL = "https://script.google.com/macros/s/AKfycbwvO_eVBaPA31-c93roVoHk8rsyrcQJvAMvGYiyxjvmYBB6niL7dQUDjQG5yjFNpU5d/exec";   // ← お知らせGASのウェブアプリURL（…/exec）
 
 /* ===== 状態 ===== */
@@ -461,6 +485,7 @@ function naRenderList(){
       '<div class="lm"><span>'+fmtShort(p.date)+'</span>'+who+
         (p.important?'<span class="chip pin">固定</span>':'')+
         (p.status==='下書き'?'<span class="chip draft">下書き</span>':'')+
+        (p.status==='公開'&&naIsNew(p.date)?'<span class="chip new">NEW</span>':'')+
         (p.status==='公開'?'<span class="lcnt">閲覧 '+(p.views||0)+'・いいね '+(p.likes||0)+'</span>':'')+
       '</div></button>';
   }).join('');
@@ -673,6 +698,7 @@ function naCard(p,mode,cur){
     media+link+'</div></div>';
 }
 function naPreview(){
+  naNewInfo();
   var p=naCollect();
   $('titleCount').textContent=p.title.length+'文字';
   $('bodyCount').textContent=p.body.length+'文字';
